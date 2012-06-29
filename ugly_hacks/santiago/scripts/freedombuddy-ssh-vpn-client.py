@@ -14,8 +14,10 @@ This is generic and doesn't need to live in this script.
 
 When connecting, it must do the following:
 
-#. SOME SSH VPN STUFF.
-#. A LITTLE MORE.
-#. AND THE LAST OF IT.
+https://duckduckgo.com/?q=ssh+vpn
+http://bodhizazen.net/Tutorials/VPN-Over-SSH/
+http://www.linuxjournal.com/content/ssh-tunneling-poor-techies-vpn
+https://help.ubuntu.com/community/SSH_VPN
+http://www.faqs.org/docs/Linux-mini/ppp-ssh.html
 
 """
