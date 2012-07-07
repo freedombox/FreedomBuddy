@@ -11,10 +11,11 @@ where I am hosting a service for a client.  It will print one location per line.
 
 If key or service isn't specified: quit.
 
-If host == False: just pull the list of locations from the cache and quit.
+If host == False: just pull the list of locations I host from the cache and
+quit.
 
-If query == False: skip querying and just pull the list of locations from the
-cache and quit.
+If query == False: skip querying the host and just pull the list of locations
+they host for me from the cache and quit.
 
 Until I implement active-request polling and between-request timeouts:
 
