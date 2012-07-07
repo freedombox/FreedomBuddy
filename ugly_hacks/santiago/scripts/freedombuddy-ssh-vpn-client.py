@@ -14,6 +14,8 @@ This is generic and doesn't need to live in this script.
 
 When connecting, it must do the following:
 
+http://openvpn.net/index.php/open-source.html
+https://github.com/dad311/Easy-OpenVPN-1.2
 https://duckduckgo.com/?q=ssh+vpn
 http://bodhizazen.net/Tutorials/VPN-Over-SSH/
 http://www.linuxjournal.com/content/ssh-tunneling-poor-techies-vpn
