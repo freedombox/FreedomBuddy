@@ -220,33 +220,51 @@ class RestMonitor(santiago.RestController):
                     file="/".join((self.relative_path, encoding, template)),
                     searchList = [dict(values)]))]
 
-class HostedService(RestMonitor):
+class Root(RestMonitor):
     @cherrypy.tools.ip_filter()
-    def GET(self, client, service, **kwargs):
-        return self.respond("hostedService.tmpl", {
-                "service": service,
-                "client": client,
-                "locations": self.santiago.hosting[client][service] })
+    def GET(self, **kwargs):
+        return self.respond("root.tmpl", {})
+
+class Stop(RestMonitor):
+    @cherrypy.tools.ip_filter()
+    def POST(self, **kwargs):
+        self.santiago.live = 0
+        raise cherrypy.HTTPRedirect("/")
 
     @cherrypy.tools.ip_filter()
-    def POST(self, client="", service="", put="", delete="", **kwargs):
+    def GET(self, **kwargs):
+        self.POST() # FIXME cause it's late and I'm tired.
+
+class Learn(RestMonitor, santiago.SantiagoListener):
+    @cherrypy.tools.ip_filter()
+    def POST(self, host, service, **kwargs):
+        super(Learn, self).learn(host, service)
+
+        raise cherrypy.HTTPRedirect("/consuming/%s/%s" % (host, service))
+
+class Hosting(RestMonitor):
+    @cherrypy.tools.ip_filter()
+    def GET(self, **kwargs):
+        return self.respond("hosting.tmpl",
+                            {"clients": [x for x in self.santiago.hosting]})
+
+    @cherrypy.tools.ip_filter()
+    def POST(self, put="", delete="", **kwargs):
         if put:
-            self.PUT(client, service, put)
+            self.PUT(put)
         elif delete:
-            self.DELETE(client, service, delete)
+            self.DELETE(delete)
 
-        raise cherrypy.HTTPRedirect("/hosting/{0}/{1}/".format(client, service))
+        raise cherrypy.HTTPRedirect("/hosting")
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, client, service, location):
-        self.santiago.create_hosting_location(client, service, [location])
+    def PUT(self, client):
+        self.santiago.create_hosting_client(client)
 
-    # Have to remove instead of delete for locations as $service is a list
     @cherrypy.tools.ip_filter()
-    # FIXME correct direct key access
-    def DELETE(self, client, service, location):
-        if location in self.santiago.hosting[client][service]:
-            self.santiago.hosting[client][service].remove(location)
+    def DELETE(self, client):
+        if client in self.santiago.hosting:
+            del self.santiago.hosting[client]
 
 class HostedClient(RestMonitor):
 
@@ -275,11 +293,39 @@ class HostedClient(RestMonitor):
         if service in self.santiago.hosting[client]:
             del self.santiago.hosting[client][service]
 
-class Hosting(RestMonitor):
+class HostedService(RestMonitor):
+    @cherrypy.tools.ip_filter()
+    def GET(self, client, service, **kwargs):
+        return self.respond("hostedService.tmpl", {
+                "service": service,
+                "client": client,
+                "locations": self.santiago.hosting[client][service] })
+
+    @cherrypy.tools.ip_filter()
+    def POST(self, client="", service="", put="", delete="", **kwargs):
+        if put:
+            self.PUT(client, service, put)
+        elif delete:
+            self.DELETE(client, service, delete)
+
+        raise cherrypy.HTTPRedirect("/hosting/{0}/{1}/".format(client, service))
+
+    @cherrypy.tools.ip_filter()
+    def PUT(self, client, service, location):
+        self.santiago.create_hosting_location(client, service, [location])
+
+    # Have to remove instead of delete for locations as $service is a list
+    @cherrypy.tools.ip_filter()
+    # FIXME correct direct key access
+    def DELETE(self, client, service, location):
+        if location in self.santiago.hosting[client][service]:
+            self.santiago.hosting[client][service].remove(location)
+
+class Consuming(RestMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
-        return self.respond("hosting.tmpl",
-                            {"clients": [x for x in self.santiago.hosting]})
+        return self.respond("consuming.tmpl",
+                            { "hosts": [x for x in self.santiago.consuming]})
 
     @cherrypy.tools.ip_filter()
     def POST(self, put="", delete="", **kwargs):
@@ -288,16 +334,41 @@ class Hosting(RestMonitor):
         elif delete:
             self.DELETE(delete)
 
-        raise cherrypy.HTTPRedirect("/hosting")
+        raise cherrypy.HTTPRedirect("/consuming")
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, client):
-        self.santiago.create_hosting_client(client)
+    def PUT(self, host):
+        self.santiago.create_consuming_host(host)
 
     @cherrypy.tools.ip_filter()
-    def DELETE(self, client):
-        if client in self.santiago.hosting:
-            del self.santiago.hosting[client]
+    def DELETE(self, host):
+        if host in self.santiago.consuming:
+            del self.santiago.consuming[host]
+
+class ConsumedHost(RestMonitor):
+    @cherrypy.tools.ip_filter()
+    def GET(self, host, **kwargs):
+        return self.respond("consumedHost.tmpl",
+                            { "services": self.santiago.consuming[host],
+                              "host": host })
+
+    @cherrypy.tools.ip_filter()
+    def POST(self, host="", put="", delete="", **kwargs):
+        if put:
+            self.PUT(host, put)
+        elif delete:
+            self.DELETE(host, delete)
+
+        raise cherrypy.HTTPRedirect("/consuming/" + host)
+
+    @cherrypy.tools.ip_filter()
+    def PUT(self, host, service):
+        self.santiago.create_consuming_service(host, service)
+
+    @cherrypy.tools.ip_filter()
+    def DELETE(self, host, service):
+        if service in self.santiago.consuming[host]:
+            del self.santiago.consuming[host][service]
 
 class ConsumedService(RestMonitor):
     @cherrypy.tools.ip_filter()
@@ -327,74 +398,3 @@ class ConsumedService(RestMonitor):
     def DELETE(self, host, service, location):
         if location in self.santiago.consuming[host][service]:
             self.santiago.consuming[host][service].remove(location)
-
-class ConsumedHost(RestMonitor):
-    @cherrypy.tools.ip_filter()
-    def GET(self, host, **kwargs):
-        return self.respond("consumedHost.tmpl",
-                            { "services": self.santiago.consuming[host],
-                              "host": host })
-
-    @cherrypy.tools.ip_filter()
-    def POST(self, host="", put="", delete="", **kwargs):
-        if put:
-            self.PUT(host, put)
-        elif delete:
-            self.DELETE(host, delete)
-
-        raise cherrypy.HTTPRedirect("/consuming/" + host)
-
-    @cherrypy.tools.ip_filter()
-    def PUT(self, host, service):
-        self.santiago.create_consuming_service(host, service)
-
-    @cherrypy.tools.ip_filter()
-    def DELETE(self, host, service):
-        if service in self.santiago.consuming[host]:
-            del self.santiago.consuming[host][service]
-
-class Consuming(RestMonitor):
-    @cherrypy.tools.ip_filter()
-    def GET(self, **kwargs):
-        return self.respond("consuming.tmpl",
-                            { "hosts": [x for x in self.santiago.consuming]})
-
-    @cherrypy.tools.ip_filter()
-    def POST(self, put="", delete="", **kwargs):
-        if put:
-            self.PUT(put)
-        elif delete:
-            self.DELETE(delete)
-
-        raise cherrypy.HTTPRedirect("/consuming")
-
-    @cherrypy.tools.ip_filter()
-    def PUT(self, host):
-        self.santiago.create_consuming_host(host)
-
-    @cherrypy.tools.ip_filter()
-    def DELETE(self, host):
-        if host in self.santiago.consuming:
-            del self.santiago.consuming[host]
-
-class Root(RestMonitor):
-    @cherrypy.tools.ip_filter()
-    def GET(self, **kwargs):
-        return self.respond("root.tmpl", {})
-
-class Stop(RestMonitor):
-    @cherrypy.tools.ip_filter()
-    def POST(self, **kwargs):
-        self.santiago.live = 0
-        raise cherrypy.HTTPRedirect("/")
-
-    @cherrypy.tools.ip_filter()
-    def GET(self, **kwargs):
-        self.POST() # FIXME cause it's late and I'm tired.
-
-class Learn(RestMonitor, santiago.SantiagoListener):
-    @cherrypy.tools.ip_filter()
-    def POST(self, host, service, **kwargs):
-        super(Learn, self).learn(host, service)
-
-        raise cherrypy.HTTPRedirect("/consuming/%s/%s" % (host, service))
