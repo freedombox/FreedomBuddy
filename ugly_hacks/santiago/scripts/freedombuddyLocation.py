@@ -59,8 +59,12 @@ def interpret_args(args, parser=None):
                       help="Find services for or by this buddy.")
     parser.add_option("-s", "--service", dest="service",
                       help="Find this service's locations.")
-    parser.add_option("-t", "--timeout", dest="timeout",
-                      help="Maximum time to wait for the request to finish.")
+    parser.add_option("-t", "--timeout", dest="timeout", default=1,
+                      help="""\
+Maximum time, in seconds, to wait for the request to finish.
+""")
+    parser.add_option("-p", "--port", dest="port", default=8080,
+                      help="Localhost's FreedomBuddy port.")
     parser.add_option("-o", "--host", dest="host", default=True,
                       action="store_true", help="""\
 Query the named key's FreedomBuddy service for the named service's location.
