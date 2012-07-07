@@ -23,3 +23,7 @@
    friend.
 
 - Messages that exceed that maximum are queued for the next time unit.
+
+* TODO Update documentation.
+
+* TODO make list of oustanding requests query-able
