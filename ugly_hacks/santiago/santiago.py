@@ -10,35 +10,17 @@ allowing this negotiation to happen very quietly.
 
 Start me with:
 
-    $ python -i santiago.py
+    $ python santiago.py
 
 The first Santiago service queries another's index with a request.  That request
 is handled and a request is returned.  Then, the reply is handled.  The upshot
 is that we learn a new set of locations for the service.
-
-We don't:
-
-- Proxy requests.
-- Use a reasonable data-store.
-- Have a decent control (rate-limiting) mechanism.
 
 :TODO: add doctests
 :FIXME: allow multiple listeners and senders per protocol (with different
     proxies)
 
 This dead-drop approach is what came of my trying to learn from bug 4185.
-
-To see the system learn from itself, try running a few queries similar to:
-
-#. https://localhost:8080/where/D95C32042EE54FFDB25EC3489F2733F40928D23A/santiago
-#. https://localhost:8080/provide/D95C32042EE54FFDB25EC3489F2733F40928D23A/santiago/localhost:8081
-#. https://localhost:8080/learn/D95C32042EE54FFDB25EC3489F2733F40928D23A/santiago
-#. https://localhost:8080/where/D95C32042EE54FFDB25EC3489F2733F40928D23A/santiago
-
-#. See what services are currently available.
-#. Start serving at the "localhost:8081" location.
-#. Learn the 8081 location.
-#. See what services are currently available, including the 8081 service.
 
                                   Santiago, he
                           smiles like a Buddah, 'neath
@@ -134,7 +116,7 @@ class Santiago(object):
         if monitors is not None:
             self.monitors = self.create_connectors(monitors, "Monitor")
 
-        self.shelf = shelve.open(str(self.me))
+        self.shelf = shelve.open(str(self.me + ".dat"))
         self.hosting = hosting if hosting else self.load_data("hosting")
         self.consuming = consuming if consuming else self.load_data("consuming")
 
@@ -718,6 +700,7 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
     logging.getLogger("cherrypy.error").setLevel(logging.CRITICAL)
 
+    # get my key, if possible
     cert = "santiago.crt"
     try:
         mykey = utilities.load_config("production.cfg").get("pgpprocessor",
@@ -725,16 +708,22 @@ if __name__ == "__main__":
     except configparser.NoSectionError:
         mykey = 0
 
-    listeners = { "https": { "socket_port": 8080,
+    # set up monitors, listeners, and senders
+    protocol = "https"
+    serving_port = 8080
+        
+    listeners = { protocol: { "socket_port": serving_port,
                              "ssl_certificate": cert,
                              "ssl_private_key": cert }, }
-    senders = { "https": { "proxy_host": "localhost",
+    senders = { protocol: { "proxy_host": "localhost",
                            "proxy_port": 8118} }
-    monitors = { "https": {} }
+    monitors = { protocol: {} }
 
-    hosting = { mykey: { "santiago": ["https://localhost:8080"] }, }
-    consuming = { mykey: { "santiago": ["https://localhost:8080"] }, }
+    # services to host and consume
+    hosting = { mykey: { "freedombuddy": ["https://localhost:" + serving_port]}}
+    consuming = {mykey: {"freedombuddy": ["https://localhost:" + serving_port]}}
 
+    # go!
     santiago = Santiago(listeners, senders,
                         hosting, consuming,
                         me=mykey, monitors=monitors)
