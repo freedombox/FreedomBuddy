@@ -153,7 +153,7 @@ if __name__ == "__main__":
 
     request_type = "consuming" if options.host else "hosting"
     params = urllib.urlencode({"encoding": "json"})
-    conn = httplib.HTTPConnection("localhost", options.port)
+    conn = httplib.HTTPSConnection("localhost", options.port)
 
     if options.host == False or options.query == False:
         locations = query(conn, params, options, request_type)

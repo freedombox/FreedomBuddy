@@ -709,14 +709,14 @@ if __name__ == "__main__":
         mykey = 0
 
     # set up monitors, listeners, and senders
-    protocol = "http"
+    protocol = "https"
     service = "freedombuddy"
     location = "https://localhost:"
     serving_port = 8080
 
     listeners = { protocol: { "socket_port": serving_port,
-                             # "ssl_certificate": cert,
-                             # "ssl_private_key": cert
+                             "ssl_certificate": cert,
+                             "ssl_private_key": cert
                               }, }
     senders = { protocol: { "proxy_host": "localhost",
                            "proxy_port": 8118} }
