@@ -4,4 +4,5 @@ README.html
 *_hosting
 *.cfg
 *.crt
+*.dat
 keys/
