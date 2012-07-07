@@ -46,8 +46,13 @@ After I implement between-request timeouts:
 
 """
 
+import httplib
+import json
 from optparse import OptionParser
 import sys
+import time
+import urllib
+
 
 def interpret_args(args, parser=None):
     """Convert command-line arguments into options."""
@@ -111,11 +116,48 @@ def validate_args(options, parser=None):
 
     if options.key == None or options.service == None:
         parser.error("--key and --service must be supplied.")
-    
+
+def query(conn, params, options, request_type, method="GET"):
+    """Query my FreedomBuddy to find hosting or consuming locations I know."""
+
+    conn.request(method,
+                 "/{0}/{1}/{2}?{3}".format(request_type, options.key,
+                                       options.service, params),)
+
+    response = conn.getresponse()
+
+    try:
+        locations = json.loads(response.read())
+    except ValueError:
+        locations = []
+
+    conn.close()
+
+    return locations
+
+def query_remotely(conn, params, options):
+    """Query the remote FreedomBuddy to learn new services, then report back."""
+
+    query(conn, params, options, "learn", "POST")
+
+    time.sleep(int(options.timeout))
+
+    return query(conn, params, options, "consuming")
+
+
 if __name__ == "__main__":
 
     parser = OptionParser()
-
     (options, args) = interpret_args(sys.argv[1:], parser)
-
     validate_args(options, parser)
+
+    request_type = "consuming" if options.host else "hosting"
+    params = urllib.urlencode({"encoding": "json"})
+    conn = httplib.HTTPConnection("localhost", options.port)
+
+    if options.host == False or options.query == False:
+        locations = query(conn, params, options, request_type)
+    else:
+        locations = query_remotely(conn, params, options)
+
+    print(" ".join(locations))
