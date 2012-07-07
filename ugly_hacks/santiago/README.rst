@@ -516,6 +516,17 @@ Functional Questions
     no hard-coded passwords or gpg-agents are required.  Then, it's just
     plug-and-play.  That might be an acceptable option in some circumstances.
 
+:Location Revocation: Key revocation is easy.  However, we don't really have a
+    solution for location revocation.  This means an adversary who controls an
+    old location can hear the broadcasts.  However, an adversary without a key
+    can't really use those broadcasts.
+
+    If we allowed key revocation, than any adversary without the key couldn't do
+    much either.
+
+    In either case, the adversary has to have the key to do anything useful.
+    Once they have the key, you're completely boned.
+
 Using Santiago
 ==============
 
