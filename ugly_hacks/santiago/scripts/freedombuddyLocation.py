@@ -11,14 +11,10 @@ where I am hosting a service for a client.  It will print one location per line.
 
 If key or service isn't specified: quit.
 
-If client and host are specified: quit.
+If host == False: just pull the list of locations from the cache and quit.
 
-If force-query and noquery and host are specified: quit.
-
-If client is specified: just pull the list of locations from the cache and quit.
-
-If noquery is specified: skip querying and just pull the list of locations from
-the cache and quit.
+If query == False: skip querying and just pull the list of locations from the
+cache and quit.
 
 Until I implement active-request polling and between-request timeouts:
 
@@ -39,8 +35,8 @@ After I implement active-request polling:
 
 After I implement between-request timeouts:
 
-    if (force-query is specified) or (the timeout has elapsed and noquery isn't
-    specified): query the host.
+    if (query == True) or (the timeout has elapsed and query != False): query
+    the host.
 
     poll the list of active requests until the active request is handled or the
     timeout elapses.
@@ -52,10 +48,12 @@ After I implement between-request timeouts:
 from optparse import OptionParser
 import sys
 
-def handle_args(args):
+def interpret_args(args, parser=None):
     """Convert command-line arguments into options."""
 
-    parser = OptionParser()
+    if parser == None:
+        parser = OptionParser()
+
     parser.add_option("-k", "--key", dest="key",
                       help="Find services for or by this buddy.")
     parser.add_option("-s", "--service", dest="service",
@@ -66,38 +64,53 @@ def handle_args(args):
                       action="store_true", help="""\
 Query the named key's FreedomBuddy service for the named service's location.
 
-May not be used with --client.  If neither --host nor --client are provided,
---host is assumed.
+If neither --host nor --client are provided, --host is assumed.  If both are
+supplied, the last one wins.
 """)
     parser.add_option("-c", "--client", dest="host", action="store_false",
                       help="""\
 Query my FreedomBuddy service for locations I'm hosting the service for the
 client.
 
-May not be used with --host.
+Overridden by --host.  If neither --host nor --client are provided, --host is
+assumed.  If both are supplied, the last one wins.
 """)
     parser.add_option("-n", "--no-query", dest="query", action="store_false",
                       help="""\
 Use locally cached services and don't query the host whether the between-request
 timeout has expired or not.
 
-This is implied when --client is used.  If neither --no-query or --force-query
-are specified, query with normal respect for the timeout.
+Implied when --client is used.  If neither --no-query or --force-query are
+specified, query with normal respect for the timeout.  If both are supplied, the
+last one wins.
 """)
     parser.add_option("-f", "--force-query", dest="query",
                       action="store_true", help="""\
 Ignore locally cached services and query the host whether the between-request
 timeout has expired or not.
 
-This is ignored when --client is used.  If neither --no-query or --force-query
-are specified, query with normal respect for the timeout.
+Ignored when --client is used.  If neither --no-query or --force-query are
+specified, query with normal respect for the timeout.  If both are supplied, the
+last one wins.
 
 TODO: Implement this option.
 """)
 
     return parser.parse_args(args)
 
+def validate_args(options, parser=None):
+    """Errors out if options are invalid."""
 
+    if parser == None:
+        parser = OptionParser()
+
+    if options.key == None or options.service == None:
+        parser.error("--key and --service must be supplied.")
+    
 if __name__ == "__main__":
 
-    (options, args) = handle_args(sys.argv[1:])
+    parser = OptionParser()
+
+    (options, args) = interpret_args(sys.argv[1:], parser)
+
+    validate_args(options, parser)
