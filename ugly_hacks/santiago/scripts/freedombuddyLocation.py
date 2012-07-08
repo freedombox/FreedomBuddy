@@ -7,7 +7,12 @@ accepts a key that identifies a trusted party and the service to show locations
 for.  It can show where someone else is hosting a service for me and it can show
 where I am hosting a service for a client.  It will print one location per line.
 
-:TODO: the below:
+This was written to be used with a local FreedomBuddy service and it shows.
+There's no way to proxy requests or send requests over anything that isn't
+HTTP(S).
+
+:TODO: allow proxies and other request methods?
+:TODO: unit test the below:
 
 If key or service isn't specified: quit.
 
@@ -67,6 +72,12 @@ def interpret_args(args, parser=None):
     parser.add_option("-t", "--timeout", dest="timeout", default=1,
                       help="""\
 Maximum time, in seconds, to wait for the request to finish.
+""")
+    parser.add_option("-a", "--address", dest="address", default="localhost",
+                      help="""\
+The "local" FreedomBuddy address to query for services.
+
+Doesn't necessarily have to be local, just has to be reachable and trusted.
 """)
     parser.add_option("-p", "--port", dest="port", default=8080,
                       help="Localhost's FreedomBuddy port.")
@@ -153,7 +164,7 @@ if __name__ == "__main__":
 
     request_type = "consuming" if options.host else "hosting"
     params = urllib.urlencode({"encoding": "json"})
-    conn = httplib.HTTPSConnection("localhost", options.port)
+    conn = httplib.HTTPSConnection(options.address, options.port)
 
     if options.host == False or options.query == False:
         locations = query(conn, params, options, request_type)
