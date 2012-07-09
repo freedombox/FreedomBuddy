@@ -217,7 +217,8 @@ class RestMonitor(santiago.RestController):
                 pass
 
         return [str(Template(
-                    file="/".join((self.relative_path, encoding, template)),
+                    file="/".join((self.relative_path, encoding,
+                                   self.santiago.locale, template)),
                     searchList = [dict(values)]))]
 
 class Root(RestMonitor):

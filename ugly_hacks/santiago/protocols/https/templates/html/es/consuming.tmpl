@@ -1,0 +1,32 @@
+#import cgi
+<html>
+  <head>
+    <style>
+      form {
+        display: inline;
+      }
+    </style>
+  </head>
+  <body>
+    <p>You are consuming services from these hosts:</p>
+    #if $hosts
+    <ul>
+      #for $host in $hosts
+      #set $host = $cgi.escape($host)
+      <li><a href="/consuming/$host">$host</a>
+        <form method="post" action="/consuming">
+          <input type="hidden" name="delete" value="$host" />
+          <input type="submit" value="Delete" />
+        </form>
+      </li>
+      #end for
+    </ul>
+    #end if
+
+    <hr />
+    <form method="post" action="/consuming">
+      <label>Host: <input name="put" /></label>
+      <input type="submit" value="Create New Host" />
+    </form>
+  </body>
+</html>

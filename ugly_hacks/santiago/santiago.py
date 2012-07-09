@@ -708,8 +708,11 @@ if __name__ == "__main__":
     try:
         mykey = utilities.load_config("production.cfg").get("pgpprocessor",
                                                             "keyid")
+        lang = utilities.load_config("production.cfg").get("general",
+                                                            "locale")
     except configparser.NoSectionError:
         mykey = 0
+        lang = None
 
     # set up monitors, listeners, and senders
     protocol = "https"
@@ -732,7 +735,7 @@ if __name__ == "__main__":
     # go!
     santiago = Santiago(listeners, senders,
                         hosting, consuming,
-                        me=mykey, monitors=monitors)
+                        me=mykey, monitors=monitors, locale=lang)
 
     # import pdb; pdb.set_trace()
     with santiago:
