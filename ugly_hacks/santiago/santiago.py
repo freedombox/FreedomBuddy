@@ -79,7 +79,8 @@ class Santiago(object):
     CONTROLLER_MODULE = "protocols.{0}.controller"
 
     def __init__(self, listeners = None, senders = None,
-                 hosting = None, consuming = None, me = 0, monitors = None, require_gpg = 0):
+                 hosting = None, consuming = None, me = 0, monitors = None,
+                 reply_service = "freedombuddy", locale = "en"):
         """Create a Santiago with the specified parameters.
 
         listeners and senders are both protocol-specific dictionaries containing
@@ -108,6 +109,8 @@ class Santiago(object):
         self.me = me
         self.gpg = gnupg.GPG(use_agent = True)
         self.protocols = set()
+        self.reply_service = reply_service
+        self.locale = locale
 
         if listeners is not None:
             self.listeners = self.create_connectors(listeners, "Listener")
@@ -302,7 +305,7 @@ class Santiago(object):
         try:
             self.outgoing_request(
                 host, self.me, host, self.me,
-                service, None, self.consuming[host]["santiago"])
+                service, None, self.consuming[host][self.reply_service])
         except Exception as e:
             logging.exception("Couldn't handle %s.%s", host, service)
 
@@ -330,7 +333,7 @@ class Santiago(object):
             sign=self.me)
 
         # FIXME use urlparse.urlparse instead!
-        for destination in self.consuming[host]["santiago"]:
+        for destination in self.consuming[host][self.reply_service]:
             protocol = destination.split(":")[0]
             self.senders[protocol].outgoing_request(request, destination)
 
@@ -463,12 +466,12 @@ class Santiago(object):
         if not self.i_am(host):
             self.proxy(to, host, client, service, reply_to)
         else:
-            self.create_consuming_location(client, "santiago", reply_to)
+            self.create_consuming_location(client, self.reply_service, reply_to)
 
             self.outgoing_request(
                 self.me, client, self.me, client,
                 service, self.hosting[client][service],
-                self.hosting[client]["santiago"])
+                self.hosting[client][self.reply_service])
 
     def proxy(self, request):
         """Pass off a request to another Santiago.
@@ -513,7 +516,7 @@ class Santiago(object):
             self.proxy()
             return
 
-        self.create_consuming_location(host, "santiago", reply_to)
+        self.create_consuming_location(host, self.reply_service, reply_to)
         self.create_consuming_location(host, service, locations)
 
         self.requests[host].remove(service)
