@@ -350,7 +350,9 @@ class ConsumedHost(RestMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, host, **kwargs):
         return self.respond("consumedHost.tmpl",
-                            { "services": self.santiago.consuming[host],
+                            {
+                "services":
+                    self.santiago.consuming[host] if host in self.santiago.consuming else [],
                               "host": host })
 
     @cherrypy.tools.ip_filter()
@@ -379,7 +381,7 @@ class ConsumedService(RestMonitor):
                             { "service": service,
                               "host": host,
                               "locations":
-                                  self.santiago.consuming[host][service] })
+                                  self.santiago.consuming[host][service] if host in self.santiago.consuming and service in self.santiago.consuming[host] else [] })
 
     @cherrypy.tools.ip_filter()
     def POST(self, host="", service="", put="", delete="", **kwargs):
