@@ -9,7 +9,9 @@ quits the interpreter, so testing stops whenever we test an error condition.
 
 """
 
+import subprocess
 import unittest
+
 import freedombuddy
 
 class ArgumentInterpretation(unittest.TestCase):
@@ -118,11 +120,15 @@ class BuddySetup(unittest.TestCase):
     def setUp(self, *args, **kwargs):
         super(BuddySetup, self).setUp(*args, **kwargs)
 
+        subprocess.Popen("python santiago_test.py".split())
+        
 
     def host(self, user, key, value):
         """Host the key with the value for the user."""
 
-        
+        conn = httplib.HTTPSConnection("localhost", 8080)
+        query(conn, params, key, value, request_type)
+        pass
         
 class LocalQuery(unittest.TestCase):
     """Are local FreedomBuddies queried correctly?
