@@ -1,3 +1,5 @@
+#! /usr/bin/env python # -*- mode: auto-fill; fill-column: 80 -*-
+
 import logging
 import sys
 import utilities

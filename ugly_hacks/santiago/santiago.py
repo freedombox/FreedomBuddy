@@ -1,4 +1,4 @@
-#! /usr/bin/python -*- mode: python; mode: auto-fill; fill-column: 80; -*-
+#! /usr/bin/env python # -*- mode: python; mode: auto-fill; fill-column: 80; -*-
 
 """The Santiago service.
 

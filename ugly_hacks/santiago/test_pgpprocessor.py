@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python # -*- mode: auto-fill; fill-column: 80 -*-
 
 """Tests for the PGP Processing Tools.
 

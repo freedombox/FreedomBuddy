@@ -1,4 +1,4 @@
-#! /usr/bin/python  -*- mode: auto-fill; fill-column: 80 -*-
+#! /usr/bin/env python # -*- mode: auto-fill; fill-column: 80 -*-
 
 """Making Santiago dance, in 4 parts:
 
