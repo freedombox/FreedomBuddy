@@ -145,17 +145,34 @@ def validate_args(options, parser=None):
     if options.key == None or options.service == None:
         parser.error("--key and --service must be supplied.")
 
-def query(conn, params, options, request_type, method="GET"):
-    """Query my FreedomBuddy to find hosting or consuming locations I know."""
+def communicate(conn, request_type, params, key, service, requestbody=None,
+                action="GET"):
+    """Query my FreedomBuddy to find hosting or consuming locations I know.
 
-    conn.request(method,
-                 "/{0}/{1}/{2}?{3}".format(request_type, options.key,
-                                       options.service, params),)
+    TODO describe parameters here
+
+    pre::
+
+        action in ("GET", "POST", "PUT", "DELETE")
+    
+    """
+
+    body = None
+    if action not in ("GET", "POST", "PUT", "DELETE"):
+        return
+    
+    if action == "POST":
+        body = urllib.urlencode({"host": key, "service": service})
+
+    conn.request(action,
+                 "/{0}/{1}/{2}?{3}".format(request_type, key, service, params),
+                 body)
 
     response = conn.getresponse()
+    data = response.read()
 
     try:
-        locations = json.loads(response.read())
+        locations = json.loads(data)
     except ValueError:
         locations = []
 
@@ -163,14 +180,14 @@ def query(conn, params, options, request_type, method="GET"):
 
     return locations
 
-def query_remotely(conn, params, options):
+def query_remotely(conn, params, key, service):
     """Query the remote FreedomBuddy to learn new services, then report back."""
 
-    query(conn, params, options, "learn", "POST")
+    communicate(conn, "learn", params, key, service, action="POST")
 
     time.sleep(int(options.timeout))
 
-    return query(conn, params, options, "consuming")
+    return communicate(conn, "consuming", params, key, service)
 
 
 if __name__ == "__main__":
@@ -183,9 +200,13 @@ if __name__ == "__main__":
     params = urllib.urlencode({"encoding": "json"})
     conn = httplib.HTTPSConnection(options.address, options.port)
 
-    if options.host == False or options.query == False:
-        locations = query(conn, params, options, request_type)
+    if options.action:
+        response = communicate(conn, request_type, params, options.key,
+                               options.service, action)
+    elif options.host == False or options.query == False:
+        response = communicate(conn, request_type, params, options.key,
+                               options.service)
     else:
-        locations = query_remotely(conn, params, options)
+        response = query_remotely(conn, params, options.key, options.service)
 
-    print(" ".join(locations))
+    print(response)
