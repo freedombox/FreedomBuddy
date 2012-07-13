@@ -102,7 +102,7 @@ class UnpackRequest(SantiagoTest):
         self.santiago = santiago.Santiago(me = self.keyid)
 
         self.request = { "host": self.keyid, "client": self.keyid,
-                         "service": "santiago", "reply_to": [1],
+                         "service": santiago.Santiago.SERVICE_NAME, "reply_to": [1],
                          "locations": [1],
                          "request_version": 1, "reply_versions": [1], }
 
@@ -261,8 +261,8 @@ class HandleRequest(SantiagoTest):
         self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {"santiago": [1] }},
-            consuming = {self.keyid: {"santiago": [1] }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
             me = self.keyid)
 
         self.santiago.requested = False
@@ -273,7 +273,7 @@ class HandleRequest(SantiagoTest):
         self.to = self.keyid
         self.host = self.keyid
         self.client = self.keyid
-        self.service = "santiago"
+        self.service = santiago.Santiago.SERVICE_NAME
         self.reply_to = [1]
         self.request_version = 1
         self.reply_versions = [1]
@@ -322,7 +322,7 @@ class HandleRequest(SantiagoTest):
         self.test_call()
 
         self.assertTrue(self.santiago.requested)
-        self.assertEqual(self.santiago.consuming[self.keyid]["santiago"],
+        self.assertEqual(self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
                          [1, 2])
 
 # class HandleReply(SantiagoTest):
@@ -416,14 +416,14 @@ class OutgoingRequest(SantiagoTest):
 
         self.santiago = santiago.Santiago(
             me = self.keyid,
-            consuming = { self.keyid: { "santiago": ( "https://1", )}})
+            consuming = { self.keyid: { santiago.Santiago.SERVICE_NAME: ( "https://1", )}})
 
         self.request_sender = OutgoingRequest.TestRequestSender()
         self.santiago.senders = { "https": self.request_sender }
 
         self.host = self.keyid
         self.client = self.keyid
-        self.service = "santiago"
+        self.service = santiago.Santiago.SERVICE_NAME
         self.reply_to = [ "https://1" ]
         self.locations = [1]
         self.request_version = 1

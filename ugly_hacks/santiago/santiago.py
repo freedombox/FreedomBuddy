@@ -78,9 +78,11 @@ class Santiago(object):
     LIST_KEYS = set(("reply_to", "locations", "reply_versions"))
     CONTROLLER_MODULE = "protocols.{0}.controller"
 
+    SERVICE_NAME = "freedombuddy"
+
     def __init__(self, listeners = None, senders = None,
                  hosting = None, consuming = None, me = 0, monitors = None,
-                 reply_service = "freedombuddy", locale = "en"):
+                 reply_service = None, locale = "en"):
         """Create a Santiago with the specified parameters.
 
         listeners and senders are both protocol-specific dictionaries containing
@@ -109,7 +111,7 @@ class Santiago(object):
         self.me = me
         self.gpg = gnupg.GPG(use_agent = True)
         self.protocols = set()
-        self.reply_service = reply_service
+        self.reply_service = reply_service or Santiago.SERVICE_NAME
         self.locale = locale
 
         if listeners is not None:
