@@ -29,7 +29,8 @@
 * TODO make list of oustanding requests query-able
 
 * TODO use real sockets for communication
-   Fix all my bullshit.
+
+   Remove the dependency on the HTTPS connector.
 
 * FIXME use GetText for Internationalization.
 
