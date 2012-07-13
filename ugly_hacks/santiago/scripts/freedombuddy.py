@@ -130,6 +130,9 @@ Must be one of:
 - PUT: Add a new element.
 - DELETE: Delete the listed item.
 
+If this option is specified, you must also specify the rest of the
+connection arguments.
+
 """)
     return parser.parse_args(args)
 
