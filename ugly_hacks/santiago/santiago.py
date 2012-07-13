@@ -206,11 +206,11 @@ class Santiago(object):
         for protocol in self.protocols:
             sys.modules[Santiago.CONTROLLER_MODULE.format(protocol)].stop()
 
-        santiago.save_data("hosting")
-        santiago.save_data("consuming")
-        debug_log([key for key in santiago.shelf])
+        self.save_data("hosting")
+        self.save_data("consuming")
+        debug_log([key for key in self.shelf])
 
-        santiago.shelf.close()
+        self.shelf.close()
 
     def i_am(self, server):
         """Verify whether this server is the specified server."""
@@ -697,48 +697,3 @@ class SantiagoMonitor(RestController):
 
     def stop(*args, **kwargs):
         pass
-
-
-if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
-    logging.getLogger("cherrypy.error").setLevel(logging.CRITICAL)
-
-    # get my key, if possible
-    cert = "santiago.crt"
-    try:
-        mykey = utilities.load_config("production.cfg").get("pgpprocessor",
-                                                            "keyid")
-        lang = utilities.load_config("production.cfg").get("general",
-                                                            "locale")
-    except configparser.NoSectionError:
-        mykey = 0
-        lang = None
-
-    # set up monitors, listeners, and senders
-    protocol = "https"
-    service = "freedombuddy"
-    location = "https://localhost:"
-    serving_port = 8080
-
-    listeners = { protocol: { "socket_port": serving_port,
-                             "ssl_certificate": cert,
-                             "ssl_private_key": cert
-                              }, }
-    senders = { protocol: { "proxy_host": "localhost",
-                           "proxy_port": 8118} }
-    monitors = { protocol: {} }
-
-    # services to host and consume
-    hosting = { mykey: { service: [location + str(serving_port)] } }
-    consuming = { mykey: { service: [location + str(serving_port)] } }
-
-    # go!
-    santiago = Santiago(listeners, senders,
-                        hosting, consuming,
-                        me=mykey, monitors=monitors, locale=lang)
-
-    # import pdb; pdb.set_trace()
-    with santiago:
-        pass
-
-    debug_log("Santiago finished!")
