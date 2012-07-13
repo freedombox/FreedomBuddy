@@ -122,7 +122,7 @@ class Sender(santiago.SantiagoSender):
         if sys.version_info >= (2, 7):
             connection.set_tunnel(self.proxy_host, self.proxy_port)
 
-        # FIXME Blammo!
+        # FIXME Blammo!  This must be a post.  Use httplib right.
         connection.request("GET", "/?%s" % params)
         connection.close()
 
