@@ -116,7 +116,21 @@ last one wins.
 
 TODO: Implement this option.
 """)
+    parser.add_option("-i", "--action", dest="action", default="",
+                      help="""\
+Sends commands directly to the FreedomBuddy system.
 
+This option is meant to be used by utilities that need direct access to the
+data, it is not meant to and should not be used by users.
+
+Must be one of:
+
+- GET: Retrieve data from the service.
+- POST: Set data in the service.
+- PUT: Add a new element.
+- DELETE: Delete the listed item.
+
+""")
     return parser.parse_args(args)
 
 def validate_args(options, parser=None):
