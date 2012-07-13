@@ -28,7 +28,7 @@ This dead-drop approach is what came of my trying to learn from bug 4185.
 
 This file is distributed under the GNU Affero General Public License, Version 3
 or later.  A copy of GPLv3 is available [from the Free Software Foundation]
-<http://www.gnu.org/licenses/gpl.html>.
+<https://www.gnu.org/licenses/agpl.html>.
 
 """
 
