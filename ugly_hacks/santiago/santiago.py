@@ -119,7 +119,7 @@ class Santiago(object):
         if monitors is not None:
             self.monitors = self.create_connectors(monitors, "Monitor")
 
-        self.shelf = shelve.open(str(self.me + ".dat"))
+        self.shelf = shelve.open(str(self.me) + ".dat")
         self.hosting = hosting if hosting else self.load_data("hosting")
         self.consuming = consuming if consuming else self.load_data("consuming")
 
