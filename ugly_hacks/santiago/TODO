@@ -27,3 +27,23 @@
 * TODO Update documentation.
 
 * TODO make list of oustanding requests query-able
+
+* TODO use real sockets for communication
+   Fix all my bullshit.
+
+* FIXME use GetText for Internationalization.
+
+   http://docs.python.org/library/gettext.html
+
+* TODO allow adding, editing, and removing through the interfaces.
+
+   If somebody has my private key anyway, I'm already screwed.
+
+* TODO remove gpg requirement
+
+   For generalized broadcasting, in case of freedom-emergency, of course.
+
+* TODO support editing-in-place well
+
+   I really should.  Remove + Add isn't acceptable in complex
+   situations.
