@@ -238,7 +238,7 @@ class Stop(RestMonitor):
 
 class Learn(RestMonitor, santiago.SantiagoListener):
     @cherrypy.tools.ip_filter()
-    def POST(self, host, service, **kwargs):
+    def POST(self, host, service):
         super(Learn, self).learn(host, service)
 
         raise cherrypy.HTTPRedirect("/consuming/%s/%s" % (host, service))
