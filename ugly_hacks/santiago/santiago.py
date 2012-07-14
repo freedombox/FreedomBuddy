@@ -33,7 +33,6 @@ or later.  A copy of GPLv3 is available [from the Free Software Foundation]
 """
 
 import ast
-import cfg
 from collections import defaultdict as DefaultDict
 import ConfigParser as configparser
 import gnupg
