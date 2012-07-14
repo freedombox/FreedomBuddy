@@ -51,13 +51,13 @@ def stop(*args, **kwargs):
 class Listener(santiago.SantiagoListener):
 
     def __init__(self, my_santiago, socket_port=0,
-                 ssl_certificate="", ssl_private_key=""):
+                 ssl_certificate="", ssl_private_key="", **kwargs):
 
         santiago.debug_log("Creating Listener.")
 
-        super(santiago.SantiagoListener, self).__init__(my_santiago)
+        super(santiago.SantiagoListener, self).__init__(my_santiago, **kwargs)
 
-        cherrypy.server.socket_port = socket_port
+        cherrypy.server.socket_port = int(socket_port)
         cherrypy.server.ssl_certificate = ssl_certificate
         cherrypy.server.ssl_private_key = ssl_private_key
 
@@ -87,9 +87,9 @@ class Listener(santiago.SantiagoListener):
 
 class Sender(santiago.SantiagoSender):
 
-    def __init__(self, my_santiago, proxy_host, proxy_port):
+    def __init__(self, my_santiago, proxy_host, proxy_port, **kwargs):
 
-        super(santiago.SantiagoSender, self).__init__(my_santiago)
+        super(santiago.SantiagoSender, self).__init__(my_santiago, **kwargs)
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
 
@@ -128,10 +128,10 @@ class Sender(santiago.SantiagoSender):
 
 class Monitor(santiago.SantiagoMonitor):
 
-    def __init__(self, aSantiago):
+    def __init__(self, aSantiago, **kwargs):
         santiago.debug_log("Creating Monitor.")
 
-        super(Monitor, self).__init__(aSantiago)
+        super(Monitor, self).__init__(aSantiago, **kwargs)
 
         try:
             d = cherrypy.tree.apps[""].config["/"]["request.dispatch"]

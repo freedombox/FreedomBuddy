@@ -607,7 +607,7 @@ class SantiagoConnector(object):
 
     """
     def __init__(self, santiago=None, *args, **kwargs):
-        super(SantiagoConnector, self).__init__(*args, **kwargs)
+        super(SantiagoConnector, self).__init__()
         self.santiago = santiago
 
     def setup(self):
@@ -686,12 +686,8 @@ class RestController(object):
     def DELETE(self, *args, **kwargs):
         raise NotImplemented("RestController.DELETE")
 
-class SantiagoMonitor(RestController):
+class SantiagoMonitor(RestController, SantiagoConnector):
     """A REST controller that can be started and stopped."""
-
-    def __init__(self, aSantiago):
-        super(SantiagoMonitor, self).__init__()
-        self.santiago = aSantiago
 
     def start(*args, **kwargs):
         pass
