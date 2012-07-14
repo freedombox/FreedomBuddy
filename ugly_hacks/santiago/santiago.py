@@ -188,15 +188,15 @@ class Santiago(object):
 
         debug_log("Santiago started!")
 
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Clean up and save all data to shut down the service."""
+
         count = 0
         try:
             while self.live:
                 time.sleep(5)
         except KeyboardInterrupt:
             pass
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Clean up and save all data to shut down the service."""
 
         debug_log("Stopping Santiago.")
 
