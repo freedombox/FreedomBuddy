@@ -274,7 +274,8 @@ class HostedClient(RestMonitor):
     def GET(self, client, **kwargs):
         return self.respond("hostedClient.tmpl",
                             { "client": client,
-                              "services": self.santiago.hosting[client] })
+                              "services": self.santiago.hosting[client] if
+                              client in self.santiago.hosting else [] })
 
     @cherrypy.tools.ip_filter()
     def POST(self, client="", put="", delete="", **kwargs):
@@ -300,7 +301,9 @@ class HostedService(RestMonitor):
         return self.respond("hostedService.tmpl", {
                 "service": service,
                 "client": client,
-                "locations": self.santiago.hosting[client][service] })
+                "locations": self.santiago.hosting[client][service] if
+                client in self.santiago.hosting and
+                service in self.santiago.hosting[client] else [] })
 
     @cherrypy.tools.ip_filter()
     def POST(self, client="", service="", put="", delete="", **kwargs):
