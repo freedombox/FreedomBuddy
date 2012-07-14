@@ -48,3 +48,9 @@
 
    I really should.  Remove + Add isn't acceptable in complex
    situations.
+
+* TODO display errors when we quit because we can't initialize
+
+   The port could already be in use.
+
+   The cert-file might not exist.
