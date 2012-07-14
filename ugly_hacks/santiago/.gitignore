@@ -1,8 +1,8 @@
 *~
 README.html
-*_consuming
-*_hosting
-*.cfg
-*.crt
+production.cfg
+test.cfg
+freedombuddy.crt
 *.dat
 keys/
+build/
