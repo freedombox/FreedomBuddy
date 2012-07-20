@@ -157,7 +157,7 @@ def unwrapper_test(data):
 
     # unwrap it!
 
-    dog = santiago.PgpUnwrapper(str(data))
+    dog = pgpprocessor.Unwrapper(str(data))
 
     print "unwrapping..."
     for message in dog:
@@ -190,4 +190,4 @@ if __name__ == "__main__":
     # signed = sign_test(str(data))
     # verify = verify_test(signed)
 
-    unwrapper_test(str(data))
+    # unwrapper_test(str(data))
