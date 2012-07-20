@@ -127,6 +127,6 @@ if __name__ == "__main__":
         import pdb; pdb.set_trace()
 
     with freedombuddy:
-        webbrowser.open_new_tab(url)
+        webbrowser.open_new_tab(url + "/freedombuddy")
 
     santiago.debug_log("Santiago finished!")
