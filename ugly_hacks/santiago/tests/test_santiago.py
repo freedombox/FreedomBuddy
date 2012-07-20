@@ -322,8 +322,9 @@ class HandleRequest(SantiagoTest):
         self.test_call()
 
         self.assertTrue(self.santiago.requested)
-        self.assertEqual(self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
-                         [1, 2])
+        self.assertEqual(
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
+            [1, 2])
 
 # class HandleReply(SantiagoTest):
 
@@ -532,6 +533,55 @@ class CreateConsuming(SantiagoTest):
 
         self.assertIn(self.location,
                        self.santiago.consuming[self.host][self.service])
+
+class ListenerTests(SantiagoTest):
+    """Tests the ``SantiagoListener`` class.
+
+    Mostly making sure entire requests are successfully passed down to the
+    underlying Santiago.
+
+    """
+    def setUp(self):
+        """Make sure an underlying Santiago correctly receives passed arguments.
+
+        Create it, set its receiving methods to save off the arguments, and set
+        a few values that we'll save off later.
+        
+        """
+        self.listener = santiago.SantiagoListener(santiago.Santiago())
+
+        self.listener.santiago.incoming_request = self.acall
+        self.listener.santiago.get_client_locations = self.acall
+        self.listener.santiago.query = self.acall
+        self.listener.santiago.create_hosting_location = self.acall
+
+        self.x, self.y, self.z = (1, 2, 3)
+
+    def acall(self, *args, **kwargs):
+        """Just record the passed through arguments."""
+
+        self.args = args
+        self.kwargs = kwargs
+
+    def test_pass_incoming_request(self):
+        self.listener.incoming_request(self.x)
+
+        self.assertEqual(self.args, (self.x,))
+
+    def test_pass_where(self):
+        self.listener.where(self.x, self.y)
+
+        self.assertEqual(self.args, (self.x, self.y))
+
+    def test_pass_learn(self):
+        self.listener.learn(self.x, self.y)
+
+        self.assertEqual(self.args, (self.x, self.y))
+
+    def test_pass_provide(self):
+        self.listener.provide(self.x, self.y, self.z)
+
+        self.assertEqual(self.args, (self.x, self.y, [self.z]))
 
 if __name__ == "__main__":
     logging.disable(logging.CRITICAL)
