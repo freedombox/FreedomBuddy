@@ -403,3 +403,50 @@ class ConsumedService(RestMonitor):
     def DELETE(self, host, service, location):
         if location in self.santiago.consuming[host][service]:
             self.santiago.consuming[host][service].remove(location)
+
+def query(conn, type="", id="", service="",
+          action="GET", url="", params=None, body=None):
+    """A helper method to request tests for the HTTPS controller.
+
+    :conn: a httplib.HTTPSConnection.
+
+    :type: the type of request (consuming, learning, hosting, stop, /).
+
+    :id: the gpg key we're querying about
+
+    :service: the service to request data for
+
+    :action: GET, POST, PUT, DELETE (required when posting)
+
+    :url: the url to query (required for weird controllers).  Defaults to
+    ``/%(type)s/%(id)s/%(service)s?%(params)s``
+
+    :params: the request parameters.  defaults to {}
+
+    :body: the request's body.  ignored unless posting.
+
+    """
+    if params is None:
+        params = {}
+    params = urllib.urlencode(params)
+
+    if action not in ("GET", "POST", "PUT", "DELETE"):
+        return
+
+    if action == "POST":
+        if not body:
+            body = urllib.urlencode({"host": id, "service": service})
+        else:
+            body = urllib.urlencode(body)
+
+    if url:
+        location = url % locals()
+    else:
+        location = "/{0}/{1}/{2}?{3}".format(type, id, service, params)
+
+    conn.request(action, location, body)
+
+    response = conn.getresponse()
+    data = response.read()
+
+    return data
