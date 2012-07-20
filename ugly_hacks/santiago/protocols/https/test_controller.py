@@ -33,469 +33,229 @@ class RestTester(unittest.TestCase):
             if not a in b:
                 raise self.ContainsError("%s not in %s" % (a, b))
 
-class MonitorTest(RestMonitor):
-    """Generic test-class."""
+class MonitorTest(RestTester):
+    """Generic test-class.
+
+    This is, unfortunately, bad effect testing.  I'm depending on way too much
+    code to get things set up and this should be broken out much more.  However,
+    it's testable and, more than anything, I need to get this under test.
+
+    """
+    def setUp(self):
+        """Create my FBuddy, start it, and make a connector to it."""
+
+        super(MonitorTest, self).setUp()
+
+        self.conn = httplib.HTTPSConnection("localhost", 8080)
+
+        # import pdb; pdb.set_trace()
+        self.santiago = self.create_santiago()
+        self.santiago.__enter__()
+
+    def create_santiago(self):
+        # get my key, if possible
+        try:
+            mykey = utilities.load_config("test.cfg").get("pgpprocessor",
+                                                          "keyid")
+        except configparser.NoSectionError:
+            mykey = 0
+
+        # set up monitors, listeners, and senders
+        cert = "freedombuddy.crt"
+        protocol = "https"
+        service = "freedombuddy"
+        location = "https://localhost:"
+        serving_port = 8080
+
+        listeners = { protocol: { "socket_port": serving_port,
+                                 "ssl_certificate": cert,
+                                 "ssl_private_key": cert
+                                  }, }
+        senders = { protocol: { "proxy_host": "localhost",
+                               "proxy_port": 8118} }
+        monitors = { protocol: {} }
+
+        # services to host and consume
+        hosting = { mykey: { service: [location + str(serving_port)] } }
+        consuming = { mykey: { service: [location + str(serving_port)] } }
+
+        # go!
+        return santiago.Santiago(listeners, senders,
+                                 hosting, consuming,
+                                 me=mykey, monitors=monitors)
+
+    def tearDown(self):
+        self.santiago.live = 0
+        self.santiago.__exit__(None, 0, None)
+
+    def get_args(self, *args, **kwargs):
+        """Record arguments."""
+
+        self.args = args
+        self.kwargs = kwargs
+
+class RestMonitorTest(unittest.TestCase):
+    def setUp(self):
+        self.monitor = controller.RestMonitor(None)
+
+class RestMonitorQueryTest(RestMonitorTest):
+    """Test RestMonitor's Queries."""
+
+    def test_full_urls(self):
+        url = "https://localhost:8080/index?something=somethingelse"
+        self.assertEqual( { "something": "somethingelse" },
+                          self.monitor._parse_query(url) )
+
+    def test_query_strings(self):
+        url = "something=somethingelse"
+        self.assertEqual( { "something": "somethingelse" },
+                          self.monitor._parse_query(url) )
+
+    def test_with_question(self):
+        url = "?something=somethingelse"
+        self.assertEqual( { "something": "somethingelse" },
+                          self.monitor._parse_query(url) )
+
+    def test_multiple_url_queries(self):
+        url = "https://localhost:8080/index?something=somethingelse&this=that&1=2"
+        self.assertEqual( { "something": "somethingelse",
+                            "this": "that",
+                            "1": "2" },
+                          self.monitor._parse_query(url) )
+
+    def test_multiple_string_queries(self):
+        url = "?something=somethingelse&this=that&1=2"
+        self.assertEqual( { "something": "somethingelse",
+                            "this": "that",
+                            "1": "2" },
+                          self.monitor._parse_query(url) )
+
+class RestMonitorRespondTest(RestMonitorTest):
+    """Nothing I can think of testing here.
+
+    It's really just verifying Cheetah's Templates.  Worthwhile, perhaps?
+    Still, not a high priority.
+
+    """
+    pass
+
+class StopTest(MonitorTest):
+    def test_post(self):
+        controller.query(self.conn, url="/stop")
+
+        self.assertFalse(self.santiago.live)
+
+class Learn(MonitorTest):
 
     def setUp(self):
-        self.santiago = santiago.Santiago(None)
+        super(Learn, self).setUp()
 
-        self.client = 0
-        self.host = 1
-        self.service = 2
-        self.location = 3
+        self.service = "atest"
+        self.value = 3
 
-        self.monitor = controller.Monitor(santiago)
+        self.santiago.create_hosting_location(self.santiago.me, self.service,
+                                              [self.value])
 
-        self.dispatcher = cherrypy.dispatch.RoutesDispatcher()
+    # def test_post(self):
+    #     """Make sure arguments are actually passed to the Santiago as expected.
 
-        self.root = controller.Root(self.santiago)
-        cherrypy.tree.mount(self.root, "",
-                            {"/": {"request.dispatch": self.dispatcher}})
+    #     """
+    #     self.santiago.query = self.args
 
-    def connect(self, routing_pairs):
-        for location, handler in routing_pairs:
-            self.monitor.rest_connect(self.dispatcher, location, handler)
+    #     raise NotImplemented("ohnoes!")
 
-    def test_put(self):
-        raise NotImplementedError("MonitorTest.test_put")
+    def test_learn_hosted_services(self):
+        """Make sure requests to learners actually result in learned services.
 
-    def test_delete(self):
-        raise NotImplementedError("MonitorTest.test_delete")
+        """
+        controller.query(self.conn, "learn", self.santiago.me, self.service,
+                         action="POST")
 
-class HostingTest(unittest.TestCase):
+        self.assertEqual(
+            self.santiago.get_client_locations(self.santiago.me, self.service),
+            self.value)
+
+    def test_redirected_to_service(self):
+        """The HTTPS controller redirects to the learned service's location."""
+
+        data = controller.query(self.conn, "learn", self.santiago.me,
+                                self.service, action="POST")
+
+        self.assertIn("""\
+This resource can be found at <a href='https://{0}:{1}/consuming/{2}/{3}'>\
+""".format(self.conn.host, self.conn.port, self.santiago.me, self.service),
+                      data)
+
+class Listener(MonitorTest):
+    """External incoming-request listener.
+
+    All HTTPS requests and replies eventually funnel into here, so if this won't
+    work, nothing will.
+
+    """
     def setUp(self):
-        self.connect(('/hosting', controller.Hosting(self.santiago)))
+        """Create a FreedomBuddy that knows about itself."""
 
-    def test_put(self):
-        params = urllib.urlencode({'put': self.client})
-        headers = {}
-        conn = httplib.HTTPConnection("https://localhost:8080/hosting/")
-        print params, headers, conn
+        super(Listener, self).setUp()
 
-        conn.request("POST", "", params, headers)
-        response = conn.getresponse()
-        print response.status, response.reason
+        self.service = "atest"
+        self.value = 3
 
-        data = response.read()
-        print data
+        self.santiago.create_hosting_location(self.santiago.me, self.service,
+                                              [self.value])
 
-        conn.close()
+        self.request = {
+            "request":
+                self.santiago.gpg.encrypt(
+                json.dumps({ "host": self.santiago.me,
+                             "client": self.santiago.me,
+                             "service": self.service,
+                             "locations": [self.value],
+                             "reply_to": [],
+                             "request_version": 1,
+                             "reply_versions":
+                                 list(santiago.Santiago.SUPPORTED_PROTOCOLS),}),
 
-        self.assertIn(self.santiago.hosting, self.client)
+            self.santiago.me,
+            sign=self.santiago.me)}
 
-class HostingServicesTest(unittest.TestCase):
-    pass
-class HostingLocationsTest(unittest.TestCase):
-    pass
-class ClientTest(unittest.TestCase):
-    pass
-class ClientServicesTest(unittest.TestCase):
-    pass
-class ClientLocationsTest(unittest.TestCase):
-    pass
+    def test_learn_hosted_services(self):
+        """Make sure requests to listeners actually result in learned services.
 
-# class SantiagoTest(unittest.TestCase):
-#     """The base class for tests."""
-#
-#     def setUp(self):
-#         super(TestServing, self).setUp()
-#
-#         port_a = "localhost:9000"
-#         port_b = "localhost:8000"
-#
-#         listeners_a = [santiago.SantiagoListener(port_a)]
-#         senders_a = [santiago.SantiagoSender()]
-#         listeners_b = [santiago.SantiagoListener(port_b)]
-#         senders_b = [santiago.SantiagoSender()]
-#
-#         hosting_a = { "b": { "santiago": [ port_a ]}}
-#         consuming_a = { "santiagao": { "b": [ port_b ]}}
-#
-#         hosting_b = { "a": { "santiago": [ port_b ],
-#                              "wiki": [ "localhost:8001" ]}}
-#         consuming_b = { "santiagao": { "a": [ port_a ]}}
-#
-#         self.santiago_a = Santiago(listeners_a, senders_a, hosting_a, consuming_a)
-#         self.santiago_b = Santiago(listeners_b, senders_b, hosting_b, consuming_b)
-#
-#     def serveOnPort(self, port):
-#         """Start listening for connections on a named port.
-#
-#         Used in testing as a mock listener for responses from a Santiago server.
-#
-#         """
-#         class RequestReceiver(object):
-#             """A very basic listener.
-#
-#             It merely records the calling arguments.
-#
-#             """
-#             @cherrypy.expose
-#             def index(self, *args, **kwargs):
-#                 self.args = args
-#                 self.kwargs = kwargs
-#
-#             self.socket_port = port
-#
-#         self.receiver = RequestReceiver()
-#
-#         cherrypy.quickstart(self.receiver)
-#
-#     if sys.version_info < (2, 7):
-#         """Add a poor man's forward compatibility."""
-#
-#         class ContainsError(AssertionError):
-#             pass
-#
-#         def assertIn(self, a, b):
-#             if not a in b:
-#                 raise self.ContainsError("%s not in %s" % (a, b))
-#
-# class TestClientInitialRequest(SantiagoTest):
-#     """Does the client send a correctly formed request?
-#
-#     In these tests, we're sending requests to a mock listener which merely
-#     records that the requests were well-formed.
-#
-#     """
-#     def setUp(self):
-#         super(SantiagoTest, self).setUp()
-#
-#         self.serveOnPort(8000)
-#
-#     def test_request(self):
-#         """Verify that A queues a properly formatted initial request."""
-#
-#         self.santiago_a.request(from_="a", to="b",
-#                                 client="a", host="b",
-#                                 service="wiki", reply_to="localhost:9001")
-#
-#         self.assertEqual(self.santiago_a.outgoing_messages,
-#                          [{ "from": "a", "to": "b",
-#                             "client": "a", "host": "b",
-#                             "service": "wiki", "reply-to": "localhost:9001"}])
-#
-#     def test_request(self):
-#         """Verify that A sends out a properly formatted initial request."""
-#
-#         self.santiago_a.request(from_="a", to="b",
-#                                 client="a", host="b",
-#                                 service="wiki", reply_to="localhost:9001")
-#
-#         self.santiago_a.process()
-#
-#         self.assertEqual(self.receiver.kwargs,
-#                          [{ "from": "a", "to": "b",
-#                             "client": "a", "host": "b",
-#                             "service": "wiki", "reply-to": "localhost:9001"}])
-#
-# class TestServerInitialRequest(SantiagoTest):
-#     """Test how the Santiago server replies to initial service requests.
-#
-#     TODO: Add a mock listener to represent A.
-#     TODO: Transform the data structure tests into the mock-response tests.
-#     TODO tests: (normal serving + proxying) * (learning santiagi + not learning)
-#
-#     Proxying
-#     ~~~~~~~~
-#
-#     A host/listener (B) trusts proxied requests according to the minimum trust
-#     in the request.  If the request comes from an untrusted proxy or is for an
-#     untrusted client, B ignores it.
-#
-#     """
-#     def setUp(self):
-#         super(SantiagoTest, self).setUp()
-#
-#         self.serveOnPort(9000)
-#
-#     def test_acknowledgement(self):
-#         """If B receives an authorized request, then it replies with a location.
-#
-#         An "authorized request" in this case is for a service from a client that
-#         B is willing to host that service for.
-#
-#         In this case, B will answer with the wiki's location.
-#
-#         """
-#         self.santiago_b.receive(from_="a", to="b",
-#                                 client="a", host="b",
-#                                 service="wiki", reply_to=None)
-#
-#         self.assertEqual(self.santiago_b.outgoing_messages,
-#                          [{"from": "b",
-#                            "to": "a",
-#                            "client": "a",
-#                            "host": "b",
-#                            "service": "wiki",
-#                            "locations": ["192.168.0.13"],
-#                            "reply-to": "localhost:8000"}])
-#
-#     def test_reject_bad_service(self):
-#         """Does B reject requests for unsupported services?
-#
-#         In this case, B should reply with an empty list of locations.
-#
-#         """
-#         self.santiago_b.receive(from_="a", to="b",
-#                                 client="a", host="b",
-#                                 service="wiki", reply_to=None)
-#
-#         self.assertEqual(self.santiago_b.outgoing_messages,
-#                          [{"from": "b",
-#                            "to": "a",
-#                            "client": "a",
-#                            "host": "b",
-#                            "service": "wiki",
-#                            "locations": [],
-#                            "reply-to": "localhost:8000"}])
-#
-#     def test_reject_bad_key(self):
-#         """If B receives a request from an unauthorized key, it does not reply.
-#
-#         An "unauthorized request" in this case is for a service from a client
-#         that B does not trust.  This is different than clients B hosts no
-#         services for.
-#
-#         In this case, B will never answer the request.
-#
-#         """
-#         self.santiago_b.receive(from_="a", to="b",
-#                                 client="z", host="b",
-#                                 service="wiki", reply_to=None)
-#
-#         self.assertEqual(self.santiago_b.outgoing_messages, [])
-#
-#     def test_reject_good_source_bad_client(self):
-#         """B is silent when a trusted key proxies anything for an untrusted key.
-#
-#         B doesn't know who the client is and should consider it an
-#         untrusted key connection attempt.
-#
-#         """
-#         self.santiago_b.receive(from_="a", to="b",
-#                                 client="z", host="b",
-#                                 service="wiki", reply_to=None)
-#
-#         self.assertEqual(self.santiago_b.outgoing_messages, [])
-#
-#     def test_reject_bad_source_good_client(self):
-#         """B is silent when an untrusted key proxies anything for a trusted key.
-#
-#         B doesn't know who the proxy is and should consider it an
-#         untrusted key connection attempt.
-#
-#         """
-#         self.santiago_b.receive(from_="z", to="b",
-#                                 client="a", host="b",
-#                                 service="wiki", reply_to=None)
-#
-#         self.assertEqual(self.santiago_b.outgoing_messages, [])
-#
-#     def test_reject_bad_source_bad_client(self):
-#         """B is silent when untrusted keys proxy anything for untrusted keys.
-#
-#         B doesn't know who anybody is and considers this an untrusted
-#         connection attempt.
-#
-#         """
-#         self.santiago_b.receive(from_="y", to="b",
-#                                 client="z", host="b",
-#                                 service="wiki", reply_to=None)
-#
-#         self.assertEqual(self.santiago_b.outgoing_messages, [])
-#
-#     def test_learn_santaigo(self):
-#         """Does B learn new Santiago locations from trusted requests?
-#
-#         If A sends B a request with a new Santiago location, B should learn it.
-#
-#         """
-#         self.santiago_b.receive(from_="a", to="b",
-#                                 client="a", host="b",
-#                                 service="wiki", reply_to="localhost:9001")
-#
-#         self.assertEqual(self.santiago_b.consuming["santiago"]["a"],
-#                          ["localhost:9000", "localhost:9001"])
-#
-#     def test_handle_requests_once(self):
-#         """Verify that we reply to each request only once."""
-#
-#         self.santiago_b.receive(from_="a", to="b",
-#                                 client="a", host="b",
-#                                 service="wiki", reply_to=None)
-#         self.santiago_b.process()
-#
-#         self.assertEqual(self.santiago_b.outgoing_messages, [])
-#
-# class TestServerInitialResponse(SantiagoTest):
-#     pass
-#
-# class TestClientInitialResponse(SantiagoTest):
-#     pass
-#
-# class TestForwardedRequest(SantiagoTest):
-#     pass
-#
-# class TestForwardedResponse(SantiagoTest):
-#     pass
-#
-# class TestSimpleSantiago(unittest.TestCase):
-#     def setUp(self):
-#
-#         port_a = "localhost:9000"
-#         port_b = "localhost:8000"
-#
-#         listeners_a = {"http": {"port": port_a}}
-#         senders_a = ({ "protocol": "http", "proxy": tor_proxy_port },)
-#
-#         listeners_b = {"http": {"port": port_b}}
-#         senders_b = ({ "protocol": "http", "proxy": tor_proxy_port },)
-#
-#         hosting_a = { "b": { "santiago": set( ["aDifferentHexNumber.onion"])}}
-#         consuming_a = { "santiagao": {"b": set(["iAmAHexadecimalNumber.onion"])}}
-#
-#         hosting_b = { "a": { "santiago": set( ["iAmAHexadecimalNumber.onion"])}}
-#         consuming_b = { "santiagao": { "a": set( ["aDifferentHexNumber.onion"])}}
-#
-#         self.santiago_a = santiago.Santiago(listeners_a, senders_a,
-#                                          hosting_a, consuming_a, "a")
-#         self.santiago_b = santiago.Santiago(listeners_b, senders_b,
-#                                          hosting_b, consuming_b, "b")
-#
-#         cherrypy.Application(self.santiago_a, "/")
-#         cherrypy.Application(self.santiago_b, "/")
-#
-#         cherrypy.engine.start()
-#
-#     def testRequest(self):
-#         self.santiago_a.request(from_="a", to="b",
-#                                 client="a", host="b",
-#                                 service="wiki", reply_to="localhost:9000")
-#
-#
-# class Unwrapping(unittest.TestCase):
-#
-#     def testVerifySigner(self):
-#         pass
-#
-#     def testVerifyClient(self):
-#         pass
-#
-#     def testDecryptClient(self):
-#         pass
-#
-# class IncomingProxyRequest(unittest.TestCase):
-#
-#     """Do we correctly handle valid, incoming, proxied messages?
-#
-#     These tests are for the first wrapped layer of the message, that which is
-#     signed by the sender.  The sender is not necessarily the original requester
-#     who's asking us to do something with the message.
-#
-#     """
-#
-#     def setUp(self):
-#         pass
-#
-#     def testPassingMessage(self):
-#         """Does a valid proxied message pass?"""
-#
-#         pass
-#
-#     def testInvalidSig(self):
-#         """Does an invalid signature raise an error?"""
-#
-#         pass
-#
-#     def testUnknownClient(self):
-#         """Does an unknown client raise an error?"""
-#
-#         pass
-#
-# class IncomingSignedRequest(IncomingProxyRequest):
-#
-#     """Do we correctly handle valid, incoming, messages?
-#
-#     These tests focus on the second layer of the message which is signed by the
-#     host/client and lists a destination.
-#
-#     """
-#     def testProxyOtherHosts(self):
-#         """Messages to others are sent to them directly or proxied."""
-#
-#         pass
-#
-#     def testHandleMyHosting(self):
-#         """Messages to me are not proxied and handled normally."""
-#
-#         pass
-#
-#     def testNoDestination(self):
-#         """Messages without destinations are ignored."""
-#
-#         pass
-#
-# class IncomingRequestBody(IncomingSignedRequest):
-#
-#     """Do we correctly handle the body of a request?
-#
-#     This is the last layer of the message which is encrypted by the original
-#     sender.  This validation also depends on the previous layer's data, making
-#     it a bit more complicated.
-#
-#     """
-#     def testHandleGoodMessage(self):
-#         """Sanity check: no errors are thrown for a valid message."""
-#
-#         pass
-#
-#     def testCantDecryptMessage(self):
-#         """This message isn't for me.  I can't decrypt it."""
-#
-#         pass
-#
-#     def testImNotHost(self):
-#         """Bail out if someone else is the host, yet I am the "to"."""
-#
-#         pass
-#
-#     def testImNotClient(self):
-#         """Bail out if someone else is the client, yet I am the "to"."""
-#
-#         pass
-#
-#     def testHostAndClient(self):
-#         """Bail out if the message includes a host and a client.
-#
-#         A circular response?
-#
-#         """
-#         pass
-#
-#     def testImNotTo(self):
-#         """This message isn't for me.
-#
-#         The "To" has been repeated from the signed message, but I'm not the
-#         recipient in the encrypted message.
-#
-#         """
-#         pass
-#
-#     def testNoDestinations(self):
-#         """No host, client, or to."""
-#
-#         pass
-#
-#     def testSignersDiffer(self):
-#         """The signed message and encrypted message have different signers."""
-#
-#         pass
-#
-#     def testSignerAndClientDiffer(self):
-#         """The encrypted message is signed by someone other than the cilent."""
-#
-#         pass
+        FIXME: or rather, fix controller::Listener::index.  I shouldn't be able
+        to GET here.
+
+        """
+        controller.query(self.conn, "/", params=self.request)
+
+        time.sleep(1)
+
+        self.assertEqual(
+            self.santiago.get_client_locations(self.santiago.me, self.service),
+            self.value)
+
+    def test_learn_hosted_services_the_right_way(self):
+        """Make sure requests to listeners actually result in learned services.
+
+        """
+        controller.query(self.conn, "/", action="POST", body=self.request)
+
+        time.sleep(1)
+
+        self.assertEqual(
+            self.santiago.get_client_locations(self.santiago.me, self.service),
+            self.value)
+
+    def test_catch_outgoing_request(self):
+        """If I make an outgoing request, does the listener hear it?"""
+
+        self.santiago.listeners["https"].incoming_request = self.get_args
+
+        id = self.santiago.me
+        self.santiago.outgoing_request(id, id, id, id, self.service)
+
+        self.assertTrue(self.kwargs["request"])
+
 
 
 if __name__ == "__main__":
