@@ -47,7 +47,6 @@ import time
 import pgpprocessor
 import utilities
 
-
 def debug_log(message):
     frame = inspect.stack()
     trace = inspect.getframeinfo(frame[1][0])
@@ -194,7 +193,7 @@ class Santiago(object):
         count = 0
         try:
             while self.live:
-                time.sleep(5)
+                time.sleep(1)
         except KeyboardInterrupt:
             pass
 
@@ -242,7 +241,7 @@ class Santiago(object):
         Check that hosting service exists before trying to add location.
 
         """
-        self.create_hosting_service(client,service)
+        self.create_hosting_service(client, service)
 
         for location in locations:
             if location not in self.hosting[client][service]:
@@ -311,7 +310,7 @@ class Santiago(object):
             logging.exception("Couldn't handle %s.%s", host, service)
 
     def outgoing_request(self, from_, to, host, client,
-                         service, locations, reply_to):
+                         service, locations="", reply_to=""):
         """Send a request to another Santiago service.
 
         This tag is used when sending queries or replies to other Santiagi.
