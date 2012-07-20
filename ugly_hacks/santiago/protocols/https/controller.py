@@ -302,9 +302,7 @@ class HostedService(RestMonitor):
         return self.respond("hostedService.tmpl", {
                 "service": service,
                 "client": client,
-                "locations": self.santiago.hosting[client][service] if
-                client in self.santiago.hosting and
-                service in self.santiago.hosting[client] else [] })
+                "locations": self.santiago.get_host_locations(client, service)})
 
     @cherrypy.tools.ip_filter()
     def POST(self, client="", service="", put="", delete="", **kwargs):
@@ -353,11 +351,11 @@ class Consuming(RestMonitor):
 class ConsumedHost(RestMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, host, **kwargs):
-        return self.respond("consumedHost.tmpl",
-                            {
-                "services":
-                    self.santiago.consuming[host] if host in self.santiago.consuming else [],
-                              "host": host })
+        return self.respond(
+            "consumedHost.tmpl",
+            { "services": self.santiago.consuming[host] if host in
+                  self.santiago.consuming else [],
+              "host": host })
 
     @cherrypy.tools.ip_filter()
     def POST(self, host="", put="", delete="", **kwargs):
@@ -380,12 +378,12 @@ class ConsumedHost(RestMonitor):
 class ConsumedService(RestMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, host, service, **kwargs):
-        # FIXME don't crash with a 500 error, don't directly access the key!!
         return self.respond("consumedService.tmpl",
                             { "service": service,
                               "host": host,
                               "locations":
-                                  self.santiago.consuming[host][service] if host in self.santiago.consuming and service in self.santiago.consuming[host] else [] })
+                                  self.santiago.get_client_locations(host,
+                                                                     service)})
 
     @cherrypy.tools.ip_filter()
     def POST(self, host="", service="", put="", delete="", **kwargs):
