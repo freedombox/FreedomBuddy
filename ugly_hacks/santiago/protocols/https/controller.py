@@ -150,7 +150,6 @@ class Monitor(santiago.SantiagoMonitor):
             ('/learn/:host/:service', Learn(self.santiago)),
             ("/stop", Stop(self.santiago)),
             ("/freedombuddy", root),
-            ("/:argument", root), # comment if we shouldn't catch root requests.
             )
 
         for location, handler in routing_pairs:
