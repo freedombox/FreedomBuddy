@@ -1,48 +1,27 @@
-"""
-If I produce a listener that just echoes the parameters, I can validate the response:
-
-    import httplib, urllib
-
-    params = urllib.urlencode({'@number': 12524, '@type': 'issue', '@action': 'show'})
-    headers = {"Content-type": "application/x-www-form-urlencoded",
-               "Accept": "text/plain"}
-    conn = httplib.HTTPConnection("bugs.python.org")
-    print params, headers, conn
-
-    conn.request("POST", "", params, headers)
-    response = conn.getresponse()
-    print response.status, response.reason
-
-    data = response.read()
-    print data
-
-    conn.close()
-
-"""
+"""Tests for the HTTPS controller."""
 
 import cherrypy
+import ConfigParser as configparser
 import httplib, urllib
+import json
 import sys
+import time
 import unittest
 
 import protocols.https.controller as controller
 import santiago
+import utilities
 
 
-class RestMonitor(unittest.TestCase):
+class CherryPyTester(unittest.TestCase):
 
-    def setUp(self):
-        super(RestMonitor, self).__init__()
+    def test_right_version(self):
+        """CherryPy < 3.2 hoses things silently."""
 
-        self.monitor = controller.RestMonitor(None)
+        self.assertTrue([int(x) for x in cherrypy.__version__.split(".")]
+                        >= [3,2])
 
-    def test_valid_template_path(self):
-        """Make sure the template path ends in a slash.
-
-        Otherwise, we can't find templates and the engine gets mighty buggered.
-
-        """
-        self.assertTrue(self.monitor.relative_path.endswith("/"))
+class RestTester(unittest.TestCase):
 
     if sys.version_info < (2, 7):
         """Add a poor man's forward compatibility."""
