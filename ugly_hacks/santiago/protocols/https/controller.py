@@ -192,7 +192,7 @@ class RestMonitor(santiago.RestController):
         self.relative_path = "protocols/https/templates"
 
     def _parse_query(self, query_input):
-        """
+        """Split a URL into its query string.
 
         Might raise any of: ValueError, TypeError, NameError
 
@@ -200,6 +200,7 @@ class RestMonitor(santiago.RestController):
         query = ""
 
         if query_input:
+            query_input = query_input[query_input.find("?")+1:]
             query = dict([item.split("=") for item in query_input.split("&")])
 
         return query
