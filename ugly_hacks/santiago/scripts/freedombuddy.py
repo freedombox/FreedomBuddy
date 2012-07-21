@@ -11,7 +11,8 @@ This was written to be used with a local FreedomBuddy service and it shows.
 There's no way to proxy requests or send requests over anything that isn't
 HTTP(S).
 
-:TODO: allow proxies and other request methods?
+:FIXME: add proxying.
+:FIXME: Fix the timeout
 :TODO: unit test the below:
 
 If key or service isn't specified: quit.
@@ -57,6 +58,8 @@ from optparse import OptionParser
 import sys
 import time
 import urllib
+
+import protocols.https.controller as controller
 
 
 def interpret_args(args, parser=None):
@@ -145,50 +148,47 @@ def validate_args(options, parser=None):
     if options.key == None or options.service == None:
         parser.error("--key and --service must be supplied.")
 
-def communicate(conn, request_type, params, key, service, requestbody=None,
-                action="GET"):
-    """Query my FreedomBuddy to find hosting or consuming locations I know.
+def query_remotely(address, port, key, service, params=None, timeout=1):
+    """Query the remote FreedomBuddy to learn new services, then report back.
 
-    TODO describe parameters here
+    :conn: The HTTP(S) connection to send the request along.  Requires
+    ``conn.request`` and ``conn.get_response``.
 
-    pre::
+    :key: The other FreedomBuddy service to query.
 
-        action in ("GET", "POST", "PUT", "DELETE")
-    
+    :service: The particular data to ask the other FBuddy for.
+
+    For example, if I wanted to ask Dave (who's key was "0x3") for his
+    "wikipedia" service (he makes parody articles, he's a funny guy), I'd have
+    to ask my FreedomBuddy service to find him:
+
+    query_remotely(
+        "localhost", 8080, # my FreedomBuddy service
+        0x3,         # will ask Dave's FreedomBuddy service
+        "wikipedia") # for the address of his wikipedia service
+
+    Neat, huh?
+
     """
+    conn = httplib.HTTPSConnection(address, port)
+    query(conn, "learn", key, service, "POST")
+    conn.close()
 
-    body = None
-    if action not in ("GET", "POST", "PUT", "DELETE"):
-        return
-    
-    if action == "POST":
-        body = urllib.urlencode({"host": key, "service": service})
+    time.sleep(timeout)
 
-    conn.request(action,
-                 "/{0}/{1}/{2}?{3}".format(request_type, key, service, params),
-                 body)
-
-    response = conn.getresponse()
-    data = response.read()
-
-    try:
-        locations = json.loads(data)
-    except ValueError:
-        locations = []
-
+    conn = httplib.HTTPSConnection(address, port)
+    locations = query(conn, "consuming", key, service, params=params)
     conn.close()
 
     return locations
 
-def query_remotely(conn, params, key, service):
-    """Query the remote FreedomBuddy to learn new services, then report back."""
+def query(*args, **kwargs):
+    """Unwrap controller's json."""
 
-    communicate(conn, "learn", params, key, service, action="POST")
-
-    time.sleep(int(options.timeout))
-
-    return communicate(conn, "consuming", params, key, service)
-
+    try:
+        return controller.query(*args, **kwargs)
+    except (ValueError, TypeError):
+        pass
 
 if __name__ == "__main__":
 
@@ -196,17 +196,21 @@ if __name__ == "__main__":
     (options, args) = interpret_args(sys.argv[1:], parser)
     validate_args(options, parser)
 
-    request_type = "consuming" if options.host else "hosting"
-    params = urllib.urlencode({"encoding": "json"})
+    type = "consuming" if options.host else "hosting"
     conn = httplib.HTTPSConnection(options.address, options.port)
+    params={"encoding": "json"}
 
-    if options.action:
-        response = communicate(conn, request_type, params, options.key,
-                               options.service, action)
-    elif options.host == False or options.query == False:
-        response = communicate(conn, request_type, params, options.key,
-                               options.service)
+    if not options.action:
+        options.action = "GET"
+
+    if options.host == False or options.query == False:
+        response = query(conn, type, options.key,
+                         options.service, options.action, params=params)
     else:
-        response = query_remotely(conn, params, options.key, options.service)
+        response = query_remotely(options.address, options.port, options.key,
+                                  options.service, params=params)
 
-    print(response)
+    conn.close()
+
+    if response:
+        print(response)
