@@ -25,21 +25,21 @@ class ArgumentInterpretation(unittest.TestCase):
         """Make sure that arguments taking values save those values correctly.
 
         If the shortname or destination isn't supplied, it'll be interpreted
-        from the long name by using the second and third 
+        from the long name by using the second and third
 
         If the value is a boolean flag, don't pass the target value as an
         argument.
-        
+
         """
         if short_name is None:
             short_name = "-" + arg_name[0]
 
         if destination is None:
             destination = arg_name
-        
+
         for name in (short_name, "--" + arg_name):
             args = [name, value] if not boolean else [name]
-            
+
             (options, args) = freedombuddy.interpret_args(args)
 
             self.assertEqual(getattr(options, destination), value)
@@ -97,7 +97,7 @@ class ArgumentInterpretation(unittest.TestCase):
 
         """
         (options, args) = freedombuddy.interpret_args([])
-        
+
         self.assertEqual(options.host, True)
 
     def test_unset_host(self):
@@ -106,10 +106,10 @@ class ArgumentInterpretation(unittest.TestCase):
 
         """
         (options, args) = freedombuddy.interpret_args([])
-        
+
         self.assertEqual(options.query, None)
 
-class BuddySetup(unittest.TestCase):
+class FreedomBuddyTest(unittest.TestCase):
     """Utility functions to do the boring work.
 
     In the tradition of DRY, DDTBWMTO:
@@ -118,28 +118,29 @@ class BuddySetup(unittest.TestCase):
 
     """
     def setUp(self, *args, **kwargs):
-        super(BuddySetup, self).setUp(*args, **kwargs)
+        super(FreedomBuddyTest, self).setUp(*args, **kwargs)
 
         subprocess.Popen("python santiago_test.py".split())
-        
 
     def host(self, user, key, value):
         """Host the key with the value for the user."""
 
         conn = httplib.HTTPSConnection("localhost", 8080)
-        query(conn, params, key, value, request_type)
+        freedombuddy.communicate(conn, "hosting", key, value, "POST")
         pass
-        
-class LocalQuery(unittest.TestCase):
+
+class LocalQuery(FreedomBuddyTest):
     """Are local FreedomBuddies queried correctly?
 
     If I've set up a FreedomBuddy service, I should be able to pull data from
     it.
 
     """
-    pass
+    def setUp(self):
+        super(LocalQuery, self).setUp(*args, **kwargs)
+        pass
 
-class RemoteQuery(unittest.TestCase):
+class RemoteQuery(FreedomBuddyTest):
     """Are remote FreedomBuddies queried correctly?
 
     If I know of another FreedomBuddy service, I should be able to pull data
@@ -148,7 +149,7 @@ class RemoteQuery(unittest.TestCase):
     """
     pass
 
-class LocalRemoteInteractions(unittest.TestCase):
+class LocalRemoteInteractions(FreedomBuddyTest):
     """Do local and remote FreedomBuddies interact as expected?"""
 
     def test_learn_service(self):
@@ -158,7 +159,8 @@ class LocalRemoteInteractions(unittest.TestCase):
         should learn the data and report it.
 
         """
-        
-    
+        pass
+
+
 if __name__ == "__main__":
     unittest.main()
