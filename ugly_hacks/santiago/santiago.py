@@ -563,6 +563,7 @@ class Santiago(object):
                 pass
 
             try:
+                # FIXME there's gotta be something safer we can use here, right?
                 data = ast.literal_eval(str(message))
             except (ValueError, SyntaxError) as e:
                 logging.exception(e)
