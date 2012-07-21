@@ -34,7 +34,7 @@ dev tun
 ifconfig {0} {1}
 secret static.key
 """
-vpn_dir = "."
+vpn_dir = "/etc/openvpn"
 client_conf_file = vpn_dir + "/client.conf"
 server_conf_file = vpn_dir + "/server.conf"
 key_file = vpn_dir + "/static.key"
