@@ -378,12 +378,13 @@ class ConsumedHost(RestMonitor):
 class ConsumedService(RestMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, host, service, **kwargs):
-        return self.respond("consumedService.tmpl",
-                            { "service": service,
-                              "host": host,
-                              "locations":
-                                  self.santiago.get_client_locations(host,
-                                                                     service)})
+        return self.respond(
+            "consumedService.tmpl",
+            { "service": service,
+              "host": host,
+              "locations":
+                  self.santiago.get_client_locations(host,
+                                                     service)})
 
     @cherrypy.tools.ip_filter()
     def POST(self, host="", service="", put="", delete="", **kwargs):
