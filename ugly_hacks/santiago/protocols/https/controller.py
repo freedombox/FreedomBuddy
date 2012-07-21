@@ -383,8 +383,7 @@ class ConsumedService(RestMonitor):
             { "service": service,
               "host": host,
               "locations":
-                  self.santiago.get_client_locations(host,
-                                                     service)})
+                  self.santiago.get_client_locations(host, service)})
 
     @cherrypy.tools.ip_filter()
     def POST(self, host="", service="", put="", delete="", **kwargs):
