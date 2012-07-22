@@ -18,6 +18,10 @@ The FreedomBuddy System
 .. _summarized: http://creativecommons.org/licenses/by-sa/3.0/
 .. _GNU Free Documentation License: http://www.gnu.org/licenses/fdl.html
 
+:The State of Things: FreedomBuddy is **not** ready for public, in the field,
+    deployment.  It won't fully protect your privacy, there're still a number of
+    flaws that need to be fixed first.  Run ``grep -r FIXME *`` for details.
+
 Santiago's Map
 ==============
 
