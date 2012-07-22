@@ -551,7 +551,7 @@ the "gnupg_" and "cfg" modules.
 Finally, start the Santiago process in a console with ``start.sh``.  Test it out
 by navigating to:
 
-    https://localhost:8080/query?host=b&service=santiago
+    https://localhost:8080/freedombuddy
 
 You should see three requests appear in the console.
 
