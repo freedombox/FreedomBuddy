@@ -360,6 +360,17 @@ class Santiago(object):
         except KeyError as e:
             logging.exception(e)
 
+    def get_host_services(self, client):
+        """Return what I'm hosting for the client.
+
+        Return nothing if the client or service are unrecognized.
+
+        """
+        try:
+            return self.hosting[client]
+        except KeyError as e:
+            logging.exception(e)
+
     def get_client_locations(self, host, service):
         """Return where the host serves the service for me, the client."""
 
@@ -368,6 +379,27 @@ class Santiago(object):
         except KeyError as e:
             logging.exception(e)
 
+    def get_client_services(self, host):
+        """Return what services the host serves for me, the client."""
+
+        try:
+            return self.consuming[host]
+        except KeyError as e:
+            logging.exception(e)
+
+    def get_served_clients(self, service):
+        """Return what clients I'm hosting the service for."""
+
+        return [client for client in self.hosting if service in
+                   self.hosting[client]]
+
+    def get_serving_hosts(self, service):
+        """Return which hosts are hosting the service for me."""
+
+        return [host for host in self.consuming if service in
+                   self.consuming[host]]
+
+
     def query(self, host, service):
         """Request a service from another Santiago.
 
