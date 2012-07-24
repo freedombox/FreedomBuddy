@@ -78,7 +78,7 @@ class Santiago(object):
 
     SERVICE_NAME = "freedombuddy"
 
-    
+
     def __init__(self, listeners = None, senders = None,
                  hosting = None, consuming = None, me = 0, monitors = None,
                  reply_service = None, locale = "en"):
@@ -640,17 +640,11 @@ class SantiagoConnector(object):
     "controllers" in the MVC paradigm.
 
     """
-    def __init__(self, santiago=None, *args, **kwargs):
+    def __init__(self, santiago, *args, **kwargs):
         super(SantiagoConnector, self).__init__()
         self.santiago = santiago
 
-    def setup(self):
-        """Initialize the connector.
-
-        """
-        pass
-
-    def start(self):
+    def start(self, *args, **kwargs):
         """Starts the connector, called when initialization is complete.
 
         Cannot block.
@@ -658,31 +652,29 @@ class SantiagoConnector(object):
         """
         pass
 
-    def stop(self):
-        """Shuts down the connector."""
+    def stop(self, *args, **kwargs):
+        """Shuts down the connector.
 
+        Cannot block.
+
+        """
         pass
-
+        
 class SantiagoListener(SantiagoConnector):
     """Generic Santiago Listener superclass.
 
     This class contains one optional method, the request receiving method.  This
     method passes the request along to the Santiago host.
 
+    It might be strange to provide only this particular function, but this
+    allows us to separate the FreedomBuddy listener or sender from the local
+    monitor, meaning that it's possible to listen on any inerface without
+    anything but other FreedomBuddy hosts being able to connect over that
+    interface.
+
     """
     def incoming_request(self, request):
         self.santiago.incoming_request(request)
-
-    def learn(self, host, service):
-        """Request a service from another Santiago client.
-
-        """
-        return self.santiago.query(host, service)
-
-    def provide(self, client, service, location):
-        """Provide a service for the client at the location."""
-
-        return self.santiago.create_hosting_location(client, service, [location])
 
 class SantiagoSender(SantiagoConnector):
     """Generic Santiago Sender superclass.
@@ -711,10 +703,6 @@ class RestController(object):
         raise NotImplemented("RestController.DELETE")
 
 class SantiagoMonitor(RestController, SantiagoConnector):
-    """A REST controller that can be started and stopped."""
+    """A REST controller, with a Santiago, that can be started and stopped."""
 
-    def start(*args, **kwargs):
-        pass
-
-    def stop(*args, **kwargs):
-        pass
+    pass

@@ -177,7 +177,7 @@ class Monitor(santiago.SantiagoMonitor):
 
         return dispatcher
 
-class RestMonitor(santiago.RestController):
+class RestMonitor(santiago.SantiagoMonitor):
 
     # FIXME filter input and escape output properly.
     # FIXME This input shows evidence of vulnerability: <SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>
@@ -187,8 +187,7 @@ class RestMonitor(santiago.RestController):
     # http://ha.ckers.org/xss.html
 
     def __init__(self, aSantiago):
-        super(RestMonitor, self).__init__()
-        self.santiago = aSantiago
+        super(RestMonitor, self).__init__(aSantiago)
         self.relative_path = "protocols/https/templates"
 
     def _parse_query(self, query_input):
@@ -240,7 +239,7 @@ class Stop(RestMonitor):
 class Learn(RestMonitor, santiago.SantiagoListener):
     @cherrypy.tools.ip_filter()
     def POST(self, host, service):
-        super(Learn, self).learn(host, service)
+        self.santiago.query(host, service)
 
         raise cherrypy.HTTPRedirect("/consuming/%s/%s" % (host, service))
 
