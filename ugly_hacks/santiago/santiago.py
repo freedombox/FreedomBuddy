@@ -78,6 +78,7 @@ class Santiago(object):
 
     SERVICE_NAME = "freedombuddy"
 
+    
     def __init__(self, listeners = None, senders = None,
                  hosting = None, consuming = None, me = 0, monitors = None,
                  reply_service = None, locale = "en"):
@@ -212,6 +213,77 @@ class Santiago(object):
 
         self.shelf.close()
 
+    def load_data(self, key):
+        """Load hosting or consuming data from the shelf.
+
+        To do this correctly, we need to convert the list values to sets.
+        However, that can be done only after unwrapping the signed data.
+
+        pre::
+
+            key in ("hosting", "consuming")
+
+        post::
+
+            getattr(self, key) # exists
+
+        """
+        debug_log("loading data.")
+
+        if not key in ("hosting", "consuming"):
+            debug_log("bad key {0}".format(key))
+            return
+
+        message = ""
+
+        try:
+            data = self.shelf[key]
+        except KeyError as e:
+            logging.exception(e)
+            data = dict()
+        else:
+            for message in pgpprocessor.Unwrapper(data, gpg=self.gpg):
+                # iterations end when unwrapping complete.
+                pass
+
+            try:
+                # FIXME there's gotta be something safer we can use here, right?
+                data = ast.literal_eval(str(message))
+            except (ValueError, SyntaxError) as e:
+                logging.exception(e)
+                data = dict()
+
+        debug_log("found {0}: {1}".format(key, data))
+
+        return data
+
+    def save_data(self, key):
+        """Save hosting and consuming data to file.
+
+        To do this safely, we'll need to convert the set subnodes to lists.
+        That way, we'll be able to sign the data correctly.
+
+        pre::
+
+            key in ("hosting", "consuming")
+
+        """
+        debug_log("saving data.")
+
+        if not key in ("hosting", "consuming"):
+            debug_log("bad key {0}".format(key))
+            return
+
+        data = getattr(self, key)
+
+        data = str(self.gpg.encrypt(str(data), recipients=[self.me],
+                                    sign=self.me))
+
+        self.shelf[key] = data
+
+        debug_log("saved {0}: {1}".format(key, data))
+
+
     def i_am(self, server):
         """Verify whether this server is the specified server."""
 
@@ -528,76 +600,6 @@ class Santiago(object):
         debug_log("Success!")
         debug_log("consuming {0}".format(self.consuming))
         debug_log("requests {0}".format(self.requests))
-
-    def load_data(self, key):
-        """Load hosting or consuming data from the shelf.
-
-        To do this correctly, we need to convert the list values to sets.
-        However, that can be done only after unwrapping the signed data.
-
-        pre::
-
-            key in ("hosting", "consuming")
-
-        post::
-
-            getattr(self, key) # exists
-
-        """
-        debug_log("loading data.")
-
-        if not key in ("hosting", "consuming"):
-            debug_log("bad key {0}".format(key))
-            return
-
-        message = ""
-
-        try:
-            data = self.shelf[key]
-        except KeyError as e:
-            logging.exception(e)
-            data = dict()
-        else:
-            for message in pgpprocessor.Unwrapper(data, gpg=self.gpg):
-                # iterations end when unwrapping complete.
-                pass
-
-            try:
-                # FIXME there's gotta be something safer we can use here, right?
-                data = ast.literal_eval(str(message))
-            except (ValueError, SyntaxError) as e:
-                logging.exception(e)
-                data = dict()
-
-        debug_log("found {0}: {1}".format(key, data))
-
-        return data
-
-    def save_data(self, key):
-        """Save hosting and consuming data to file.
-
-        To do this safely, we'll need to convert the set subnodes to lists.
-        That way, we'll be able to sign the data correctly.
-
-        pre::
-
-            key in ("hosting", "consuming")
-
-        """
-        debug_log("saving data.")
-
-        if not key in ("hosting", "consuming"):
-            debug_log("bad key {0}".format(key))
-            return
-
-        data = getattr(self, key)
-
-        data = str(self.gpg.encrypt(str(data), recipients=[self.me],
-                                    sign=self.me))
-
-        self.shelf[key] = data
-
-        debug_log("saved {0}: {1}".format(key, data))
 
 class SantiagoConnector(object):
     """Generic Santiago connector superclass.
