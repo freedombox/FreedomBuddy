@@ -673,16 +673,6 @@ class SantiagoListener(SantiagoConnector):
     def incoming_request(self, request):
         self.santiago.incoming_request(request)
 
-    def where(self, host, service):
-        """Return where the named host provides me a service.
-
-        If no service is provided, return None.
-
-        TODO: unittest
-
-        """
-        return self.santiago.get_client_locations(host, service)
-
     def learn(self, host, service):
         """Request a service from another Santiago client.
 
