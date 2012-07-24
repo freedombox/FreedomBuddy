@@ -54,3 +54,16 @@
    The port could already be in use.
 
    The cert-file might not exist.
+
+* TODO additional (convenience) service discovery
+
+   let clients find:
+
+   - all the services I host for them
+
+   - all the hosts who host a specific service
+
+* TODO change the host learning method
+
+   replace the list of known FBuddy locations with the reply from the
+   server.
