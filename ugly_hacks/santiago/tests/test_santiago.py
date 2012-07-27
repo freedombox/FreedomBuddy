@@ -568,21 +568,6 @@ class ListenerTests(SantiagoTest):
 
         self.assertEqual(self.args, (self.x,))
 
-    def test_pass_where(self):
-        self.listener.where(self.x, self.y)
-
-        self.assertEqual(self.args, (self.x, self.y))
-
-    def test_pass_learn(self):
-        self.listener.learn(self.x, self.y)
-
-        self.assertEqual(self.args, (self.x, self.y))
-
-    def test_pass_provide(self):
-        self.listener.provide(self.x, self.y, self.z)
-
-        self.assertEqual(self.args, (self.x, self.y, [self.z]))
-
 if __name__ == "__main__":
     logging.disable(logging.CRITICAL)
     unittest.main()
