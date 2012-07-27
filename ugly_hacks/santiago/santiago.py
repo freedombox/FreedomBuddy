@@ -659,7 +659,7 @@ class SantiagoConnector(object):
 
         """
         pass
-        
+
 class SantiagoListener(SantiagoConnector):
     """Generic Santiago Listener superclass.
 
@@ -688,21 +688,158 @@ class SantiagoSender(SantiagoConnector):
             "santiago.SantiagoSender.outgoing_request not implemented.")
 
 class RestController(object):
-    """A generic REST-style controller that reacts to the basic REST verbs."""
+    """A generic controller that reacts to the basic verbs."""
 
     def PUT(self, *args, **kwargs):
-        raise NotImplemented("RestController.PUT")
+        pass
 
     def GET(self, *args, **kwargs):
-        raise NotImplemented("RestController.GET")
+        pass
 
     def POST(self, *args, **kwargs):
-        raise NotImplemented("RestController.POST")
+        pass
 
     def DELETE(self, *args, **kwargs):
-        raise NotImplemented("RestController.DELETE")
+        pass
 
 class SantiagoMonitor(RestController, SantiagoConnector):
     """A REST controller, with a Santiago, that can be started and stopped."""
 
     pass
+
+
+class Stop(SantiagoMonitor):
+    def POST(self, *args, **kwargs):
+        self.santiago.live = 0
+
+class Learn(SantiagoMonitor):
+    def POST(self, host, service, *args, **kwargs):
+        super(Learn, self).POST(host, service, *args, **kwargs)
+
+        self.santiago.query(host, service)
+
+class Hosting(SantiagoMonitor):
+    def GET(self, *args, **kwargs):
+        super(Hosting, self).GET(*args, **kwargs)
+
+        return { "clients": self.santiago.hosting.keys() }
+
+    def PUT(self, client, *args, **kwargs):
+        super(Hosting, self).PUT(client, *args, **kwargs)
+
+        self.santiago.create_hosting_client(client)
+
+    def DELETE(self, client, *args, **kwargs):
+        super(Hosting, self).DELETE(client, *args, **kwargs)
+
+        if client in self.santiago.hosting:
+            del self.santiago.hosting[client]
+
+class HostedClient(SantiagoMonitor):
+
+    def GET(self, client, *args, **kwargs):
+        super(HostedClient, self).GET(*args, **kwargs)
+
+        return { "client": client,
+                 "services": self.santiago.hosting[client] if client in
+                     self.santiago.hosting else [] }
+
+    def PUT(self, client, service, *args, **kwargs):
+        super(HostedClient, self).PUT(client, service, *args, **kwargs)
+
+        self.santiago.create_hosting_service(client, service)
+
+
+    def DELETE(self, client, service, *args, **kwargs):
+        super(HostedClient, self).DELETE(client, service, *args, **kwargs)
+
+        if service in self.santiago.hosting[client]:
+            del self.santiago.hosting[client][service]
+
+class HostedService(SantiagoMonitor):
+
+    def GET(self, client, service, *args, **kwargs):
+        super(HostedService, self).GET(client, service, *args, **kwargs)
+
+        return {
+            "service": service,
+            "client": client,
+            "locations": self.santiago.get_host_locations(client, service)}
+
+    def PUT(self, client, service, location, *args, **kwargs):
+        super(HostedService, self).PUT(client, service, location,
+                                       *args, **kwargs)
+
+        self.santiago.create_hosting_location(client, service, [location])
+
+    # Have to remove instead of delete for locations as $service is a list
+    def DELETE(self, client, service, location, *args, **kwargs):
+        super(HostedService, self).DELETE(client, service, location,
+                                          *args, **kwargs)
+
+        if client in self.santiago.hosting:
+            if location in self.santiago.hosting[client][service]:
+                self.santiago.hosting[client][service].remove(location)
+
+class Consuming(SantiagoMonitor):
+
+    def GET(self, *args, **kwargs):
+        super(Consuming, self).GET(*args, **kwargs)
+
+        return { "hosts": self.santiago.consuming.keys() }
+
+    def PUT(self, host, *args, **kwargs):
+        super(Consuming, self).PUT(host, *args, **kwargs)
+
+        self.santiago.create_consuming_host(host)
+
+    def DELETE(self, host, *args, **kwargs):
+        super(Consuming, self).DELETE(host, *args, **kwargs)
+
+        if host in self.santiago.consuming:
+            del self.santiago.consuming[host]
+
+class ConsumedHost(SantiagoMonitor):
+
+    def GET(self, host, *args, **kwargs):
+        super(ConsumedHost, self).GET(host, *args, **kwargs)
+
+        return {
+            "services": self.santiago.consuming[host] if host in
+                        self.santiago.consuming else [],
+            "host": host }
+
+    def PUT(self, host, service, *args, **kwargs):
+        super(ConsumedHost, self).PUT(host, service, *args, **kwargs)
+
+        self.santiago.create_consuming_service(host, service)
+
+    def DELETE(self, host, service, *args, **kwargs):
+        super(ConsumedHost, self).DELETE(host, service, *args, **kwargs)
+
+        if service in self.santiago.consuming[host]:
+            del self.santiago.consuming[host][service]
+
+class ConsumedService(SantiagoMonitor):
+
+    def GET(self, host, service, *args, **kwargs):
+        super(ConsumedService, self).GET(host, service, *args, **kwargs)
+
+        return { "service": service,
+                 "host": host,
+                 "locations":
+                     self.santiago.get_client_locations(host, service) }
+
+    def PUT(self, host, service, location, *args, **kwargs):
+        super(ConsumedService, self).PUT(host, service, location,
+                                         *args, **kwargs)
+
+        self.santiago.create_consuming_location(host, service, [location])
+
+    # Have to remove instead of delete for locations as $service is a list
+    def DELETE(self, host, service, location, *args, **kwargs):
+        super(ConsumedService, self).DELETE(host, service, location,
+                                            *args, **kwargs)
+
+        if location in self.santiago.consuming[host][service]:
+            self.santiago.consuming[host][service].remove(location)
