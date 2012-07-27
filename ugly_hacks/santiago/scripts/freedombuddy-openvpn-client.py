@@ -23,6 +23,7 @@ ignore all but the first.  The rest can be used for other exciting purposes.
 import httplib
 import json
 import optparse
+import subprocess
 import sys
 
 import scripts.freedombuddy as freedombuddy
@@ -56,7 +57,11 @@ Doesn't necessarily have to be local, just has to be reachable and trusted.
     parser.add_option("-p", "--port", dest="port", default=8080,
                       help="Localhost's FreedomBuddy port.")
 
-    return parser.parse_args(args)
+    (options, args) = parser.parse_args(args)
+    if not options.key:
+        parser.error("--key is required.")
+
+    return (options, args)
 
 def write_if_changed(newData, afile):
     """Write new data to file if different than existing file contents."""
@@ -82,6 +87,12 @@ def write_if_changed(newData, afile):
 
     return changed
 
+def extract(data):
+    try:
+        return json.loads(data)[0]
+    except TypeError:
+        return ""
+
 
 if __name__ == "__main__":
 
@@ -91,7 +102,6 @@ if __name__ == "__main__":
     (options, args) = validate_args(sys.argv)
 
     # get data from FBuddy
-    extract = lambda x: json.loads(x)[0]
     request = lambda service: extract(
         freedombuddy.query_remotely(options.address, options.port,
                                     options.key, service,
