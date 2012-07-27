@@ -94,12 +94,12 @@ class MonitorTest(RestTester):
         self.args = args
         self.kwargs = kwargs
 
-class RestMonitorTest(unittest.TestCase):
+class HttpMonitorTest(unittest.TestCase):
     def setUp(self):
-        self.monitor = controller.RestMonitor(None)
+        self.monitor = controller.HttpMonitor(None)
 
-class RestMonitorQueryTest(RestMonitorTest):
-    """Test RestMonitor's Queries."""
+class HttpMonitorQueryTest(HttpMonitorTest):
+    """Test HttpMonitor's Queries."""
 
     def test_full_urls(self):
         url = "https://localhost:8080/index?something=somethingelse"
@@ -130,7 +130,7 @@ class RestMonitorQueryTest(RestMonitorTest):
                             "1": "2" },
                           self.monitor._parse_query(url) )
 
-class RestMonitorRespondTest(RestMonitorTest):
+class HttpMonitorRespondTest(HttpMonitorTest):
     """Nothing I can think of testing here.
 
     It's really just verifying Cheetah's Templates.  Worthwhile, perhaps?
