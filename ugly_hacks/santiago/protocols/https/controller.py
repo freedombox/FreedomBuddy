@@ -2,7 +2,6 @@
 
 FIXME: add real authentication.
 FIXME: all the Blammos.  They're terrible, unacceptable failures.
-FIXME correct direct key access everywhere.
 
 """
 
@@ -138,17 +137,17 @@ class Monitor(santiago.SantiagoMonitor):
         except KeyError:
             d = cherrypy.dispatch.RoutesDispatcher()
 
-        root = Root(self.santiago)
+        root = HttpRoot(self.santiago)
 
         routing_pairs = (
-            ('/hosting/:client/:service', HostedService(self.santiago)),
-            ('/hosting/:client', HostedClient(self.santiago)),
-            ('/hosting', Hosting(self.santiago)),
-            ('/consuming/:host/:service', ConsumedService(self.santiago)),
-            ('/consuming/:host', ConsumedHost(self.santiago)),
-            ('/consuming', Consuming(self.santiago)),
-            ('/learn/:host/:service', Learn(self.santiago)),
-            ("/stop", Stop(self.santiago)),
+            ('/hosting/:client/:service', HttpHostedService(self.santiago)),
+            ('/hosting/:client', HttpHostedClient(self.santiago)),
+            ('/hosting', HttpHosting(self.santiago)),
+            ('/consuming/:host/:service', HttpConsumedService(self.santiago)),
+            ('/consuming/:host', HttpConsumedHost(self.santiago)),
+            ('/consuming', HttpConsuming(self.santiago)),
+            ('/learn/:host/:service', HttpLearn(self.santiago)),
+            ("/stop", HttpStop(self.santiago)),
             ("/freedombuddy", root),
             )
 
@@ -177,7 +176,7 @@ class Monitor(santiago.SantiagoMonitor):
 
         return dispatcher
 
-class RestMonitor(santiago.SantiagoMonitor):
+class HttpMonitor(object):
 
     # FIXME filter input and escape output properly.
     # FIXME This input shows evidence of vulnerability: <SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>
@@ -186,8 +185,8 @@ class RestMonitor(santiago.SantiagoMonitor):
 
     # http://ha.ckers.org/xss.html
 
-    def __init__(self, aSantiago):
-        super(RestMonitor, self).__init__(aSantiago)
+    def __init__(self, *args, **kwargs):
+        super(HttpMonitor, self).__init__()
         self.relative_path = "protocols/https/templates"
 
     def _parse_query(self, query_input):
@@ -221,33 +220,33 @@ class RestMonitor(santiago.SantiagoMonitor):
                                    self.santiago.locale, template)),
                     searchList = [dict(values)]))]
 
-class Root(RestMonitor):
+class HttpRoot(santiago.SantiagoMonitor, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
         return self.respond("root.tmpl", {})
 
-class Stop(RestMonitor):
+class HttpStop(santiago.Stop, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def POST(self, **kwargs):
-        self.santiago.live = 0
+        super(HttpStop, self).POST(**kwargs)
         raise cherrypy.HTTPRedirect("/")
 
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
         self.POST() # FIXME cause it's late and I'm tired.
 
-class Learn(RestMonitor, santiago.SantiagoListener):
+class HttpLearn(santiago.Learn, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def POST(self, host, service):
-        self.santiago.query(host, service)
-
+        super(HttpLearn, self).POST(host, service)
         raise cherrypy.HTTPRedirect("/consuming/%s/%s" % (host, service))
 
-class Hosting(RestMonitor):
+class HttpHosting(santiago.Hosting, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
         return self.respond("hosting.tmpl",
-                            {"clients": [x for x in self.santiago.hosting]})
+                            super(HttpHosting, self).GET(**kwargs),
+                            **kwargs)
 
     @cherrypy.tools.ip_filter()
     def POST(self, put="", delete="", **kwargs):
@@ -256,26 +255,22 @@ class Hosting(RestMonitor):
         elif delete:
             self.DELETE(delete)
 
-        raise cherrypy.HTTPRedirect("/hosting")
-
     @cherrypy.tools.ip_filter()
-    def PUT(self, client):
-        self.santiago.create_hosting_client(client)
+    def PUT(self, client, **kwargs):
+        super(HttpHosting, self).PUT(client)
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, client):
-        if client in self.santiago.hosting:
-            del self.santiago.hosting[client]
+        super(HttpHosting, self).DELETE(client)
 
-class HostedClient(RestMonitor):
+class HttpHostedClient(santiago.HostedClient, HttpMonitor):
 
     # FIXME correct direct key access
     @cherrypy.tools.ip_filter()
     def GET(self, client, **kwargs):
         return self.respond("hostedClient.tmpl",
-                            { "client": client,
-                              "services": self.santiago.hosting[client] if
-                              client in self.santiago.hosting else [] })
+                            super(HttpHostedClient, self).GET(client, **kwargs),
+                            **kwargs)
 
     @cherrypy.tools.ip_filter()
     def POST(self, client="", put="", delete="", **kwargs):
@@ -288,20 +283,19 @@ class HostedClient(RestMonitor):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, client, service):
-        self.santiago.create_hosting_service(client, service)
+        super(HttpHostedClient, self).PUT(client, service)
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, client, service):
-        if service in self.santiago.hosting[client]:
-            del self.santiago.hosting[client][service]
+        super(HttpHostedClient, self).DELETE(client, service)
 
-class HostedService(RestMonitor):
+class HttpHostedService(santiago.HostedService, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, client, service, **kwargs):
-        return self.respond("hostedService.tmpl", {
-                "service": service,
-                "client": client,
-                "locations": self.santiago.get_host_locations(client, service)})
+        return self.respond(
+            "hostedService.tmpl",
+            super(HttpHostedService, self).GET(client, service, **kwargs),
+            **kwargs)
 
     @cherrypy.tools.ip_filter()
     def POST(self, client="", service="", put="", delete="", **kwargs):
@@ -313,21 +307,20 @@ class HostedService(RestMonitor):
         raise cherrypy.HTTPRedirect("/hosting/{0}/{1}/".format(client, service))
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, client, service, location):
-        self.santiago.create_hosting_location(client, service, [location])
+    def PUT(self, client, service, location, **kwargs):
+        super(HttpHostedService, self).PUT(client, service, location, **kwargs)
 
-    # Have to remove instead of delete for locations as $service is a list
     @cherrypy.tools.ip_filter()
-    # FIXME correct direct key access
-    def DELETE(self, client, service, location):
-        if location in self.santiago.hosting[client][service]:
-            self.santiago.hosting[client][service].remove(location)
+    def DELETE(self, client, service, location, **kwargs):
+        super(HttpHostedService, self).DELETE(client, service, location,
+                                              **kwargs)
 
-class Consuming(RestMonitor):
+class HttpConsuming(santiago.Consuming, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
         return self.respond("consuming.tmpl",
-                            { "hosts": [x for x in self.santiago.consuming]})
+                            super(HttpConsuming, self).GET(**kwargs),
+                            **kwargs)
 
     @cherrypy.tools.ip_filter()
     def POST(self, put="", delete="", **kwargs):
@@ -339,22 +332,20 @@ class Consuming(RestMonitor):
         raise cherrypy.HTTPRedirect("/consuming")
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, host):
-        self.santiago.create_consuming_host(host)
+    def PUT(self, host, **kwargs):
+        super(HttpConsuming, self).PUT(host, **kwargs)
 
     @cherrypy.tools.ip_filter()
-    def DELETE(self, host):
-        if host in self.santiago.consuming:
-            del self.santiago.consuming[host]
+    def DELETE(self, host, **kwargs):
+        super(HttpConsuming, self).DELETE(host, **kwargs)
 
-class ConsumedHost(RestMonitor):
+class HttpConsumedHost(santiago.ConsumedHost, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, host, **kwargs):
         return self.respond(
             "consumedHost.tmpl",
-            { "services": self.santiago.consuming[host] if host in
-                  self.santiago.consuming else [],
-              "host": host })
+            super(HttpConsumedHost, self).GET(host, **kwargs),
+            **kwargs)
 
     @cherrypy.tools.ip_filter()
     def POST(self, host="", put="", delete="", **kwargs):
@@ -366,23 +357,20 @@ class ConsumedHost(RestMonitor):
         raise cherrypy.HTTPRedirect("/consuming/" + host)
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, host, service):
-        self.santiago.create_consuming_service(host, service)
+    def PUT(self, host, service, **kwargs):
+        super(HttpConsumedHost, self).PUT(host, service, **kwargs)
 
     @cherrypy.tools.ip_filter()
-    def DELETE(self, host, service):
-        if service in self.santiago.consuming[host]:
-            del self.santiago.consuming[host][service]
+    def DELETE(self, host, service, **kwargs):
+        super(HttpConsumedHost, self).DELETE(host, service, **kwargs)
 
-class ConsumedService(RestMonitor):
+class HttpConsumedService(santiago.ConsumedService, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def GET(self, host, service, **kwargs):
         return self.respond(
             "consumedService.tmpl",
-            { "service": service,
-              "host": host,
-              "locations":
-                  self.santiago.get_client_locations(host, service)})
+            super(HttpConsumedService, self).GET(host, service, **kwargs),
+            **kwargs)
 
     @cherrypy.tools.ip_filter()
     def POST(self, host="", service="", put="", delete="", **kwargs):
@@ -394,14 +382,13 @@ class ConsumedService(RestMonitor):
         raise cherrypy.HTTPRedirect("/consuming/{0}/{1}/".format(host, service))
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, host, service, location):
-        self.santiago.create_consuming_location(host, service, [location])
+    def PUT(self, host, service, location, **kwargs):
+        super(HttpConsumedService, self).PUT(host, service, location, **kwargs)
 
-    # Have to remove instead of delete for locations as $service is a list
     @cherrypy.tools.ip_filter()
-    def DELETE(self, host, service, location):
-        if location in self.santiago.consuming[host][service]:
-            self.santiago.consuming[host][service].remove(location)
+    def DELETE(self, host, service, location, **kwargs):
+        super(HttpConsumedService, self).DELETE(host, service, location,
+                                                **kwargs)
 
 def query(conn, type="", id="", service="",
           action="GET", url="", params=None, body=None):
