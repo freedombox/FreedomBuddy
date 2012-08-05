@@ -43,6 +43,7 @@ import re
 import shelve
 import sys
 import time
+import urlparse
 
 import pgpprocessor
 import utilities
@@ -343,11 +344,22 @@ class Santiago(object):
         Check that consuming service exists before trying to add location.
 
         """
-        self.create_consuming_service(host,service)
+        self.create_consuming_service(host, service)
 
         for location in locations:
             if location not in self.consuming[host][service]:
                 self.consuming[host][service].append(location)
+
+    def replace_consuming_location(self, host, service, locations):
+        """Replace existing consuming locations with the new ones."""
+
+        try:
+            del self.consuming[host][self.reply_service]
+        except:
+            pass
+
+        self.create_consuming_location(host, self.reply_service, reply_to)
+
 
     def get_host_locations(self, client, service):
         """Return where I'm hosting the service for the client.
@@ -436,10 +448,9 @@ class Santiago(object):
             host,
             sign=self.me)
 
-        # FIXME use urlparse.urlparse instead!
         for destination in self.consuming[host][self.reply_service]:
-            protocol = destination.split(":")[0]
-            self.senders[protocol].outgoing_request(request, destination)
+            o = urlparse.urlparse(destination)
+            self.senders[o.scheme].outgoing_request(request, destination)
 
     def incoming_request(self, request):
         """Provide a service to a client.
@@ -563,14 +574,16 @@ class Santiago(object):
         try:
             self.hosting[client][service]
         except KeyError:
-            debug_log("no host for you".format(self.hosting))
+            debug_log("no host for {0} in {1}".format(client, self.hosting))
             return
 
         # if we don't proxy, learn new reply locations and send the request.
         if not self.i_am(host):
             self.proxy(to, host, client, service, reply_to)
         else:
-            self.create_consuming_location(client, self.reply_service, reply_to)
+            self.replace_consuming_location(client,
+                                            self.reply_service,
+                                            reply_to)
 
             self.outgoing_request(
                 self.me, client, self.me, client,
@@ -582,9 +595,6 @@ class Santiago(object):
 
         Attempt to contact the other Santiago and ask it to reply both to the
         original host as well as me.
-
-        TODO: add tests.
-        TODO: create.
 
         """
         pass
@@ -620,12 +630,11 @@ class Santiago(object):
             self.proxy()
             return
 
-        self.create_consuming_location(host, self.reply_service, reply_to)
+        self.replace_consuming_location(host, self.reply_service, reply_to)
         self.create_consuming_location(host, service, locations)
 
         self.requests[host].remove(service)
         # clean buffers
-        # TODO clean up after 5 minutes to allow all hosts to reply?
         if not self.requests[host]:
             del self.requests[host]
 
