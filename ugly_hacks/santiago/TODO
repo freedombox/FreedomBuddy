@@ -1,11 +1,14 @@
 * TODO Integrate FreedomBuddy into Plinth
-* TODO Integrate OpenVPN/Santiago: OpenVPN via Santiago.
+
+* DONE Integrate OpenVPN/Santiago: OpenVPN via Santiago.
+  CLOSED: [2012-08-05 Sun 18:29]
    See redirect-gateway for redirecting all traffic.
    http://openvpn.net/index.php/open-source/documentation/examples.html
+
 * TODO Integrate SSH/Santiago: SSH via Santiago:
    https://help.ubuntu.com/community/SSH_VPN
 
-* TODO Service time expiry
+* TODO Service time expiry                                           :expiry:
 
 - Replies include "this service expires on".
 
@@ -17,26 +20,31 @@
 
    - Differentiate backends and the independent system.
 
-* TODO Message Queuing
+* TODO Message Queuing                                             :requests:
 
 - Process a maximum of X MB over Y requests per unit time Z per
    friend.
 
 - Messages that exceed that maximum are queued for the next time unit.
 
-* TODO Update documentation.
+* TODO Update documentation.                                        :cleanup:
 
-* TODO make list of oustanding requests query-able
+* TODO make list of oustanding requests query-able                 :requests:
 
-* TODO use real sockets for communication
+* TODO use real sockets for communication                  :cleanup:requests:
 
-   Remove the dependency on the HTTPS connector.
+  Remove the dependency on the HTTPS connector.
 
-* FIXME use GetText for Internationalization.
+  http://docs.python.org/howto/sockets.html
+
+* FIXME use GetText for Internationalization.                       :cleanup:
 
    http://docs.python.org/library/gettext.html
 
-* TODO allow adding, editing, and removing through the interfaces.
+* DONE allow adding, editing, and removing through the interfaces.
+  CLOSED: [2012-08-04 Sat 15:30]
+
+* TODO allow adding, editing, and removing reply-locations through requests. :requests:
 
    If somebody has my private key anyway, I'm already screwed.
 
@@ -44,18 +52,18 @@
 
    For generalized broadcasting, in case of freedom-emergency, of course.
 
-* TODO support editing-in-place well
+* TODO support editing-in-place well                               :requests:
 
    I really should.  Remove + Add isn't acceptable in complex
    situations.
 
-* TODO display errors when we quit because we can't initialize
+* TODO display errors when we quit because we can't initialize      :cleanup:
 
    The port could already be in use.
 
    The cert-file might not exist.
 
-* TODO additional (convenience) service discovery
+* TODO additional (convenience) service discovery                  :requests:
 
    let clients find:
 
@@ -63,7 +71,36 @@
 
    - all the hosts who host a specific service
 
-* TODO change the host learning method
+   - allow some services to be hidden?
 
-   replace the list of known FBuddy locations with the reply from the
-   server.
+* DONE change the host learning method [2/2]
+  CLOSED: [2012-08-05 Sun 18:20]
+
+  replace the list of known FBuddy locations with the reply from the
+  server:
+
+  - [X] [[file:santiago.py::self.create_consuming_location(host,%20self.reply_service,%20reply_to)][file:santiago.py::self.create_consuming_location(host, self.reply_service, reply_to)]]
+
+  - [X] [[file:santiago.py::self.create_consuming_location(client,%20self.reply_service,%20reply_to)][file:santiago.py::self.create_consuming_location(client, self.reply_service, reply_to)]]
+
+* TODO figure out what other request types FBuddies should request
+   from one another.
+
+   - request "all services for this client"
+
+      be able to hide some services from the client?
+
+* TODO reorganize and consolidate this todo file.                      :meta:
+
+* TODO move files [/]                                               :cleanup:
+
+  - [ ] move data into /data
+  - [ ] move source into /src, /src/scripts
+
+* TODO clean up [[file:santiago.py::if%20not%20self.requests%5Bhost%5D:][requests]] after 5 minutes                             :expiry:
+
+  If they don't reply in that time, it times out and should be cleaned up.
+
+* TODO move hosting and consuming back to defaultdicts              :cleanup:
+
+  The syntax is just so much cleaner and shorter.  Implied getters and setters.
