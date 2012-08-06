@@ -231,10 +231,6 @@ class HttpStop(santiago.Stop, HttpMonitor):
         super(HttpStop, self).POST(**kwargs)
         raise cherrypy.HTTPRedirect("/")
 
-    @cherrypy.tools.ip_filter()
-    def GET(self, **kwargs):
-        self.POST() # FIXME cause it's late and I'm tired.
-
 class HttpLearn(santiago.Learn, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def POST(self, host, service):

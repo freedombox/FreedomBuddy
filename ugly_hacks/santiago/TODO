@@ -37,7 +37,7 @@
 
   http://docs.python.org/howto/sockets.html
 
-* FIXME use GetText for Internationalization.                       :cleanup:
+* TODO use GetText for Internationalization.                        :cleanup:
 
    http://docs.python.org/library/gettext.html
 

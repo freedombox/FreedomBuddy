@@ -1,11 +1,20 @@
 <html>
+  <head>
+    <style>
+      form {
+        display: inline;
+      }
+    </style>
+  </head>
   <body>
     <h1>Welcome to FreedomBuddy!</h1>
     <p>You can:</p>
     <ul>
       <li><a href="/hosting">Host</a> services for others.</li>
       <li><a href="/consuming">Consume</a> others' services.</li>
-      <li><a href="/stop">Stop</a> the FreedomBuddy service.</li>
+      <li><form method="post" action="/stop">
+          <input type="submit" value="Stop" /></form>
+        the FreedomBuddy service.</li>
     </ul>
     <small>FreedomBuddy is distributed as a part of Plinth, which is
       distributed under the AGPL, version 3 or later:
