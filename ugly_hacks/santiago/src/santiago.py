@@ -39,6 +39,7 @@ import gnupg
 import inspect
 import json
 import logging
+import os
 import re
 import shelve
 import sys
@@ -82,7 +83,7 @@ class Santiago(object):
 
     def __init__(self, listeners = None, senders = None,
                  hosting = None, consuming = None, me = 0, monitors = None,
-                 reply_service = None, locale = "en"):
+                 reply_service = None, locale = "en", save_dir = "."):
         """Create a Santiago with the specified parameters.
 
         listeners and senders are both protocol-specific dictionaries containing
@@ -121,7 +122,8 @@ class Santiago(object):
         if monitors is not None:
             self.monitors = self.create_connectors(monitors, "Monitor")
 
-        self.shelf = shelve.open(str(self.me) + ".dat")
+        self.shelf = shelve.open(save_dir.rstrip(os.sep) + os.sep +
+                                 str(self.me) + ".dat")
         self.hosting = hosting if hosting else self.load_data("hosting")
         self.consuming = consuming if consuming else self.load_data("consuming")
 
@@ -358,8 +360,7 @@ class Santiago(object):
         except:
             pass
 
-        self.create_consuming_location(host, self.reply_service, reply_to)
-
+        self.create_consuming_location(host, self.reply_service, locations)
 
     def get_host_locations(self, client, service):
         """Return where I'm hosting the service for the client.

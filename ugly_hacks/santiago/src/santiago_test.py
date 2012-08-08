@@ -28,7 +28,8 @@ def parse_args(args):
 Can be given multiple times to increase logging level.  Once means show
 FreedomBuddy logging messages.  Twice means show protocol logging messages as
 well.""")
-    parser.add_option("-c", "--config", dest="config", default="production.cfg",
+    parser.add_option("-c", "--config", dest="config",
+                      default="../data/production.cfg",
                       help="""The configuration file to use.""")
 
     parser.add_option("-d", "--default-services", dest="default_services",
@@ -117,10 +118,11 @@ if __name__ == "__main__":
 
         freedombuddy = santiago.Santiago(listeners, senders, hosting, consuming,
                                          me=mykey, monitors=monitors,
-                                         locale=lang)
+                                         locale=lang, save_dir="../data")
     else:
         freedombuddy = santiago.Santiago(listeners, senders, me=mykey,
-                                         monitors=monitors, locale=lang)
+                                         monitors=monitors, locale=lang,
+                                         save_dir="../data")
 
     # run
     if options.trace:

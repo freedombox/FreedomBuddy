@@ -55,13 +55,13 @@ class MonitorTest(RestTester):
     def create_santiago(self):
         # get my key, if possible
         try:
-            mykey = utilities.load_config("test.cfg").get("pgpprocessor",
-                                                          "keyid")
+            mykey = utilities.load_config("../data/test.cfg").get(
+                "pgpprocessor", "keyid")
         except configparser.NoSectionError:
             mykey = 0
 
         # set up monitors, listeners, and senders
-        cert = "freedombuddy.crt"
+        cert = "../data/freedombuddy.crt"
         protocol = "https"
         service = "freedombuddy"
         location = "https://localhost:"

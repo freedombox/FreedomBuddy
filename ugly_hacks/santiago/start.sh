@@ -4,4 +4,5 @@ PYTHONPATH=$PYTHONPATH:../..
 PYTHONPATH=$PYTHONPATH:/home/nick/programs/python-gnupg/python-gnupg-0.2.9
 export PYTHONPATH
 
+cd src
 python santiago_test.py "$@"

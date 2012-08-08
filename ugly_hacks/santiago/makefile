@@ -1,39 +1,39 @@
 #! /usr/bin/env make
 
-CERTIFICATE=freedombuddy.crt
+DATA_DIR = data
+BUILD_DIR = build
+CERTIFICATE = $(DATA_DIR)/freedombuddy.crt
+CFG_TEMPLATE = $(DATA_DIR)/template.cfg
+CFG_PRODUCTION = $(DATA_DIR)/production.cfg
+CFG_TEST = $(DATA_DIR)/test.cfg
 
-freedombuddy: build ssl-certificate build/python-gnupg production.cfg test.cfg
+freedombuddy: build ssl-certificate $(BUILD_DIR)/python-gnupg $(CFG_PRODUCTION) $(CFG_TEST)
 
 build:
 	mkdir -p build
 
 ssl-certificate: $(CERTIFICATE)
 
-$(CERTIFICATE): build build/cert-depends
+$(CERTIFICATE): build $(BUILD_DIR)/cert-depends
 	sudo make-ssl-cert generate-default-snakeoil
 	sudo make-ssl-cert /usr/share/ssl-cert/ssleay.cnf $(CERTIFICATE)
 	sudo chgrp 1000 $(CERTIFICATE)
 	sudo chmod g+r $(CERTIFICATE)
 	sudo touch $(CERTIFICATE)
 
-build/cert-depends: build
+$(BUILD_DIR)/cert-depends: build
 	sudo apt-get install ssl-cert
-	touch build/cert-depends
+	touch $(BUILD_DIR)/cert-depends
 
-build/python-gnupg: build
+$(BUILD_DIR)/python-gnupg: build
 	-sudo apt-get install python-gnupg
-	touch build/python-gnupg
+	touch $(BUILD_DIR)/python-gnupg
 
-production.cfg:
-	cp template.cfg production.cfg
+$(CFG_PRODUCTION):
+	cp $(CFG_TEMPLATE) $(CFG_PRODUCTION)
 
-test.cfg:
-	cp template.cfg test.cfg
+$(CFG_TEST):
+	cp $(CFG_TEMPLATE) $(CFG_TEST)
 
 clean:
 	rm -r build
-
-distclean: clean
-	sudo rm $(CERTIFICATE)
-	rm production.cfg
-	rm test.cfg

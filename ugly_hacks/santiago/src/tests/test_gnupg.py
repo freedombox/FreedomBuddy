@@ -1,7 +1,4 @@
 from pprint import pprint
-import sys
-sys.path.extend(["../..", ".",
-                 "/home/nick/programs/python-gnupg/python-gnupg-0.2.9"])
 import gnupg
 import santiago
 

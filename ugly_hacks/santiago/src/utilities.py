@@ -7,7 +7,7 @@ Currently contains a bunch of errors and config-file shortcuts.
 import ConfigParser as configparser
 
 
-def load_config(configfile="test.cfg"):
+def load_config(configfile="../data/test.cfg"):
     """Returns data from the named config file."""
 
     config = configparser.ConfigParser(
@@ -39,7 +39,7 @@ class SignatureError(Exception):
 
 class InvalidSignatureError(SignatureError):
     """The signature in this message is cryptographically invalid."""
-    
+
     pass
 
 class UnwillingHostError(SignatureError):

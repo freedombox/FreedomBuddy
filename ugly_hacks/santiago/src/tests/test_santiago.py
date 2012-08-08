@@ -31,7 +31,7 @@ class SantiagoTest(unittest.TestCase):
 
     if sys.version_info < (2, 7):
         """Add a poor man's forward compatibility."""
-  
+
         class ContainsError(AssertionError):
             pass
 
@@ -546,7 +546,7 @@ class ListenerTests(SantiagoTest):
 
         Create it, set its receiving methods to save off the arguments, and set
         a few values that we'll save off later.
-        
+
         """
         self.listener = santiago.SantiagoListener(santiago.Santiago())
 
