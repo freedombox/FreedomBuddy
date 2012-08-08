@@ -1,3 +1,5 @@
+-*- mode: org -*-
+
 * TODO Integrate FreedomBuddy into Plinth
 
 * DONE Integrate OpenVPN/Santiago: OpenVPN via Santiago.
@@ -8,17 +10,20 @@
 * TODO Integrate SSH/Santiago: SSH via Santiago:
    https://help.ubuntu.com/community/SSH_VPN
 
+* TODO use exmachnia for the [[file:src/scripts/freedombuddy-openvpn-client.py::subprocess.call("service%20openvpn%20restart".split())][openvpn restart]]
+  SCHEDULED: <2012-08-09 Thu>
+
 * TODO Service time expiry                                           :expiry:
 
 - Replies include "this service expires on".
 
 * TODO Add real Unit Testing.
 
-   - Spec out the system through test harnesses.
+  - Spec out the system through test harnesses.
 
-      If the tests can run the system, it's complete.
+    If the tests can run the system, it's complete.
 
-   - Differentiate backends and the independent system.
+  - Differentiate backends and the independent system.
 
 * TODO Message Queuing                                             :requests:
 
@@ -79,9 +84,9 @@
   replace the list of known FBuddy locations with the reply from the
   server:
 
-  - [X] [[file:santiago.py::self.create_consuming_location(host,%20self.reply_service,%20reply_to)][file:santiago.py::self.create_consuming_location(host, self.reply_service, reply_to)]]
+  - [X] [[file:src/santiago.py::self.create_consuming_location(host,%20self.reply_service,%20reply_to)][file:santiago.py::self.create_consuming_location(host, self.reply_service, reply_to)]]
 
-  - [X] [[file:santiago.py::self.create_consuming_location(client,%20self.reply_service,%20reply_to)][file:santiago.py::self.create_consuming_location(client, self.reply_service, reply_to)]]
+  - [X] [[file:src/santiago.py::self.create_consuming_location(client,%20self.reply_service,%20reply_to)][file:santiago.py::self.create_consuming_location(client, self.reply_service, reply_to)]]
 
 * TODO figure out what other request types FBuddies should request
    from one another.
@@ -93,14 +98,16 @@
 * TODO reorganize and consolidate this todo file.                      :meta:
 
 * TODO move files [/]                                               :cleanup:
+  SCHEDULED: <2012-08-07 Tue>
 
   - [ ] move data into /data
   - [ ] move source into /src, /src/scripts
 
-* TODO clean up [[file:santiago.py::if%20not%20self.requests%5Bhost%5D:][requests]] after 5 minutes                             :expiry:
+* TODO clean up [[file:src/santiago.py::if%20not%20self.requests%5Bhost%5D:][requests]] after 5 minutes                             :expiry:
 
   If they don't reply in that time, it times out and should be cleaned up.
 
 * TODO move hosting and consuming back to defaultdicts              :cleanup:
+  SCHEDULED: <2012-08-08 Wed>
 
   The syntax is just so much cleaner and shorter.  Implied getters and setters.
