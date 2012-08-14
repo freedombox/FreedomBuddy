@@ -582,10 +582,10 @@ class Santiago(object):
         if not self.i_am(host):
             self.proxy(to, host, client, service, reply_to)
         else:
-            self.replace_consuming_location(client,
-                                            self.reply_service,
-                                            reply_to)
-
+            if reply_to:
+                self.replace_consuming_location(client,
+                                                self.reply_service,
+                                                reply_to)
             self.outgoing_request(
                 self.me, client, self.me, client,
                 service, self.hosting[client][service],
@@ -631,7 +631,8 @@ class Santiago(object):
             self.proxy()
             return
 
-        self.replace_consuming_location(host, self.reply_service, reply_to)
+        if reply_to:
+            self.replace_consuming_location(host, self.reply_service, reply_to)
         self.create_consuming_location(host, service, locations)
 
         self.requests[host].remove(service)
