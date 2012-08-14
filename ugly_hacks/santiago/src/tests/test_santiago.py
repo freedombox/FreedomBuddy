@@ -19,12 +19,15 @@ import os
 import sys
 import unittest
 
+import cherrypy
 import gnupg
 import json
 import logging
 import santiago
 import utilities
 
+
+cherrypy.log.access_file = None
 
 class SantiagoTest(unittest.TestCase):
     """The base class for tests."""

@@ -12,6 +12,11 @@ import protocols.https.controller as controller
 import santiago
 import utilities
 
+import logging
+
+
+logging.getLogger("cherrypy")
+logging.disable(9001) # it's over 9000!!!!
 
 class CherryPyTester(unittest.TestCase):
 
