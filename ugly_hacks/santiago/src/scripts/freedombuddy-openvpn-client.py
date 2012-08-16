@@ -26,6 +26,11 @@ import optparse
 import subprocess
 import sys
 
+try:
+    from exmachina import ExMachinaClient
+except ImportError:
+    pass
+
 import scripts.freedombuddy as freedombuddy
 
 
@@ -120,4 +125,8 @@ if __name__ == "__main__":
     restart = write_if_changed(newKey, key_file)
 
     if restart:
-        subprocess.call("service openvpn restart".split())
+        try:
+            client = ExMachinaClient()
+            client.call.initd_restart("openvpn")
+        except NameError:
+            subprocess.call("service openvpn restart".split())
