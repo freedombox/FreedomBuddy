@@ -83,32 +83,7 @@
 
 * TODO Update documentation.                                        :cleanup:
 
-* TODO move hosting and consuming back to defaultdicts              :cleanup:
-  SCHEDULED: <2012-08-08 Wed>
+* DONE move hosting and consuming back to defaultdicts              :cleanup:
+  SCHEDULED: <2012-08-08 Wed> CLOSED: [2012-08-14 Tue 22:08]
 
   The syntax is just so much cleaner and shorter.  Implied getters and setters.
-* DONE move files [2/2]                                             :cleanup:
-  SCHEDULED: <2012-08-07 Tue> CLOSED: [2012-08-07 Tue 20:50]
-
-  - [X] move data into /data
-  - [X] move source into /src, /src/scripts
-
-* DONE change the host learning method [2/2]
-  CLOSED: [2012-08-05 Sun 18:20]
-
-  replace the list of known FBuddy locations with the reply from the
-  server:
-
-  - [X] [[file:src/santiago.py::self.create_consuming_location(host,%20self.reply_service,%20reply_to)][file:santiago.py::self.create_consuming_location(host, self.reply_service, reply_to)]]
-
-  - [X] [[file:src/santiago.py::self.create_consuming_location(client,%20self.reply_service,%20reply_to)][file:santiago.py::self.create_consuming_location(client, self.reply_service, reply_to)]]
-
-* DONE Integrate OpenVPN/Santiago: OpenVPN via Santiago.
-  CLOSED: [2012-08-05 Sun 18:29]
-   See redirect-gateway for redirecting all traffic.
-   http://openvpn.net/index.php/open-source/documentation/examples.html
-
-* DONE allow adding, editing, and removing through the interfaces.
-  CLOSED: [2012-08-04 Sat 15:30]
-
-
