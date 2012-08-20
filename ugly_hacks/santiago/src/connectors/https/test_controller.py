@@ -8,7 +8,7 @@ import sys
 import time
 import unittest
 
-import protocols.https.controller as controller
+import connectors.https.controller as controller
 import santiago
 import utilities
 
@@ -67,18 +67,18 @@ class MonitorTest(RestTester):
 
         # set up monitors, listeners, and senders
         cert = "../data/freedombuddy.crt"
-        protocol = "https"
+        connector = "https"
         service = "freedombuddy"
         location = "https://localhost:"
         serving_port = 8080
 
-        listeners = { protocol: { "socket_port": serving_port,
+        listeners = { connector: { "socket_port": serving_port,
                                  "ssl_certificate": cert,
                                  "ssl_private_key": cert
                                   }, }
-        senders = { protocol: { "proxy_host": "localhost",
+        senders = { connector: { "proxy_host": "localhost",
                                "proxy_port": 8118} }
-        monitors = { protocol: {} }
+        monitors = { connector: {} }
 
         # services to host and consume
         hosting = { mykey: { service: [location + str(serving_port)] } }
@@ -219,7 +219,7 @@ class Listener(MonitorTest):
                              "reply_to": [],
                              "request_version": 1,
                              "reply_versions":
-                                 list(santiago.Santiago.SUPPORTED_PROTOCOLS),}),
+                                 list(santiago.Santiago.SUPPORTED_CONNECTORS),}),
 
             self.santiago.me,
             sign=self.santiago.me)}

@@ -69,6 +69,7 @@ class Listener(santiago.SantiagoListener):
         santiago.debug_log("Listener Created.")
 
     @cherrypy.tools.ip_filter()
+    # @cherrypy.tools.allow_requests("POST")
     def index(self, **kwargs):
         """Receive an incoming Santiago request from another Santiago client."""
 
@@ -76,6 +77,7 @@ class Listener(santiago.SantiagoListener):
 
         # FIXME Blammo!
         # make sure there's some verification of the incoming connection here.
+        # allow POSTs only.
 
         try:
             self.incoming_request(kwargs["request"])
@@ -187,7 +189,7 @@ class HttpMonitor(object):
 
     def __init__(self, *args, **kwargs):
         super(HttpMonitor, self).__init__()
-        self.relative_path = "protocols/https/templates"
+        self.relative_path = "connectors/https/templates"
 
     def _parse_query(self, query_input):
         """Split a URL into its query string.

@@ -4,7 +4,7 @@
 
 Santiago is designed to let users negotiate services without third party
 interference.  By sending OpenPGP signed and encrypted messages over HTTPS (or
-other protocols) between parties, I hope to reduce or even prevent MITM attacks.
+other connectors) between parties, I hope to reduce or even prevent MITM attacks.
 Santiago can also use the Tor network as a proxy (with Python 2.7 or later),
 allowing this negotiation to happen very quietly.
 
@@ -17,7 +17,7 @@ is handled and a request is returned.  Then, the reply is handled.  The upshot
 is that we learn a new set of locations for the service.
 
 :TODO: add doctests
-:FIXME: allow multiple listeners and senders per protocol (with different
+:FIXME: allow multiple listeners and senders per connector (with different
     proxies)
 
 This dead-drop approach is what came of my trying to learn from bug 4185.
@@ -62,11 +62,10 @@ def debug_log(message):
 class Santiago(object):
     """This Santiago is a less extensible Santiago.
 
-    The client and server are unified, and it has hardcoded support for
-    protocols.
+    The client and server are unified.
 
     """
-    SUPPORTED_PROTOCOLS = set([1])
+    SUPPORTED_CONNECTORS = set([1])
     # all keys must be present in the message.
     ALL_KEYS = set(("host", "client", "service", "locations", "reply_to",
                     "request_version", "reply_versions"))
@@ -76,7 +75,7 @@ class Santiago(object):
     # optional keys may be null.
     OPTIONAL_KEYS = ALL_KEYS ^ REQUIRED_KEYS
     LIST_KEYS = set(("reply_to", "locations", "reply_versions"))
-    CONTROLLER_MODULE = "protocols.{0}.controller"
+    CONTROLLER_MODULE = "connectors.{0}.controller"
 
     SERVICE_NAME = "freedombuddy"
 
@@ -86,8 +85,8 @@ class Santiago(object):
                  reply_service = None, locale = "en", save_dir = "."):
         """Create a Santiago with the specified parameters.
 
-        listeners and senders are both protocol-specific dictionaries containing
-        relevant settings per protocol:
+        listeners and senders are both connector-specific dictionaries containing
+        relevant settings per connector:
 
             { "http": { "port": 80 } }
 
@@ -111,7 +110,7 @@ class Santiago(object):
         self.requests = DefaultDict(set)
         self.me = me
         self.gpg = gnupg.GPG(use_agent = True)
-        self.protocols = set()
+        self.connectors = set()
         self.reply_service = reply_service or Santiago.SERVICE_NAME
         self.locale = locale
 
@@ -129,13 +128,13 @@ class Santiago(object):
 
     def create_connectors(self, data, type):
         connectors = self._create_connectors(data, type)
-        self.protocols |= set(connectors.keys())
+        self.connectors |= set(connectors.keys())
 
         return connectors
 
 
     def _create_connectors(self, settings, connector):
-        """Iterates through each protocol given, creating connectors for all.
+        """Iterates through each connector given, creating connectors for all.
 
         This assumes that the caller correctly passes parameters for each
         connector.  If not, we log a TypeError and continue to serve any
@@ -145,29 +144,29 @@ class Santiago(object):
         """
         connectors = dict()
 
-        for protocol in settings.iterkeys():
-            module = Santiago._get_protocol_module(protocol)
+        for connector in settings.iterkeys():
+            module = Santiago._get_connector_module(connector)
 
             try:
-                connectors[protocol] = \
-                    getattr(module, connector)(self, **settings[protocol])
+                connectors[connector] = \
+                    getattr(module, connector)(self, **settings[connector])
 
             # log a type error, assume all others are fatal.
             except TypeError:
                 logging.error("Could not create %s %s with %s",
-                              protocol, connector, str(settings[protocol]))
+                              connector, connector, str(settings[connector]))
 
         return connectors
 
     @classmethod
-    def _get_protocol_module(cls, protocol):
-        """Return the requested protocol module.
+    def _get_connector_module(cls, connector):
+        """Return the requested connector module.
 
         It assumes the Santiago directory is in sys.path, which seems to be a
         fair assumption.
 
         """
-        import_name = cls.CONTROLLER_MODULE.format(protocol)
+        import_name = cls.CONTROLLER_MODULE.format(connector)
 
         if not import_name in sys.modules:
             __import__(import_name)
@@ -186,8 +185,8 @@ class Santiago(object):
                           list(self.senders.itervalues())):
             connector.start()
 
-        for protocol in self.protocols:
-            sys.modules[Santiago.CONTROLLER_MODULE.format(protocol)].start()
+        for connector in self.connectors:
+            sys.modules[Santiago.CONTROLLER_MODULE.format(connector)].start()
 
         debug_log("Santiago started!")
 
@@ -207,8 +206,8 @@ class Santiago(object):
                           list(self.senders.itervalues())):
             connector.stop()
 
-        for protocol in self.protocols:
-            sys.modules[Santiago.CONTROLLER_MODULE.format(protocol)].stop()
+        for connector in self.connectors:
+            sys.modules[Santiago.CONTROLLER_MODULE.format(connector)].stop()
 
         self.save_data("hosting")
         self.save_data("consuming")
@@ -435,7 +434,7 @@ class Santiago(object):
         Each incoming item must be a single item or a list.
 
         The outgoing ``request`` is literally the request's text.  It needs to
-        be wrapped for transport across the protocol.
+        be wrapped for transport across the connector.
 
         """
         self.requests[host].add(service)
@@ -445,7 +444,7 @@ class Santiago(object):
                   "service": service, "locations": list(locations or ""),
                   "reply_to": list(reply_to),
                   "request_version": 1,
-                  "reply_versions": list(Santiago.SUPPORTED_PROTOCOLS),}),
+                  "reply_versions": list(Santiago.SUPPORTED_CONNECTORS),}),
             host,
             sign=self.me)
 
@@ -515,7 +514,7 @@ class Santiago(object):
         Some lists are changed to sets here.  This allows for set-operations
         (union, intersection, etc) later, making things much more intuitive.
 
-        The request and client must be of and support protocol versions I
+        The request and client must be of and support connector versions I
         understand.
 
         """
@@ -547,10 +546,10 @@ class Santiago(object):
             return
 
         # versions must overlap.
-        if not (Santiago.SUPPORTED_PROTOCOLS &
+        if not (Santiago.SUPPORTED_CONNECTORS &
                 set(request_body["reply_versions"])):
             return
-        if not (Santiago.SUPPORTED_PROTOCOLS &
+        if not (Santiago.SUPPORTED_CONNECTORS &
               set([request_body["request_version"]])):
             return
 
@@ -568,7 +567,7 @@ class Santiago(object):
           aren't, quit and return nothing.
         - Forward the request if it's not for me.
         - Learn new Santiagi if they were sent.
-        - Reply to the client on the appropriate protocol.
+        - Reply to the client on the appropriate connector.
 
         """
         # give up if we won't host the service for the client.
@@ -691,7 +690,7 @@ class SantiagoSender(SantiagoConnector):
     """Generic Santiago Sender superclass.
 
     This class contains one required method, the request sending method.  This
-    method sends a Santiago request via that protocol.
+    method sends a Santiago request via that connector.
 
     """
     def outgoing_request(self):

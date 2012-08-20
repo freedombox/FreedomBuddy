@@ -223,17 +223,17 @@ class UnpackRequest(SantiagoTest):
     def test_require_protocol_version_overlap(self):
         """Clients that can't accept protocols I can send are ignored."""
 
-        santiago.Santiago.SUPPORTED_PROTOCOLS, unsupported = \
-            set(["e"]), santiago.Santiago.SUPPORTED_PROTOCOLS
+        santiago.Santiago.SUPPORTED_CONNECTORS, unsupported = \
+            set(["e"]), santiago.Santiago.SUPPORTED_CONNECTORS
 
         self.request = self.wrap_message(self.request)
 
         self.assertFalse(self.santiago.unpack_request(self.request))
 
-        santiago.Santiago.SUPPORTED_PROTOCOLS, unsupported = \
-            unsupported, santiago.Santiago.SUPPORTED_PROTOCOLS
+        santiago.Santiago.SUPPORTED_CONNECTORS, unsupported = \
+            unsupported, santiago.Santiago.SUPPORTED_CONNECTORS
 
-        self.assertTrue(santiago.Santiago.SUPPORTED_PROTOCOLS, set([1]))
+        self.assertTrue(santiago.Santiago.SUPPORTED_CONNECTORS, set([1]))
 
     def test_require_protocol_version_understanding(self):
         """The service must ignore any protocol versions it can't understand."""

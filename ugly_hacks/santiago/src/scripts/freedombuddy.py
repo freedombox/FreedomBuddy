@@ -59,7 +59,7 @@ import sys
 import time
 import urllib
 
-import protocols.https.controller as controller
+import connectors.https.controller as controller
 
 
 def interpret_args(args, parser=None):

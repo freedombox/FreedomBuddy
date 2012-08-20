@@ -26,7 +26,7 @@ def parse_args(args):
     parser.add_option("-v", "--verbose", dest="verbose", action="count",
                       help="""\
 Can be given multiple times to increase logging level.  Once means show
-FreedomBuddy logging messages.  Twice means show protocol logging messages as
+FreedomBuddy logging messages.  Twice means show connector logging messages as
 well.""")
     parser.add_option("-c", "--config", dest="config",
                       default="../data/production.cfg",
