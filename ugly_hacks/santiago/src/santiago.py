@@ -144,17 +144,17 @@ class Santiago(object):
         """
         connectors = dict()
 
-        for connector in settings.iterkeys():
-            module = Santiago._get_connector_module(connector)
+        for protocol in settings.iterkeys():
+            module = Santiago._get_connector_module(protocol)
 
             try:
-                connectors[connector] = \
-                    getattr(module, connector)(self, **settings[connector])
+                connectors[protocol] = \
+                    getattr(module, connector)(self, **settings[protocol])
 
             # log a type error, assume all others are fatal.
             except TypeError:
                 logging.error("Could not create %s %s with %s",
-                              connector, connector, str(settings[connector]))
+                              protocol, connector, str(settings[protocol]))
 
         return connectors
 
