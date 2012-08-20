@@ -59,7 +59,7 @@ import sys
 import time
 import urllib
 
-import connectors.https.controller as controller
+import connectors.https.controller as httpcontroller
 
 
 def interpret_args(args, parser=None):
@@ -186,7 +186,7 @@ def query(*args, **kwargs):
     """Unwrap controller's json."""
 
     try:
-        return controller.query(*args, **kwargs)
+        return httpcontroller.query(*args, **kwargs)
     except (ValueError, TypeError):
         pass
 

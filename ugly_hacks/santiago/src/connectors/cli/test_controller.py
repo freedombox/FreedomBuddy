@@ -12,7 +12,7 @@ quits the interpreter, so testing stops whenever we test an error condition.
 import subprocess
 import unittest
 
-import freedombuddy
+import connectors.cli.controller
 
 class ArgumentInterpretation(unittest.TestCase):
     """Verify arguments set data as expected.
