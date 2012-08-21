@@ -555,6 +555,37 @@ by navigating to:
 
 You should see three requests appear in the console.
 
+Basic Service Configuration
+---------------------------
+
+Services offered over FreedomBuddy follow a standard pattern.  The service uses
+standard names to identify its data points and lists that data under the
+reserved "services" key.  For example, to allow a client to connect, an OpenVPN
+host must tell its client three items:
+
+1. The host's IP address ("openvpn-host").
+2. The client's IP address ("openvpn-client").
+3. The shared static key ("openvpn-key").
+
+The client will eventually poll the server for each of those keys individually,
+but the host may advertise those keys under the "services" key to make the
+client's job easier (so the client doesn't need to guess whether the host will
+carry those keys).
+
+The generic "services" key lists the name of other keys the host carries for the
+client, allowing clients to effectively narrow their service search without
+querying for services that may not be there.  However, the "services" key is not
+required to list all services.  It should only list the keys the server wishes
+the client to find automatically.
+
+FreedomBuddy Service Configuration
+----------------------------------
+
+The FreedomBuddy service reserves the "freedombuddy" key for advertising its own
+locations.  This can be changed, but requires editing santiago.py's
+Santiago.SERVICE_NAME variable.  Changing it produces non-interoperable clients
+and is thus not recommended for general use.
+
 Tasks
 -----
 
