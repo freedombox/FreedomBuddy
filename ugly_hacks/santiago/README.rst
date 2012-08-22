@@ -22,6 +22,8 @@ The FreedomBuddy System
     deployment.  It won't fully protect your privacy, there're still a number of
     flaws that need to be fixed first.  Run ``grep -r FIXME *`` for details.
 
+.. contents::
+
 Santiago's Map
 ==============
 
