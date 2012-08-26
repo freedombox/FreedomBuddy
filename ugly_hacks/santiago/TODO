@@ -1,33 +1,32 @@
--*- mode: org -*-
+-*- mode: org; fill-column: 80 -*-
 
-* TODO Integrate FreedomBuddy into Plinth
+* TODO reorganize and consolidate this todo file.                      :meta:
+* TODO Make easy introduction protocol                               :design:
 
-* TODO Integrate SSH/Santiago: SSH via Santiago:
+A self-signed message that says:
+
+    Here is my public key ID.
+
+    Here is a location.
+
+Then, I can import these messages into the local keyring and the FBuddy data
+store.
+
+* TODO Integrate FreedomBuddy into Plinth                            :design:
+
+* TODO Integrate SSH/Santiago: SSH via Santiago:                     :design:
    https://help.ubuntu.com/community/SSH_VPN
 
-* TODO remove gpg requirement
+* TODO remove gpg requirement                                        :design:
 
    For generalized broadcasting, in case of freedom-emergency, of course.
 
-* TODO use exmachnia for the [[file:src/scripts/freedombuddy-openvpn-client.py::subprocess.call("service%20openvpn%20restart".split())][openvpn restart]]
-  SCHEDULED: <2012-08-09 Thu>
-
-* TODO Add real Unit Testing.
-
-  - Spec out the system through test harnesses.
-
-    If the tests can run the system, it's complete.
-
-  - Differentiate backends and the independent system.
-
-* TODO figure out what other request types FBuddies should request
+* TODO figure out what other request types FBuddies should request   :design:
    from one another.
 
    - request "all services for this client"
 
       be able to hide some services from the client?
-
-* TODO reorganize and consolidate this todo file.                      :meta:
 
 * TODO Service time expiry                                           :expiry:
 
@@ -37,11 +36,7 @@
 
   If they don't reply in that time, it times out and should be cleaned up.
 
-* TODO allow adding, editing, and removing reply-locations through requests. :requests:
-
-   If somebody has my private key anyway, I'm already screwed.
-
-* TODO support editing-in-place well                               :requests:
+* TODO support editing-in-place well for HTML frontend             :requests:
 
    I really should.  Remove + Add isn't acceptable in complex
    situations.
@@ -71,6 +66,14 @@
 
   http://docs.python.org/howto/sockets.html
 
+* TODO Add real Unit Testing.                                       :cleanup:
+
+  - Spec out the system through test harnesses.
+
+    If the tests can run the system, it's complete.
+
+  - Differentiate backends and the independent system.
+
 * TODO use GetText for Internationalization.                        :cleanup:
 
    http://docs.python.org/library/gettext.html
@@ -87,3 +90,12 @@
   SCHEDULED: <2012-08-08 Wed> CLOSED: [2012-08-14 Tue 22:08]
 
   The syntax is just so much cleaner and shorter.  Implied getters and setters.
+* DONE use exmachnia for the [[file:src/scripts/freedombuddy-openvpn-client.py::subprocess.call("service%20openvpn%20restart".split())][openvpn restart]]                         :design:
+  SCHEDULED: <2012-08-09 Thu> CLOSED: [2012-08-26 Sun 16:43]
+
+
+* DONE allow adding, editing, and removing reply-locations through requests. :requests:
+  CLOSED: [2012-08-26 Sun 16:44]
+
+   If somebody has my private key anyway, I'm already screwed.
+
