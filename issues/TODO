@@ -1,11 +1,5 @@
 -*- mode: org; fill-column: 80 -*-
 
-* TODO Split this into a separate repository                           :meta:
-
-http://stackoverflow.com/questions/509859/what-is-the-best-way-to-git-patch-a-subrange-of-a-branch
-
-http://stackoverflow.com/questions/2520002/git-exclude-a-commit-in-a-branch
-
 * TODO reorganize and consolidate this todo file.                      :meta:
 * TODO Make easy introduction protocol                               :design:
 
@@ -92,16 +86,10 @@ store.
 
 * TODO Update documentation.                                        :cleanup:
 
-* DONE move hosting and consuming back to defaultdicts              :cleanup:
-  SCHEDULED: <2012-08-08 Wed> CLOSED: [2012-08-14 Tue 22:08]
+* DONE Split this into a separate repository                           :meta:
+  CLOSED: [2012-08-27 Mon 13:45]
 
-  The syntax is just so much cleaner and shorter.  Implied getters and setters.
-* DONE use exmachnia for the [[file:src/scripts/freedombuddy-openvpn-client.py::subprocess.call("service%20openvpn%20restart".split())][openvpn restart]]                         :design:
-  SCHEDULED: <2012-08-09 Thu> CLOSED: [2012-08-26 Sun 16:43]
+http://stackoverflow.com/questions/509859/what-is-the-best-way-to-git-patch-a-subrange-of-a-branch
 
-
-* DONE allow adding, editing, and removing reply-locations through requests. :requests:
-  CLOSED: [2012-08-26 Sun 16:44]
-
-   If somebody has my private key anyway, I'm already screwed.
+http://stackoverflow.com/questions/2520002/git-exclude-a-commit-in-a-branch
 
