@@ -1,5 +1,11 @@
 -*- mode: org; fill-column: 80 -*-
 
+* TODO Split this into a separate repository                           :meta:
+
+http://stackoverflow.com/questions/509859/what-is-the-best-way-to-git-patch-a-subrange-of-a-branch
+
+http://stackoverflow.com/questions/2520002/git-exclude-a-commit-in-a-branch
+
 * TODO reorganize and consolidate this todo file.                      :meta:
 * TODO Make easy introduction protocol                               :design:
 
