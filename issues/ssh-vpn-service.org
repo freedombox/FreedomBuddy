@@ -1,0 +1,31 @@
+# -*- mode: org; fill-column: 80 -*-
+
+#+TITLE: Create a FreedomBuddy SSH VPN Service
+
+* Introduction
+
+https://help.ubuntu.com/community/SSH_VPN
+
+* Fixes
+
+We need to read FreedomBuddy data to configure bot the SSH host and the SSH
+client, similar to how the [[file:~/programs/freedombox/freedombuddy/src/scripts/openvpn/static-key_client.py][Open VPN client]] does it.  We have two options:
+
+1. Edit =/etc/network/interfaces= and restart the network service.
+
+2. Plow a bunch of networking commands through as the super user.
+
+Not really sure which one'd be easier, I almost think editing the interfaces
+file might be, if I can make (or use) a decent /etc/network/interfaces editor.
+
+** TODO SSH Host
+
+** TODO SSH Client
+
+* Updates
+
+** [2012-08-27 Mon]
+   CLOCK: [2012-08-27 Mon 22:00]--[2012-08-27 Mon 22:27] => 0:27
+   :PROPERTIES:
+   :Author:   Nick Daly
+   :END:
