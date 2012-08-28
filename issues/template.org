@@ -1,0 +1,20 @@
+# -*- mode: org; fill-column: 80 -*-
+
+#+TITLE: (some title)
+
+* Introduction
+
+(a description of the problem)
+
+* Fixes [/]
+
+** TODO (a goal)
+
+* Updates
+
+** [a timestamp]
+   :PROPERTIES:
+   :Author: (your name)
+   :END:
+
+   (your changes)
