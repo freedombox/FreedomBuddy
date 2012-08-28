@@ -14,9 +14,6 @@ store.
 
 * TODO Integrate FreedomBuddy into Plinth                            :design:
 
-* TODO Integrate SSH/Santiago: SSH via Santiago:                     :design:
-   https://help.ubuntu.com/community/SSH_VPN
-
 * TODO remove gpg requirement                                        :design:
 
    For generalized broadcasting, in case of freedom-emergency, of course.
@@ -86,10 +83,4 @@ store.
 
 * TODO Update documentation.                                        :cleanup:
 
-* DONE Split this into a separate repository                           :meta:
-  CLOSED: [2012-08-27 Mon 13:45]
-
-http://stackoverflow.com/questions/509859/what-is-the-best-way-to-git-patch-a-subrange-of-a-branch
-
-http://stackoverflow.com/questions/2520002/git-exclude-a-commit-in-a-branch
-
+2012.0827.2205
