@@ -14,7 +14,7 @@ We need to read FreedomBuddy data to configure an [[https://help.ubuntu.com/comm
 Not really sure which one'd be easier, I almost think editing the interfaces
 file might be, if I can make (or use) a decent /etc/network/interfaces editor.
 
-* Fixes
+* Fixes [0/2]
 
 ** TODO SSH Host
 
