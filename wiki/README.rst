@@ -9,10 +9,14 @@ The FreedomBuddy System
 
 :Author: Nick Daly, 2012
 :License: This file is distributed under a Creative Commons
-    Attribution-ShareAlike 3.0 Unported, Version 3 license. This CC-By-SA
+    Attribution-ShareAlike 3.0 Unported, Version 3 license.  This CC-By-SA
     license is available in both full_ and summarized_ versions from Creative
     Commons.  This file is also distributed under the `GNU Free Documentation
     License`_, version 1.3 or later.
+
+    FreedomBuddy itself is distributed under the terms of the GNU Affero General
+    Public License as published by the Free Software Foundation, either version
+    3 of the License, or (at your option) any later version.
 
 .. _full: http://creativecommons.org/licenses/by-sa/3.0/legalcode
 .. _summarized: http://creativecommons.org/licenses/by-sa/3.0/
