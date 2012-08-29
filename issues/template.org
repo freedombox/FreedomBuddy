@@ -3,15 +3,15 @@
 #+TITLE: (some title)
 
 * Metadata
- :PROPERTIES:
- :Status:    (Incomplete/Complete)
- :Owner:     (your name)
- :Blocks:    [[blocked-issue.org][Some other issue]]
- :Blocking:  [[blocking-issue-1.org][A different issue]]
- :Blocking:  [[blocking-issue-2.org][Yet one more issue]]
- :Related:   [[a-related-issue.org][Some Related Issue]]
- :Duplicate: [[a-duplicate-issue.org][Some Duplicate]]
- :END:
+  :PROPERTIES:
+  :Status:    (Incomplete/Complete)
+  :Owner:     (your name)
+  :Blocks:    [[blocked-issue.org][Some other issue]]
+  :Blocking:  [[blocking-issue-1.org][A different issue]]
+  :Blocking:  [[blocking-issue-2.org][Yet one more issue]]
+  :Related:   [[a-related-issue.org][Some Related Issue]]
+  :Duplicate: [[a-duplicate-issue.org][Some Duplicate]]
+  :END:
 
 * Issue
 
