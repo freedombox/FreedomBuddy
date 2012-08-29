@@ -1,0 +1,54 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Field Testing FreedomBuddy
+
+* Metadata
+  :PROPERTIES:
+  :Status:    Incomplete
+  :Owner:     Nick Daly
+  :Blocked:   [[file:ssh-vpn-service.org][SSH VPN Service]]
+  :END:
+
+* Issue
+
+  (a description of the problem)
+
+* Fixes [0/1]
+
+  (a description of the needed changes)
+
+** TODO (a goal)
+
+   (a solution's description)
+
+* Discussion
+
+** (subject)
+   :PROPERTIES:
+   :Author:   (name)
+   :END:
+
+   (discussing a topic)
+
+*** (subject)
+    :PROPERTIES:
+    :Author:   (name)
+    :END:
+
+    (a reply)
+
+** (subject)
+   :PROPERTIES:
+   :Author:   (name)
+   :END:
+
+   (another sub-topic)
+
+* Updates
+
+** [a timestamp]
+   :PROPERTIES:
+   :Author:   (your name)
+   :END:
+
+   (your changes)
