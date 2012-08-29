@@ -1,20 +1,58 @@
-# -*- mode: org; fill-column: 80 -*-
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: (some title)
 
-* Introduction
+* Metadata
+ :PROPERTIES:
+ :Status:    (Incomplete/Complete)
+ :Owner:     (your name)
+ :Blocks:    [[blocked-issue.org][Some other issue]]
+ :Blocking:  [[blocking-issue-1.org][A different issue]]
+ :Blocking:  [[blocking-issue-2.org][Yet one more issue]]
+ :Related:   [[a-related-issue.org][Some Related Issue]]
+ :Duplicate: [[a-duplicate-issue.org][Some Duplicate]]
+ :END:
 
-(a description of the problem)
+* Issue
 
-* Fixes [/]
+  (a description of the problem)
+
+* Fixes [0/1]
+
+  (a description of the needed changes)
 
 ** TODO (a goal)
+
+   (a solution's description)
+
+* Discussion
+
+** (subject)
+   :PROPERTIES:
+   :Author:   (name)
+   :END:
+
+   (discussing a topic)
+
+*** (subject)
+    :PROPERTIES:
+    :Author:   (name)
+    :END:
+
+    (a reply)
+
+** (subject)
+   :PROPERTIES:
+   :Author:   (name)
+   :END:
+
+   (another sub-topic)
 
 * Updates
 
 ** [a timestamp]
    :PROPERTIES:
-   :Author: (your name)
+   :Author:   (your name)
    :END:
 
    (your changes)
