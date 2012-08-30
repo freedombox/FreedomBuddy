@@ -1,15 +1,17 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: (some title)
+#+COLUMNS: %30ITEM(Task) %10Owner %10Blocking %10Blocked %ORDER
 
 * Metadata
   :PROPERTIES:
-  :Status:    (Incomplete/Complete)
-  :Owner:     (your name)
-  :Blocking:  [[blocking-issue-1.org][A different issue]] [[blocking-issue-2.org][Yet one more issue]]
-  :Blocked:   [[blocked-issue.org][Some other issue]]
-  :Related:   [[a-related-issue.org][Some Related Issue]]
-  :Duplicate: [[a-duplicate-issue.org][Some Duplicate]]
+  :Complete:   0
+  :Priority:   10
+  :Owner:      (your name)
+  :Blocking:   [[blocking-issue-1.org][A different issue]] [[blocking-issue-2.org][Yet one more issue]]
+  :Blocked:    [[blocked-issue.org][Some other issue]]
+  :Related:    [[a-related-issue.org][Some Related Issue]]
+  :Duplicate:  [[a-duplicate-issue.org][Some Duplicate]]
   :END:
 
 * Issue
@@ -46,12 +48,3 @@
    :END:
 
    (another sub-topic)
-
-* Updates
-
-** [a timestamp]
-   :PROPERTIES:
-   :Author:   (your name)
-   :END:
-
-   (your changes)
