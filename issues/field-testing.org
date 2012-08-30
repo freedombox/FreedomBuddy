@@ -1,6 +1,7 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Field Testing FreedomBuddy
+#+COLUMNS: %30ITEM(Task) %10Owner %10Blocking %10Blocked %ORDER
 
 * Metadata
   :PROPERTIES:
@@ -11,44 +12,12 @@
 
 * Issue
 
-  (a description of the problem)
+* Fixes [0/3]
+  :PROPERTIES:
+  :ORDERED:  t
+  :END:
 
-* Fixes [0/1]
+** TODO FNF Volunteers
 
-  (a description of the needed changes)
-
-** TODO (a goal)
-
-   (a solution's description)
-
-* Discussion
-
-** (subject)
-   :PROPERTIES:
-   :Author:   (name)
-   :END:
-
-   (discussing a topic)
-
-*** (subject)
-    :PROPERTIES:
-    :Author:   (name)
-    :END:
-
-    (a reply)
-
-** (subject)
-   :PROPERTIES:
-   :Author:   (name)
-   :END:
-
-   (another sub-topic)
-
-* Updates
-
-** [a timestamp]
-   :PROPERTIES:
-   :Author:   (your name)
-   :END:
-
-   (your changes)
+** TODO FreedomBox Volunteers
+** TODO International Volunteers
