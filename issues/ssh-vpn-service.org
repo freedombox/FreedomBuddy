@@ -1,12 +1,13 @@
 # -*- mode: org; fill-column: 80 -*-
 
 #+TITLE: Create a FreedomBuddy SSH VPN Service
+#+COLUMNS: %30ITEM(Task) %10Owner %10Blocking %10Blocked %ORDER
 
 * Metadata
   :PROPERTIES:
-  :Status:    Incomplete
-  :Owner:     Nick Daly
-  :Blocking:  [[file:field-testing.org][Field Testing]]
+  :Status:   Incomplete
+  :Owner:    Nick Daly
+  :Blocking: [[file:field-testing.org][Field Testing]]
   :END:
 
 * Issue
@@ -26,16 +27,3 @@
 ** TODO SSH Host
 
 ** TODO SSH Client
-
-* Discussion
-
-* Updates
-
-** [2012-08-27 Mon]
-   CLOCK: [2012-08-27 Mon 22:32]--[2012-08-27 Mon 22:37] =>  0:05
-   CLOCK: [2012-08-27 Mon 22:00]--[2012-08-27 Mon 22:27] => 0:27
-   :PROPERTIES:
-   :Author:   Nick Daly
-   :END:
-
-   Initial commit.
