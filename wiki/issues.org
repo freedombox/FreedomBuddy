@@ -1,0 +1,43 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Issues, Explained
+
+Issues are stored as [[http://orgmode.org][Org Mode]] files using [[http://www.taskjuggler.org][TaskJuggler]]-similar [[http://www.taskjuggler.org/tj3/manual/task.html][properties]] to
+allow easy export to almost any format, including a TaskJuggler project list.
+
+* Structure
+
+The basic structure of these files is:
+
+1. A title.
+2. Some metadata, stored in a [[http://orgmode.org/manual/Properties-and-Columns.html#Properties-and-Columns][Property-drawer]].
+3. A description of the issue.
+4. Potential fixes.
+5. Any issue-related discussion.
+
+* Properties as Metadata
+
+To integrate better with TaskJuggler, consider using properties TaskJuggler
+recognizes:
+
+- complete :: 0 - 100
+- priority :: 1 - 1000
+- responsible :: a person
+- precedes :: another bug that can't be handled until this one
+- depends :: a bug that must be handled before this one
+- effort :: time, in workdays, required to fix the issue
+
+Some non-TaskJuggler properties might also be useful:
+
+- Related :: related issues (similar, but not blocking or blocked)
+- Duplicate :: a duplicate issue
+- Status :: open/closed, incomplete/complete, invalid
+- Severity :: The issue's overall impact.  With frequency, determines priority.
+- Frequency :: How often the issue occurs.  With severity, determines priority.
+
+The only ones I ever really bother using are:
+
+- blocking :: an alternate form of precedes
+- blocked :: an alternate form of depends
+- owner :: an alternate form of responsible
+- status :: an alternate form of complete that allows for "invalid" percentages
