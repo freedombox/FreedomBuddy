@@ -12,12 +12,6 @@ A self-signed message that says:
 Then, I can import these messages into the local keyring and the FBuddy data
 store.
 
-* TODO Integrate FreedomBuddy into Plinth                            :design:
-
-* TODO remove gpg requirement                                        :design:
-
-   For generalized broadcasting, in case of freedom-emergency, of course.
-
 * TODO figure out what other request types FBuddies should request   :design:
    from one another.
 
@@ -62,14 +56,6 @@ store.
   Remove the dependency on the HTTPS connector.
 
   http://docs.python.org/howto/sockets.html
-
-* TODO Add real Unit Testing.                                       :cleanup:
-
-  - Spec out the system through test harnesses.
-
-    If the tests can run the system, it's complete.
-
-  - Differentiate backends and the independent system.
 
 * TODO use GetText for Internationalization.                        :cleanup:
 
