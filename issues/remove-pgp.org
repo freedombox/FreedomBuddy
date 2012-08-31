@@ -5,7 +5,7 @@
 * Metadata
   :PROPERTIES:
   :Status:    Incomplete
-  :Priority:  10
+  :Priority:  5
   :Owner:     Nick Daly
   :END:
 
@@ -17,6 +17,10 @@
   clients.  It would also make it possible to publish a public service list in
   case of a general service shutdown or other situations where accessibility is
   more important than the host's anonymity or privacy.
+
+  Both J and S requested this: one for privacy and resilience, the other for
+  accessibility and resilience.  Either way, we're removing a constraint, making
+  the system more flexible.
 
 * Fixes [0/1]
 

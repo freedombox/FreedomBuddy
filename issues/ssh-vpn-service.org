@@ -1,13 +1,13 @@
-# -*- mode: org; fill-column: 80 -*-
+# -*- mode: org; fill-column: 80; mode: auto-fill -*-
 
 #+TITLE: Create a FreedomBuddy SSH VPN Service
-#+COLUMNS: %30ITEM(Task) %10Owner %10Blocking %10Blocked %ORDER
 
 * Metadata
   :PROPERTIES:
   :Status:   Incomplete
   :Owner:    Nick Daly
   :Blocking: [[file:field-testing.org][Field Testing]]
+  :Priority: 10
   :END:
 
 * Issue

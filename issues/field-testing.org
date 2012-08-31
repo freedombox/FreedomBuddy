@@ -1,23 +1,36 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Field Testing FreedomBuddy
-#+COLUMNS: %30ITEM(Task) %10Owner %10Blocking %10Blocked %ORDER
 
 * Metadata
   :PROPERTIES:
-  :Status:    Incomplete
-  :Owner:     Nick Daly
-  :Blocked:   [[file:ssh-vpn-service.org][SSH VPN Service]]
+  :Status:   Incomplete
+  :Owner:    Nick Daly
+  :Blocked:  [[file:full-test-suite.org][Full Test Suite]] [[file:ssh-vpn-service.org][SSH VPN]]
+  :Priority: 10
   :END:
 
 * Issue
+
+  Before promoting to the general public, FreedomBuddy must:
+
+  - Have all primary connectors and services complete.
+
+  - Be proven theoretically secure.
+
+  - Be successfully and securely field tested.
 
 * Fixes [0/3]
   :PROPERTIES:
   :ORDERED:  t
   :END:
 
+  - Volunteers will be recruited.
+
+  - Test results will be recorded, reported, analyzed, and corrected for.
+
 ** TODO FNF Volunteers
 
 ** TODO FreedomBox Volunteers
+
 ** TODO International Volunteers
