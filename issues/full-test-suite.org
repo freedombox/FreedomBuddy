@@ -1,0 +1,42 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Create a Comprehensive Self-Test Suite
+
+* Metadata
+  :PROPERTIES:
+  :Status:     Incomplete
+  :Priority:   10
+  :Owner:      Nick Daly
+  :Blocking:   [[file:field-testing.org][Field Testing]]
+  :END:
+
+* Issue
+
+  Creating a self-testing package will simplify testing the FreedomBuddy system
+  in several ways:
+
+  - Automatic data collection (no user intervention or interpretation).
+
+  - Testing connections to a variety of hosts in a series of destination
+    countries.
+
+  - Testing all available connection methods.
+
+  - Automatic connection and performance problem reporting and diagnosis.
+
+  - Repeated connection attempts over a period of time and at different times of
+    day.
+
+* Fixes [0/4]
+
+  A comprehensive, automated, test suite is complete.
+
+** TODO Automatic data collection
+
+** TODO Testing all available connection methods.
+
+** TODO Automatic connection and performance problem reporting and diagnosis.
+
+** TODO Repeated connection attempts over time and at different times of day.
+
+* Discussion
