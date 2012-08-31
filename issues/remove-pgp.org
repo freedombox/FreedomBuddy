@@ -1,0 +1,56 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Remove PGP Requirement
+
+* Metadata
+  :PROPERTIES:
+  :Status:    Incomplete
+  :Priority:  10
+  :Owner:     Nick Daly
+  :END:
+
+* Issue
+
+  Optionally run FreedomBuddy without PGP.
+
+  This removes the key-exchange requirement and allows fully anonymous access by
+  clients.  It would also make it possible to publish a public service list in
+  case of a general service shutdown or other situations where accessibility is
+  more important than the host's anonymity or privacy.
+
+* Fixes [0/1]
+
+** TODO Operate FB without PGP
+
+* Discussion
+
+** Constraints
+
+   FBuddy could not encrypt messages between clients.
+
+   We could fake the key id and make integration easy by using a reserved key
+   id, like 0.  Get a request, pull the service list from the 0 key.
+
+*** Replies
+
+    This also changes the reply setup, because each reply location would *have*
+    to be transmitted with each request.  If all clients are the same client, we
+    need to differentiate them, which we can do only once per request.  This
+    means either:
+
+    - Requests block.
+
+    - I find some other way to mark request reply locations for the duration of
+      the request.
+
+    Reply locations are currently recorded for the client at the beginning of
+    the request.  Multiple, overlapping, requests for a single client would
+    stomp on one another's reply locations.  So, we can't treat them all as a
+    single client, they're now request-specific.  Not a big deal for most
+    web-apps, but we need to play it carefully here, to make sure we store
+    request data differently depending on the context.  That's damn annoying.
+
+*** Flooding
+
+    Does this simplify or reduce flooding concerns at all?  Possibly.  Without
+    decrypting, messages become much easier to handle.
