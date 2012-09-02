@@ -6,3 +6,4 @@ freedombuddy.crt
 *.dat
 keys/
 build/
+*.html
