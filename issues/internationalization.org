@@ -1,0 +1,21 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Internationalize Monitors Correctly
+
+* Metadata
+  :PROPERTIES:
+  :Status:     Incomplete
+  :Priority:   5
+  :Owner:      Nick Daly
+  :END:
+
+* Issue
+
+Monitors aren't internationalized reasonably, we're duplicating code.
+
+* Fixes [0/1]
+
+** TODO Use [[http://docs.python.org/library/gettext.html][GetText]] for Internationalization.
+
+* Discussion
+

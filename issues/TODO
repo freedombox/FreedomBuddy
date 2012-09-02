@@ -51,16 +51,6 @@ store.
 
 * TODO make list of oustanding requests query-able                 :requests:
 
-* TODO use real sockets for communication                  :cleanup:requests:
-
-  Remove the dependency on the HTTPS connector.
-
-  http://docs.python.org/howto/sockets.html
-
-* TODO use GetText for Internationalization.                        :cleanup:
-
-   http://docs.python.org/library/gettext.html
-
 * TODO display errors when we quit because we can't initialize      :cleanup:
 
    The port could already be in use.
