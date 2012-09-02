@@ -1,0 +1,22 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Make CLI Connector Use Real Sockets
+
+* Metadata
+  :PROPERTIES:
+  :Status:     Incomplete
+  :Priority:   0
+  :Owner:      Nick Daly
+  :END:
+
+* Issue
+
+The [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py::#!%20/usr/bin/env%20python%20#%20-*-%20mode:%20python%3B%20mode:%20auto-fill%3B%20fill-column:%2080%3B%20-*-][CLI connector]] just pipes stuff through the HTTPS connector.  That's silly.
+We should use a real [[http://docs.python.org/howto/sockets.html][socket-based]] connector instead.
+
+* Fixes [0/1]
+
+** TODO Convert the [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py][CLI Connector]] to a socket-based system.
+
+* Discussion
+
