@@ -1,0 +1,70 @@
+# -*- mode: org; mode: refill; fill-column: 80 -*-
+
+Hosting FreedomBuddy
+
+* Introduction
+
+FreedomBuddy can publish its own repository by including the [[https://gitorious.org/project-publish][Project Publish]]
+project.  I recommend using a reverse proxy of some sort, like [[http://pagekite.net][PageKite]], for
+publishing your work.
+
+* How To
+
+These instructions explain how to start hosting the FreedomBuddy project with
+the Project Publish tool.  Publishing requires four basic steps:
+
+1. Get the source code.
+2. Create a landing page.
+3. Configure the tool.
+4. Start publishing!
+
+** Get Project Publish
+
+In FreedomBuddy's root directory, run:
+
+: git clone git://gitorious.org/project-publish/project-publish.git publish
+
+** Create an Index File
+
+Also in FreedomBuddy's root directory, create an index.html file that looks like
+this:
+
+#+begin_src html
+  <html>
+    <head>
+      <title>FreedomBuddy</title>
+    </head>
+    <body>
+      <p>Welcome to FreedomBuddy!</p>
+      <p>See the:</p>
+      <ul>
+        <li><a href="wiki">Wiki</a></li>
+        <li><a href="issues">Issues</a></li>
+        <li><a href="src">Source</a></li>
+        <li><a href="publish">Publishing Tools</a></li>
+      </ul>
+    </body>
+  </html>
+#+end_src
+
+** Configure
+
+Now, link the issue and wiki directories that we need to compile:
+
+: cd publish
+: ln -s ../issues .
+: ln -s ../wiki .
+
+** Publish
+
+Finally, publish your project:
+
+: bash hosting.sh
+
+=hosting.sh= takes additional configuration arguments, please see the source
+file for details, it's pretty darn simple.
+
+* Congratulations!
+
+You've just published your project!  Now, sign up for [[http://pagekite.net][PageKite]], or similar
+reverse proxies, to make your publication easy to access.
