@@ -61,13 +61,15 @@ Finally, publish your project:
 
 : bash hosting.sh
 
-=hosting.sh= takes additional configuration arguments, please see the source
-file for details, it's pretty darn simple.
+Your project is now available on [[http://localhost:8000][port 8000]].  =hosting.sh= takes additional
+configuration arguments, please see the source file for details, it's pretty
+darn simple.
 
 * Congratulations!
 
 You've just published your project!  Now, sign up for [[http://pagekite.net][PageKite]], or similar
 reverse proxies, to make your publication easy to access.
+
 * Metadata
   :PROPERTIES:
   :Description: How FreedomBuddy can easily host itself on any system.
