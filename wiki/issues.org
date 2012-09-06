@@ -41,3 +41,12 @@ The only ones I ever really bother using are:
 - blocked :: an alternate form of depends
 - owner :: an alternate form of responsible
 - status :: an alternate form of complete that allows for "invalid" percentages
+- priority :: the order issues will be tackled in
+
+* Metadata
+  :PROPERTIES:
+  :Description: How to view and file issues in FBuddy.
+  :Status:     Incomplete
+  :Priority:   0
+  :Owner:      Nick Daly
+  :END:
