@@ -1,6 +1,15 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE:
+#+OPTIONS:   pri:t
+
+* Issue
+
+* Fixes [0/1]
+
+** TODO
+
+* Discussion
 
 * Metadata
   :PROPERTIES:
@@ -8,18 +17,4 @@
   :Priority:   0
   :Owner:
   :END:
-
-* Issue
-
-
-
-* Fixes [0/1]
-
-
-
-** TODO
-
-
-
-* Discussion
 

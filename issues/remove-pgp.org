@@ -1,13 +1,7 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Remove PGP Requirement
-
-* Metadata
-  :PROPERTIES:
-  :Status:    Incomplete
-  :Priority:  5
-  :Owner:     Nick Daly
-  :END:
+#+OPTIONS:   pri:t
 
 * Issue
 
@@ -58,3 +52,10 @@
 
     Does this simplify or reduce flooding concerns at all?  Possibly.  Without
     decrypting, messages become much easier to handle.
+
+* Metadata
+  :PROPERTIES:
+  :Status:    Incomplete
+  :Priority:  5
+  :Owner:     Nick Daly
+  :END:

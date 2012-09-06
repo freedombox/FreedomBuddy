@@ -1,13 +1,7 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Make CLI Connector Use Real Sockets
-
-* Metadata
-  :PROPERTIES:
-  :Status:     Incomplete
-  :Priority:   0
-  :Owner:      Nick Daly
-  :END:
+#+OPTIONS:   pri:t
 
 * Issue
 
@@ -20,3 +14,9 @@ We should use a real [[http://docs.python.org/howto/sockets.html][socket-based]]
 
 * Discussion
 
+* Metadata
+  :PROPERTIES:
+  :Status:     Incomplete
+  :Priority:   0
+  :Owner:      Nick Daly
+  :END:

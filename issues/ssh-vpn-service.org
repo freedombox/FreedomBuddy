@@ -1,14 +1,7 @@
 # -*- mode: org; fill-column: 80; mode: auto-fill -*-
 
 #+TITLE: Create a FreedomBuddy SSH VPN Service
-
-* Metadata
-  :PROPERTIES:
-  :Status:   Incomplete
-  :Owner:    Nick Daly
-  :Blocking: [[file:field-testing.org][Field Testing]] [[file:plinth.org][Plinth Integration]]
-  :Priority: 10
-  :END:
+#+OPTIONS:   pri:t
 
 * Issue
 
@@ -27,3 +20,11 @@
 ** TODO SSH Host
 
 ** TODO SSH Client
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Owner:    Nick Daly
+  :Blocking: [[file:field-testing.org][Field Testing]] [[file:plinth.org][Plinth Integration]]
+  :Priority: 10
+  :END:

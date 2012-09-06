@@ -1,13 +1,7 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Internationalize Monitors Correctly
-
-* Metadata
-  :PROPERTIES:
-  :Status:     Incomplete
-  :Priority:   5
-  :Owner:      Nick Daly
-  :END:
+#+OPTIONS:   pri:t
 
 * Issue
 
@@ -18,4 +12,9 @@ Monitors aren't internationalized reasonably, we're duplicating code.
 ** TODO Use [[http://docs.python.org/library/gettext.html][GetText]] for Internationalization.
 
 * Discussion
-
+* Metadata
+  :PROPERTIES:
+  :Status:     Incomplete
+  :Priority:   5
+  :Owner:      Nick Daly
+  :END:

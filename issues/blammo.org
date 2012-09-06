@@ -1,6 +1,35 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Fix the Blammos!
+#+OPTIONS:   pri:t
+
+* Issue
+
+  There are Blammos.  They point to significant failings in the code and must be
+  fixed before the code is used by others.
+
+* Fixes [0/3]
+
+** TODO Remove GET, use POST [0/2]
+
+   Seriously.
+
+*** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!][HTTPS Connector::78]] Only allow POST.
+
+*** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!%20This%20must%20be%20a%20post.%20Use%20httplib%20right.][HTTPS Connector::126]] POST requests, don't GET them.
+
+** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::117][HTTPS Connector::117]] Make sure HTTPS connection is secure
+
+   I might need both a key and a cert verified correctly.  Figure out how to use
+   httplib.HTTPSConnection correctly, basically.
+
+** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::122][HTTPS Connector::122]] Make sure connections are appropriately proxied
+
+   I'm certain there are other proxying functions, but I don't recall them.
+   Python supported proxying before version 2.7, and that's just stupid and
+   broken.
+
+* Discussion
 
 * Metadata
   :PROPERTIES:
@@ -9,21 +38,3 @@
   :Owner:      Nick Daly
   :Blocking:   [[file:field-testing.org][Field Testing]]
   :END:
-
-* Issue
-
-There are Blammos.  They point to significant failings in the code and must be
-fixed before the code is used by others.
-
-* Fixes [0/4]
-
-** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!][HTTPS Connector::78]] Only allow POST.
-
-** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!][HTTPS Connector::117]] Make sure HTTPS connection is secure
-
-** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!][HTTPS Connector::122]] Make sure connections are appropriately proxied
-
-** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!%20This%20must%20be%20a%20post.%20Use%20httplib%20right.][HTTPS Connector::126]] POST requests, don't GET them.
-
-* Discussion
-

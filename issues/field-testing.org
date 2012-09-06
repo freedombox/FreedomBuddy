@@ -1,14 +1,7 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Field Testing FreedomBuddy
-
-* Metadata
-  :PROPERTIES:
-  :Status:   Incomplete
-  :Owner:    Nick Daly
-  :Blocked:  [[file:full-test-suite.org][Full Test Suite]] [[file:ssh-vpn-service.org][SSH VPN]] [[file:blammo.org][Blammos]]
-  :Priority: 10
-  :END:
+#+OPTIONS:   pri:t
 
 * Issue
 
@@ -34,3 +27,11 @@
 ** TODO FreedomBox Volunteers
 
 ** TODO International Volunteers
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Owner:    Nick Daly
+  :Blocked:  [[file:full-test-suite.org][Full Test Suite]] [[file:ssh-vpn-service.org][SSH VPN]] [[file:blammo.org][Blammos]]
+  :Priority: 10
+  :END:
