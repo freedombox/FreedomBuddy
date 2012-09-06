@@ -1,7 +1,7 @@
 # -*- mode: org; fill-column: 80; mode: auto-fill -*-
 
 #+TITLE: Create a FreedomBuddy SSH VPN Service
-#+OPTIONS:   pri:t
+#+OPTIONS:   d:t
 
 * Issue
 

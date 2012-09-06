@@ -1,7 +1,7 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Fix the Blammos!
-#+OPTIONS:   pri:t
+#+OPTIONS:   d:t
 
 * Issue
 
@@ -21,7 +21,7 @@
 ** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::117][HTTPS Connector::117]] Make sure HTTPS connection is secure
 
    I might need both a key and a cert verified correctly.  Figure out how to use
-   httplib.HTTPSConnection correctly, basically.
+   httplib.HTTPSConnection correctly.
 
 ** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::122][HTTPS Connector::122]] Make sure connections are appropriately proxied
 

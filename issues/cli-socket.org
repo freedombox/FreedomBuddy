@@ -1,7 +1,7 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Make CLI Connector Use Real Sockets
-#+OPTIONS:   pri:t
+#+OPTIONS:   d:t
 
 * Issue
 

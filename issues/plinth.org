@@ -1,7 +1,7 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Integrate FreedomBuddy into Plinth
-#+OPTIONS:   pri:t
+#+OPTIONS:   d:t
 
 * Issue
 

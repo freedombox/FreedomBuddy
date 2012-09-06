@@ -1,7 +1,7 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Create a Comprehensive Self-Test Suite
-#+OPTIONS:   pri:t
+#+OPTIONS:   d:t
 
 * Issue
 

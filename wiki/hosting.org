@@ -1,6 +1,7 @@
 # -*- mode: org; mode: refill; fill-column: 80 -*-
 
 #+TITLE: Hosting FreedomBuddy
+#+OPTIONS: d:t
 
 * Introduction
 
