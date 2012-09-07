@@ -25,6 +25,6 @@
   :PROPERTIES:
   :Status:   Incomplete
   :Owner:    Nick Daly
-  :Blocking: [[file:field-testing.org][Field Testing]] [[file:plinth.org][Plinth Integration]]
+  :Blocking: [[file:field-testing.org][Field Testing]]; [[file:plinth.org][Plinth Integration]]
   :Priority: 10
   :END:
