@@ -2,6 +2,8 @@
 
 #+TITLE: Issues, Explained
 #+OPTIONS: d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
 
 Issues are stored as [[http://orgmode.org][Org Mode]] files using [[http://www.taskjuggler.org][TaskJuggler]]-similar [[http://www.taskjuggler.org/tj3/manual/task.html][properties]] to
 allow easy export to almost any format, including a TaskJuggler project list.

@@ -2,6 +2,8 @@
 
 #+TITLE: Remove PGP Requirement
 #+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
 
 * Issue
 

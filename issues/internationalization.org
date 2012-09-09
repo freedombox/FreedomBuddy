@@ -2,6 +2,8 @@
 
 #+TITLE: Internationalize Monitors Correctly
 #+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
 
 * Issue
 

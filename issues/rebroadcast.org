@@ -2,6 +2,8 @@
 
 #+TITLE: Rebroadcast Friend Information and Proxy Other Messages
 #+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
 
 * Issue
 
