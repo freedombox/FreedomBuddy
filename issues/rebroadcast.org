@@ -1,0 +1,34 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Rebroadcast Friend Information and Proxy Other Messages
+#+OPTIONS:   d:t
+
+* Issue
+
+  Right now, FBuddy is great for one-off communications, but doesn't try to
+  produce a trust-web.  If I know Alice and Bob, Alice can't ask me to introduce
+  her to Bob, via FBuddy.
+
+  That, to me, seems like an advantage and a disadvantage.  There could be some
+  sort of overlay message layer atop this one that handles those sorts of
+  messages, but why bother creating yet another messaging layer when the one we
+  have is designed for exactly these sorts of interactions?
+
+  If we only allow proxying (and not searching), then Alice needs to know the
+  trust-web structure to pass Bob a message.  If she knows that, then why not
+  let her do that?
+
+  Anonymity-preserving-searching is much harder, and may be impossible (aside
+  from the good folks at [[http://code.google.com/p/phantom][Phantom]].
+
+* Fixes [0/0]
+
+* Discussion
+
+* Metadata
+  :PROPERTIES:
+  :Status:     Incomplete
+  :Priority:   0
+  :Owner:      Nick Daly
+  :Related:    [[file:proxying.org][Proxying]]; [[file:searching.org][Searching]]
+  :END:

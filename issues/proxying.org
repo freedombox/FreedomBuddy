@@ -1,0 +1,20 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Allow Proxying
+#+OPTIONS:   d:t
+
+* Issue
+
+  Clients can't currently proxy requests for one another.  They should.
+
+* Fixes [0/0]
+
+* Discussion
+
+* Metadata
+  :PROPERTIES:
+  :Status:     Incomplete
+  :Priority:   0
+  :Owner:      Nick Daly
+  :Related:    [[file:searching.org][Searching]]; [[file:rebroadcast.org][Rebroadcast]]
+  :END:
