@@ -1,4 +1,6 @@
 *~
+*.pyc
+TAGS
 README.html
 production.cfg
 test.cfg
