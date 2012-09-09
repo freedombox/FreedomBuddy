@@ -1,0 +1,45 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: httplib.HTTPSConnection Insecure
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  As the Python documentation makes clear, [[http://docs.python.org/library/httplib.html#httplib.HTTPSConnection][httplib.HTTPSConnection]] is insecure.
+  It doesn't validate or verify the server's certificate, meaning that we can't
+  guarntee the server's identity or even that we're consistently connecing to
+  the same server.
+
+* Searches
+
+  This issue is easy to find.  There may be false positives, because it's
+  possible to verify certificates around the connection itself, but the fact
+  that it's there means there's something to investigate.
+
+  #+begin_src sh
+    grep -nHr "HTTPSConnection" ../src/*
+  #+end_src
+
+  #+results:
+  | [[../src/connectors/https/controller.py::118]]     |
+  | [[../src/connectors/https/test_controller.py::54]] |
+  | [[../src/connectors/cli/controller.py::174]]       |
+  | [[../src/connectors/cli/controller.py::181]]       |
+  | [[../src/connectors/cli/controller.py::202]]       |
+  | [[../src/connectors/cli/test_controller.py::128]]  |
+
+* Fixes [0/0]
+
+  Remove or Secure Occurrences.
+
+* Discussion
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 100
+  :Owner:    Nick Daly
+  :Tags:     Security
+  :END:

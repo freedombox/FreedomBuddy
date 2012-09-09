@@ -37,18 +37,26 @@
    I might need both a key and a cert verified correctly.  Figure out how to use
    httplib.HTTPSConnection correctly.
 
+   As in the [[file:cli-socket.org][cli-socket]] issue, this can be considered a security hole, given how
+   the ~httplib.HTTPSConnection~ doesn't validate the certificates.  So, you
+   could easily, accidentally, and unknowingly connect to an untrusted server.
+
 ** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::122][HTTPS Connector::122]] Make sure connections are appropriately proxied
 
    I'm certain there are other proxying functions, but I don't recall them.
    Python supported proxying before version 2.7, and that's just stupid and
    broken.
 
+   Perhaps I should just avoid proxying for now, until I figure out the proxying
+   and searching issues.
+
 * Discussion
 
 * Metadata
   :PROPERTIES:
-  :Status:     Incomplete
-  :Priority:   100
-  :Owner:      Nick Daly
-  :Blocking:   [[file:field-testing.org][Field Testing]]
+  :Status:   Incomplete
+  :Priority: 100
+  :Owner:    Nick Daly
+  :Blocking: [[file:field-testing.org][Field Testing]]
+  :Tags:     Security
   :END:

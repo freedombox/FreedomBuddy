@@ -170,12 +170,14 @@ def query_remotely(address, port, key, service, params=None, timeout=1):
     Neat, huh?
 
     """
+    # FIXME use socket, not http, especially since it doesn't validate certs.
     conn = httplib.HTTPSConnection(address, port)
     query(conn, "learn", key, service, "POST")
     conn.close()
 
     time.sleep(timeout)
 
+    # FIXME use socket, not http, especially since it doesn't validate certs.
     conn = httplib.HTTPSConnection(address, port)
     locations = query(conn, "consuming", key, service, params=params)
     conn.close()
