@@ -1,0 +1,65 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Add Real Authentication to the HTTPS Controller
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  The authentication we have now is a miserable embarrassment to security,
+  mostly because it isn't authentication.
+
+  With the [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::def%20allow_ips(ips%20%3D%20None):][allow_ips]] decorator, we merely restrict the controllers to the
+  localhost, meaning that FBuddy can't be run on a shared box, because then any
+  users could access the FBuddy whether they're supposed to or not.
+
+  #+begin_src sh
+    grep -nH ip_filter ../src/connectors/https/controller.py
+  #+end_src
+
+  #+results:
+  | [[../src/connectors/https/controller.py::90]]  |
+  | [[../src/connectors/https/controller.py::116]] |
+  | [[../src/connectors/https/controller.py::244]] |
+  | [[../src/connectors/https/controller.py::250]] |
+  | [[../src/connectors/https/controller.py::256]] |
+  | [[../src/connectors/https/controller.py::262]] |
+  | [[../src/connectors/https/controller.py::268]] |
+  | [[../src/connectors/https/controller.py::275]] |
+  | [[../src/connectors/https/controller.py::279]] |
+  | [[../src/connectors/https/controller.py::286]] |
+  | [[../src/connectors/https/controller.py::292]] |
+  | [[../src/connectors/https/controller.py::301]] |
+  | [[../src/connectors/https/controller.py::305]] |
+  | [[../src/connectors/https/controller.py::310]] |
+  | [[../src/connectors/https/controller.py::317]] |
+  | [[../src/connectors/https/controller.py::326]] |
+  | [[../src/connectors/https/controller.py::330]] |
+  | [[../src/connectors/https/controller.py::336]] |
+  | [[../src/connectors/https/controller.py::342]] |
+  | [[../src/connectors/https/controller.py::351]] |
+  | [[../src/connectors/https/controller.py::355]] |
+  | [[../src/connectors/https/controller.py::360]] |
+  | [[../src/connectors/https/controller.py::367]] |
+  | [[../src/connectors/https/controller.py::376]] |
+  | [[../src/connectors/https/controller.py::380]] |
+  | [[../src/connectors/https/controller.py::385]] |
+  | [[../src/connectors/https/controller.py::392]] |
+  | [[../src/connectors/https/controller.py::401]] |
+  | [[../src/connectors/https/controller.py::405]] |
+
+* Fixes [0/1]
+
+** TODO Add Real Authentication
+
+* Discussion
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 100
+  :Owner:    Nick Daly
+  :Tags:     Security
+  :Blocking: [[file:field-testing.org][Field Testing]]
+  :END:
