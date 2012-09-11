@@ -452,7 +452,7 @@ class Santiago(object):
             o = urlparse.urlparse(destination)
             self.senders[o.scheme].outgoing_request(request, destination)
 
-    def incoming_request(self, request):
+    def incoming_request(self, request_list):
         """Provide a service to a client.
 
         This tag doesn't do any real processing, it just catches and hides
@@ -472,35 +472,36 @@ class Santiago(object):
         """
         # no matter what happens, the sender will never hear about it.
         try:
-            debug_log("request: {0}".format(str(request)))
+            for request in request_list:
+                debug_log("request: {0}".format(str(request)))
 
-            unpacked = self.unpack_request(request)
+                unpacked = self.unpack_request(request)
 
-            if not unpacked:
-                debug_log("opaque request.")
-                return
+                if not unpacked:
+                    debug_log("opaque request.")
+                    return
 
-            debug_log("unpacked {0}".format(str(unpacked)))
+                debug_log("unpacked {0}".format(str(unpacked)))
 
-            if unpacked["locations"]:
-                debug_log("handling reply")
+                if unpacked["locations"]:
+                    debug_log("handling reply")
 
-                self.handle_reply(
-                    unpacked["from"], unpacked["to"],
-                    unpacked["host"], unpacked["client"],
-                    unpacked["service"], unpacked["locations"],
-                    unpacked["reply_to"],
-                    unpacked["request_version"],
-                    unpacked["reply_versions"])
-            else:
-                debug_log("handling request")
+                    self.handle_reply(
+                        unpacked["from"], unpacked["to"],
+                        unpacked["host"], unpacked["client"],
+                        unpacked["service"], unpacked["locations"],
+                        unpacked["reply_to"],
+                        unpacked["request_version"],
+                        unpacked["reply_versions"])
+                else:
+                    debug_log("handling request")
 
-                self.handle_request(
-                    unpacked["from"], unpacked["to"],
-                    unpacked["host"], unpacked["client"],
-                    unpacked["service"], unpacked["reply_to"],
-                    unpacked["request_version"],
-                    unpacked["reply_versions"])
+                    self.handle_request(
+                        unpacked["from"], unpacked["to"],
+                        unpacked["host"], unpacked["client"],
+                        unpacked["service"], unpacked["reply_to"],
+                        unpacked["request_version"],
+                        unpacked["reply_versions"])
 
         except Exception as e:
             logging.exception(e)

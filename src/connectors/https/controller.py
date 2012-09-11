@@ -12,7 +12,7 @@ import cherrypy
 import httplib, urllib, urlparse
 import sys
 import logging
-
+
 
 def allow_ips(ips = None):
     """Refuse connections from non-whitelisted IPs.
@@ -31,7 +31,26 @@ def allow_ips(ips = None):
         santiago.debug_log("Request from non-local IP.  Forbidden.")
         raise cherrypy.HTTPError(403)
 
+def allow_requests(requests = None):
+    """Refuse non-whitelisted request types.
+
+    Defaults to "GET"
+
+    """
+    if requests is None:
+        requests = [ "GET" ]
+
+    # just in case they entered a single allowed type, like "POST"
+    if not hasattr(requests, "__iter__"):
+        requests = [requests]
+
+    if cherrypy.request.method not in requests:
+        santiago.debug_log("Request of improper type.  Forbidden.")
+        raise cherrypy.HTTPError(405)
+
 cherrypy.tools.ip_filter = cherrypy.Tool('before_handler', allow_ips)
+cherrypy.tools.request_filter = cherrypy.Tool('before_handler', allow_requests)
+
 
 def start(*args, **kwargs):
     """Module-level start function, called after listener and sender started.
@@ -45,7 +64,7 @@ def stop(*args, **kwargs):
     """
     cherrypy.engine.stop()
     cherrypy.engine.exit()
-
+
 
 class Listener(santiago.SantiagoListener):
 
@@ -69,22 +88,19 @@ class Listener(santiago.SantiagoListener):
         santiago.debug_log("Listener Created.")
 
     @cherrypy.tools.ip_filter()
-    # @cherrypy.tools.allow_requests("POST")
-    def index(self, **kwargs):
+    @cherrypy.tools.request_filter(requests = "POST")
+    def index(self):
         """Receive an incoming Santiago request from another Santiago client."""
 
-        santiago.debug_log("Received request {0}".format(str(kwargs)))
-
-        # FIXME Blammo!
-        # make sure there's some verification of the incoming connection here.
-        # allow POSTs only.
-
         try:
+            body = cherrypy.request.body.read()
+            santiago.debug_log("Received request {0}".format(str(body)))
+
+            kwargs = urlparse.parse_qs(body)
+
             self.incoming_request(kwargs["request"])
         except Exception as e:
             logging.exception(e)
-
-            raise cherrypy.HTTPRedirect("/freedombuddy")
 
 class Sender(santiago.SantiagoSender):
 
@@ -123,8 +139,7 @@ class Sender(santiago.SantiagoSender):
         if sys.version_info >= (2, 7):
             connection.set_tunnel(self.proxy_host, self.proxy_port)
 
-        # FIXME Blammo!  This must be a post.  Use httplib right.
-        connection.request("GET", "/?%s" % params)
+        connection.request("POST", "/", params)
         connection.close()
 
 class Monitor(santiago.SantiagoMonitor):

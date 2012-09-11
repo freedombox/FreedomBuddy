@@ -10,15 +10,18 @@
   There are Blammos.  They point to significant failings in the code and must be
   fixed before the code is used by others.
 
-* Fixes [0/3]
+* Fixes [1/3]
 
-** TODO Remove GET, use POST [0/2]
+** DONE Remove GET, use POST [2/2]
+   CLOSED: [2012-09-11 Tue 08:38]
 
-   Seriously.
+   Seriously.  I did it right in [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::if%20action%20%3D%3D%20"POST":][HTTPS Connector::420]].
 
-*** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!][HTTPS Connector::78]] Only allow POST.
+*** DONE [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!][HTTPS Connector::78]] Only allow POST.
+    CLOSED: [2012-09-11 Tue 08:38]
 
-*** TODO [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!%20This%20must%20be%20a%20post.%20Use%20httplib%20right.][HTTPS Connector::126]] POST requests, don't GET them.
+*** DONE [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::#%20FIXME%20Blammo!%20This%20must%20be%20a%20post.%20Use%20httplib%20right.][HTTPS Connector::126]] POST requests, don't GET them.
+    CLOSED: [2012-09-09 Sun 16:01]
 
 *** References
 
@@ -47,8 +50,9 @@
    Python supported proxying before version 2.7, and that's just stupid and
    broken.
 
-   Perhaps I should just avoid proxying for now, until I figure out the proxying
-   and searching issues.
+   +Perhaps I should just avoid proxying for now, until I figure out the proxying
+   and searching issues.+  We're talking about HTTP proxying, not request
+   proxying, so, yes, this needs to be solved.
 
 * Discussion
 
