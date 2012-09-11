@@ -34,6 +34,6 @@
   :PROPERTIES:
   :Status:   Incomplete
   :Owner:    Nick Daly
-  :Blocked:  [[file:full-test-suite.org][Full Test Suite]]; [[file:ssh-vpn-service.org][SSH VPN]]; [[file:blammo.org][Blammos]]
+  :Blocked:  [[file:full-test-suite.org][Full Test Suite]]; [[file:ssh-vpn-service.org][SSH VPN]]; [[file:blammo.org][Blammos]]; [[file:http-authentication.org][HTTP Authentication]]
   :Priority: 10
   :END:
