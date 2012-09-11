@@ -1,0 +1,24 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Never Reply to Errors
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  We sometimes throw [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::raise%20cherrypy.HTTPError(403)][403]], 303, [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::raise%20cherrypy.HTTPError(405)][405]]s, etc, in case of errors.
+
+  We should stay silent or return empty 200s in case of error.
+
+* Fixes [0/0]
+
+* Discussion
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 50
+  :Owner:    Nick Daly
+  :Tags:     Identifiability; Anonymity
+  :END:
