@@ -44,6 +44,7 @@ this:
         <li><a href="wiki">Wiki</a></li>
         <li><a href="issues">Issues</a></li>
         <li><a href="src">Source</a></li>
+        <li><a href="current.tar.gz">Current Repository Snapshot</a></li>
         <li><a href="publish">Publishing Tools</a></li>
       </ul>
     </body>
@@ -76,7 +77,7 @@ reverse proxies, to make your publication easy to access.
 * Metadata
   :PROPERTIES:
   :Description: How FreedomBuddy can easily host itself on any system.
-  :Status:     Incomplete
-  :Priority:   0
-  :Owner:      Nick Daly
+  :Status:      Complete
+  :Priority:    0
+  :Owner:       Nick Daly
   :END:

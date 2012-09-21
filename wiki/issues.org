@@ -49,7 +49,7 @@ The only ones I ever really bother using are:
 * Metadata
   :PROPERTIES:
   :Description: How to view and file issues in FBuddy.
-  :Status:     Incomplete
-  :Priority:   0
-  :Owner:      Nick Daly
+  :Status:      Complete
+  :Priority:    0
+  :Owner:       Nick Daly
   :END:
