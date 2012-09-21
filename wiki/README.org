@@ -17,36 +17,30 @@
 
 * Introduction
 
-- The State of Things :: FreedomBuddy is **not** ready for public, in the field,
-    deployment.  It won't fully protect your privacy, there're still a number of
-    flaws that need to be fixed first.  Run ~grep -r FIXME *~ for details.
+  - Warning :: FreedomBuddy is *not* ready for public, in the field, deployment.
+               It won't fully protect your privacy, there're still a number of
+               flaws that need to be fixed first.  Run =grep -r FIXME *= for
+               details.
 
-:Author: Nick Daly, 2012
-:License: This file is distributed under a Creative Commons
-    Attribution-ShareAlike 3.0 Unported, Version 3 license.  This CC-By-SA
-    license is available in both full_ and summarized_ versions from Creative
-    Commons.  This file is also distributed under the `GNU Free Documentation
-    License`_, version 1.3 or later.
+  FreedomBuddy manages service discovery and data communication between trusted
+  friends.  It uses PGP to set up friend networks and cryptographically
+  guarantee the validity of transmitted data while sending its messages over any
+  supported backend (HTTP, Tor, I2P, GNUnet,
 
-    FreedomBuddy itself is distributed under the terms of the GNU Affero General
-    Public License as published by the Free Software Foundation, either version
-    3 of the License, or (at your option) any later version.
+  - License :: This file is distributed under a Creative Commons
+               Attribution-ShareAlike 3.0 Unported, Version 3 license.  This
+               CC-By-SA license is available in both [[http://creativecommons.org/licenses/by-sa/3.0/legalcode][full]] and [[http://creativecommons.org/licenses/by-sa/3.0/][summarized]]
+               versions from Creative Commons.  This file is also distributed
+               under the [[http://www.gnu.org/licenses/fdl.html][GNU Free Documentation License]], version 1.3 or later.
 
-.. _full: http://creativecommons.org/licenses/by-sa/3.0/legalcode
-.. _summarized: http://creativecommons.org/licenses/by-sa/3.0/
-.. _GNU Free Documentation License: http://www.gnu.org/licenses/fdl.html
-
-
-
-=========================
-Person-Focused Networking
-=========================
------------------------
-The FreedomBuddy System
------------------------
+               FreedomBuddy itself is distributed under the terms of the [[http://www.gnu.org/licenses/agpl][GNU
+               Affero General Public License]] as published by the Free Software
+               Foundation, either version 3 of the License, or (at your option)
+               any later version.
 
 
-.. contents::
+
+* TODO Pick up editing here.
 
 Santiago's Map
 ==============
