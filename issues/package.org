@@ -1,0 +1,50 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Package FreedomBuddy
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  FBuddy isn't packaged into Debian's repositories.  It should be.
+
+* Fixes [0/5]
+
+  FreedomBuddy is packaged and available in the Debian repositories.
+
+** TODO Learn how to package
+
+** TODO Track Dependencies
+
+   - python-cherrypy >= 3.2
+
+     Anything less 404s randomly.
+
+   - python-httplib2 >= 0.7
+
+     Anything less doesn't validate server certificates.
+
+   - python-socksipy
+
+   - python >= 2.6
+
+** TODO Package.
+
+** TODO Submit for approval
+
+** TODO Find a sponsor
+
+   - Jonas?
+
+   - Bdale?
+
+* Discussion
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 0
+  :Owner:    Nick Daly
+  :Tags:
+  :END:
