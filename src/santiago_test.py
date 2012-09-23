@@ -51,6 +51,9 @@ def load_config(options):
     protocols = [safe_load(config, "connectors", "protocols", {})]
     connectors = {}
 
+    if protocols == [{}]:
+        raise RuntimeError("No protocols detected.  Have you run 'make'?")
+
     # loop through the protocols, finding connectors each protocol uses
     # load the settings for each connector.
     for protocol in protocols:
@@ -83,6 +86,9 @@ if __name__ == "__main__":
 
     (options, args) = parse_args(sys.argv)
 
+    if options.trace:
+        import pdb; pdb.set_trace()
+
     if options.verbose > 0:
         logging.getLogger().setLevel(logging.DEBUG)
         logging.getLogger("cherrypy.error").setLevel(logging.CRITICAL)
@@ -111,6 +117,7 @@ if __name__ == "__main__":
     url = "https://localhost:8080"
 
     # configure system
+    # TODO Set this automatically when no relevant data/(keyid).dat file exists.
     if options.default_services:
         service = "freedombuddy"
         hosting = { mykey: { service: [url] } }
@@ -125,9 +132,6 @@ if __name__ == "__main__":
                                          save_dir="../data")
 
     # run
-    if options.trace:
-        import pdb; pdb.set_trace()
-
     with freedombuddy:
         webbrowser.open_new_tab(url + "/freedombuddy")
 
