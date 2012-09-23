@@ -248,7 +248,7 @@ class HttpStop(santiago.Stop, HttpMonitor):
     @cherrypy.tools.ip_filter()
     def POST(self, **kwargs):
         super(HttpStop, self).POST(**kwargs)
-        raise cherrypy.HTTPRedirect("/")
+        raise cherrypy.HTTPRedirect("/freedombuddy")
 
 class HttpLearn(santiago.Learn, HttpMonitor):
     @cherrypy.tools.ip_filter()
