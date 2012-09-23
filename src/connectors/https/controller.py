@@ -1,7 +1,6 @@
 """The HTTPS Santiago listener and sender.
 
 FIXME: add real authentication.
-FIXME: all the Blammos.  They're terrible, unacceptable failures.
 
 """
 
@@ -9,7 +8,8 @@ import santiago
 
 from Cheetah.Template import Template
 import cherrypy
-import httplib, urllib, urlparse
+import httplib2, socks
+import urllib, urlparse
 import sys
 import logging
 
@@ -104,11 +104,23 @@ class Listener(santiago.SantiagoListener):
 
 class Sender(santiago.SantiagoSender):
 
-    def __init__(self, my_santiago, proxy_host, proxy_port, **kwargs):
+    def __init__(self, my_santiago,
+                 proxy_type = socks.PROXY_TYPE_SOCKS5,
+                 proxy_host = "",
+                 proxy_port = 0,
+                 **kwargs):
 
         super(santiago.SantiagoSender, self).__init__(my_santiago, **kwargs)
-        self.proxy_host = proxy_host
-        self.proxy_port = proxy_port
+
+        self.proxy = None
+
+        # FIXME Fix proxying.  There's bitrot or version skew here.
+        proxytest = 1
+        if proxytest == 1:
+            self.proxy = httplib2.ProxyInfo(proxy_type, proxy_host, int(proxy_port))
+        else if proxytest == 2:
+            self.proxy = socks.socksocket()
+            self.proxy.setproxy(proxy_type, proxy_host, int(proxy_port))
 
     @cherrypy.tools.ip_filter()
     def outgoing_request(self, request, destination):
@@ -123,24 +135,14 @@ class Sender(santiago.SantiagoSender):
 
         """
         santiago.debug_log("request {0}".format(str(request)))
-        to_send = { "request": request }
 
-        params = urllib.urlencode(to_send)
-        santiago.debug_log("params {0}".format(str(params)))
+        body = urllib.urlencode({ "request": request })
 
-        # TODO: Does HTTPSConnection require the cert and key?
-        # Is the fact that the server has it sufficient?  I think so.
-        # FIXME Blammo!
-        connection = httplib.HTTPSConnection(destination.split("//")[1])
+        if self.proxy:
+            destination = str(destination)
 
-        # proxying required and available only in Python 2.7 or later.
-        # TODO: fail if Python version < 2.7.
-        # FIXME Blammo!
-        if sys.version_info >= (2, 7):
-            connection.set_tunnel(self.proxy_host, self.proxy_port)
-
-        connection.request("POST", "/", params)
-        connection.close()
+        connection = httplib2.Http(proxy_info = self.proxy)
+        connection.request(destination, "POST", body)
 
 class Monitor(santiago.SantiagoMonitor):
 
