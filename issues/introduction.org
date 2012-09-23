@@ -1,0 +1,42 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Create a Reasonable Introduction Mechanism
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  It's pretty difficult to introduce folks to one another right now.  The
+  requirements aren't even written down anywhere.
+
+* Fixes [0/2]
+
+** TODO Enumerate Required Data
+
+   - PGP certificate (bi-directional)
+
+   - One or more connection method's data. (receiver to sender)
+
+   - Connector-specific data:
+
+     - HTTP:
+
+       - Server Location / Hidden Service Address
+
+       - SSL Certificate
+
+** TODO Create Introduction (Identity Exchange) Mechanism
+
+   Users should be able to write an email or print out a document that contains
+   all the information they need to exchange data with friends.
+
+* Discussion
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 0
+  :Owner:    Nick Daly
+  :Tags:
+  :END:
