@@ -30,9 +30,14 @@
   | [[../src/connectors/cli/controller.py::202]]       |
   | [[../src/connectors/cli/test_controller.py::128]]  |
 
-* Fixes [0/0]
+* Fixes [0/1]
 
   Remove or Secure Occurrences.
+
+** TODO Secure occurrences.
+
+   Replace [[http://docs.python.org/library/httplib.html#httplib.HTTPSConnection][httplib.HTTPSConnection]] with [[https://code.google.com/p/httplib2/][httplib2]].  It checks certificates with
+   httplib2 version 0.7 or later.
 
 * Discussion
 
