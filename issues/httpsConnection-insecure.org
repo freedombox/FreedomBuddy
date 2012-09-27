@@ -23,12 +23,28 @@
   #+end_src
 
   #+results:
-  | [[../src/connectors/https/controller.py::118]]     |
-  | [[../src/connectors/https/test_controller.py::54]] |
-  | [[../src/connectors/cli/controller.py::174]]       |
-  | [[../src/connectors/cli/controller.py::181]]       |
-  | [[../src/connectors/cli/controller.py::202]]       |
-  | [[../src/connectors/cli/test_controller.py::128]]  |
+
+** Code
+
+   | Code                                     |
+   |------------------------------------------|
+   | [[../src/connectors/cli/controller.py::174]] |
+   | [[../src/connectors/cli/controller.py::181]] |
+   | [[../src/connectors/cli/controller.py::202]] |
+
+   The only place this exists in code is in the cli controller.  This is
+   corrected by [[file:cli-socket.org][converting the CLI controller to sockets]].
+
+** Tests
+
+   | Tests                                          |
+   |------------------------------------------------|
+   | [[../src/connectors/https/test_controller.py::54]] |
+   | [[../src/connectors/cli/test_controller.py::128]]  |
+
+   I don't know if I should be alright with leaving this in any tests, but
+   there it is, of course, less urgent.
+
 
 * Fixes [0/1]
 
@@ -36,8 +52,7 @@
 
 ** TODO Secure occurrences.
 
-   Replace [[http://docs.python.org/library/httplib.html#httplib.HTTPSConnection][httplib.HTTPSConnection]] with [[https://code.google.com/p/httplib2/][httplib2]].  It checks certificates with
-   httplib2 version 0.7 or later.
+   [[file:cli-socket.org][Convert the CLI controller to sockets]].
 
 * Discussion
 
@@ -47,4 +62,5 @@
   :Priority: 100
   :Owner:    Nick Daly
   :Tags:     Security
+  :Blocked:  [[file:cli-socket.org][Convert CLI To Sockets]]
   :END:

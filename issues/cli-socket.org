@@ -15,9 +15,22 @@ specify any address to connect to, and the ~httplib.HTTPSConnection~ doesn't
 validate the certificates.  So, you could easily, accidentally, and unknowingly
 connect to an untrusted server.
 
+* Searches
+
+  #+begin_src sh
+    grep -nH HTTPSConnection ../src/connectors/cli/controller.py
+  #+end_src
+
+  #+results:
+  | [[../src/connectors/cli/controller.py::174]] |
+  | [[../src/connectors/cli/controller.py::181]] |
+  | [[../src/connectors/cli/controller.py::202]] |
+
 * Fixes [0/1]
 
 ** TODO Convert the [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py][CLI Connector]] to a socket-based system.
+
+** References
 
 * Discussion
 
@@ -27,4 +40,5 @@ connect to an untrusted server.
   :Priority: 0
   :Owner:    Nick Daly
   :Tags:     Security
+  :Blocking: [[file:httpsConnection-insecure.org][httplib.HTTPS Connection Insecure]]
   :END:
