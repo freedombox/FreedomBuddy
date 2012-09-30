@@ -80,9 +80,10 @@ class Santiago(object):
     SERVICE_NAME = "freedombuddy"
 
 
-    def __init__(self, listeners = None, senders = None,
-                 hosting = None, consuming = None, me = 0, monitors = None,
-                 reply_service = None, locale = "en", save_dir = "."):
+    def __init__(self, listeners=None, senders=None,
+                 hosting=None, consuming=None, monitors=None,
+                 me=0, reply_service=None,
+                 locale="en", save_dir=".", save_services=True):
         """Create a Santiago with the specified parameters.
 
         listeners and senders are both connector-specific dictionaries containing
@@ -105,6 +106,22 @@ class Santiago(object):
         consuming allows users to safely proxy requests for one another, if some
         hosts are unreachable from some points.
 
+        :me: my PGP key ID.
+
+        :reply_service: Messages between clients contain lists of keys, one of
+          which is the "reply to" location.  This parameter names the key to
+          check for reply locations in messages.  This is usually
+          "freedombuddy".
+
+        :locale: The locale to use for the UI.
+
+        :save_dir: The directory to save service data to, for storage between
+          sessions.
+
+        :save_services: Whether to save service data between sessions at all.
+          Technically, it's "whether service data is overwritten at the end of
+          the session", but that's mostly semantics.
+
         """
         self.live = 1
         self.requests = DefaultDict(set)
@@ -113,6 +130,7 @@ class Santiago(object):
         self.connectors = set()
         self.reply_service = reply_service or Santiago.SERVICE_NAME
         self.locale = locale
+        self.save_services = save_services
 
         if listeners is not None:
             self.listeners = self.create_connectors(listeners, "Listener")
@@ -181,8 +199,19 @@ class Santiago(object):
         """
         debug_log("Starting connectors.")
 
-        for connector in (list(self.listeners.itervalues()) +
-                          list(self.senders.itervalues())):
+        l_and_s = list()
+
+        try:
+            l_and_s += list(self.listeners.itervalues())
+        except AttributeError:
+            pass
+
+        try:
+            l_and_s += list(self.senders.itervalues())
+        except AttributeError:
+            pass
+
+        for connector in (l_and_s):
             connector.start()
 
         for connector in self.connectors:
@@ -202,15 +231,28 @@ class Santiago(object):
 
         debug_log("Stopping Santiago.")
 
-        for connector in (list(self.listeners.itervalues()) +
-                          list(self.senders.itervalues())):
+        l_and_s = list()
+
+        try:
+            l_and_s += list(self.listeners.itervalues())
+        except AttributeError:
+            pass
+
+        try:
+            l_and_s += list(self.senders.itervalues())
+        except AttributeError:
+            pass
+
+        for connector in (l_and_s):
             connector.stop()
 
         for connector in self.connectors:
             sys.modules[Santiago.CONTROLLER_MODULE.format(connector)].stop()
 
-        self.save_data("hosting")
-        self.save_data("consuming")
+        if self.save_services:
+            self.save_data("hosting")
+            self.save_data("consuming")
+
         debug_log([key for key in self.shelf])
 
         self.shelf.close()
