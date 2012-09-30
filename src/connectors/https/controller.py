@@ -14,6 +14,10 @@ import sys
 import logging
 
 
+if cherrypy.__version__ < "3.2":
+    raise RuntimeError("CherryPy versions less than 3.2.0 are not supported.")
+
+
 def allow_ips(ips = None):
     """Refuse connections from non-whitelisted IPs.
 
@@ -115,12 +119,16 @@ class Sender(santiago.SantiagoSender):
         self.proxy = None
 
         # FIXME Fix proxying.  There's bitrot or version skew here.
-        proxytest = 1
-        if proxytest == 1:
-            self.proxy = httplib2.ProxyInfo(proxy_type, proxy_host, int(proxy_port))
-        else if proxytest == 2:
-            self.proxy = socks.socksocket()
-            self.proxy.setproxy(proxy_type, proxy_host, int(proxy_port))
+        if proxy_type and proxy_host and proxy_port:
+
+            proxytest = 1
+
+            if proxytest == 1:
+                self.proxy = socks.socksocket()
+                self.proxy.setproxy(proxy_type, proxy_host, int(proxy_port))
+            else:
+                self.proxy = httplib2.ProxyInfo(proxy_type, proxy_host,
+                                                int(proxy_port))
 
     @cherrypy.tools.ip_filter()
     def outgoing_request(self, request, destination):
