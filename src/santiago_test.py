@@ -1,4 +1,5 @@
-#! /usr/bin/env python # -*- mode: python; mode: auto-fill; fill-column: 80; -*-
+#! /usr/bin/env python
+# -*- mode: python; mode: auto-fill; fill-column: 80; -*-
 
 """Starts a test FreedomBuddy service.
 
@@ -23,19 +24,28 @@ def parse_args(args):
     """Interpret args passed in on the command line."""
 
     parser = OptionParser()
+
     parser.add_option("-v", "--verbose", dest="verbose", action="count",
                       help="""\
 Can be given multiple times to increase logging level.  Once means show
 FreedomBuddy logging messages.  Twice means show connector logging messages as
 well.""")
+
     parser.add_option("-c", "--config", dest="config",
                       default="../data/production.cfg",
                       help="""The configuration file to use.""")
 
     parser.add_option("-d", "--default-services", dest="default_services",
                       action="store_true", help="""\
-Whether to reset the list of hosted and consumed services to the default.
-""")
+Whether to reset the list of hosted and consumed services to the default.""")
+
+    parser.add_option("-f", "--forget", dest="forget_services",
+                      action="store_true", help="""\
+If set, don't store service data when exiting.
+
+Useful if you want to test or experiment with new service configurations,
+without overwriting your existing data.""")
+
     parser.add_option("-t", "--trace", dest="trace", action="store_true",
                       help="Drop into the debugger when starting FreedomBuddy.")
 
@@ -70,6 +80,21 @@ def load_config(options):
 
     return mykey, lang, protocols, connectors
 
+def configure_connectors(protocols, connectors):
+
+    listeners, senders, monitors = {}, {}, {}
+
+    for protocol in protocols:
+        for connector in connectors:
+            if connector.endswith("listener"):
+                listeners[protocol] = dict(connectors[protocol + "-listener"])
+            elif connector.endswith("sender"):
+                senders[protocol] = dict(connectors[protocol + "-sender"])
+            elif connector.endswith("monitor"):
+                monitors[protocol] = dict(connectors[protocol + "-monitor"])
+
+    return listeners, senders, monitors
+
 def safe_load(config, section, key=None, default=None):
     """Safely load data from a configuration file."""
 
@@ -98,20 +123,8 @@ if __name__ == "__main__":
     # load configuration settings
     (mykey, lang, protocols, connectors) = load_config(options)
 
-    listeners = {}
-    senders = {}
-    monitors = {}
-
     # create listeners and senders
-    # FIXME figure out why it's incorrectly including keyid.
-    for protocol in protocols:
-        for connector in connectors:
-            if connector.endswith("listener"):
-                listeners[protocol] = dict(connectors[protocol + "-listener"])
-            elif connector.endswith("sender"):
-                senders[protocol] = dict(connectors[protocol + "-sender"])
-            elif connector.endswith("monitor"):
-                monitors[protocol] = dict(connectors[protocol + "-monitor"])
+    listeners, senders, monitors = configure_connectors(protocols, connectors)
 
     # services to host and consume
     url = "https://localhost:8080"
@@ -120,8 +133,10 @@ if __name__ == "__main__":
     # TODO Set this automatically when no relevant data/(keyid).dat file exists.
     if options.default_services:
         service = "freedombuddy"
-        hosting = { mykey: { service: [url] } }
-        consuming = { mykey: { service: [url] } }
+        hosting = { mykey: { service: [url],
+                             service + "-monitor" : [url + "/freedombuddy"] } }
+        consuming = { mykey: { service: [url],
+                             service + "-monitor" : [url + "/freedombuddy"] } }
 
         freedombuddy = santiago.Santiago(listeners, senders, hosting, consuming,
                                          me=mykey, monitors=monitors,
