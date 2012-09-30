@@ -120,11 +120,21 @@ class FreedomBuddyTest(unittest.TestCase):
     def setUp(self, *args, **kwargs):
         super(FreedomBuddyTest, self).setUp(*args, **kwargs)
 
-        subprocess.Popen("python santiago_test.py".split())
+        url = "sharky_with_angry_hats"
+        service = "omg its a fake service name, haha."
+
+        listeners = senders = None
+        hosting = { keyid: { service: [url] } }
+        consuming = { keyid: { service: [url] } }
+
+        freedombuddy = santiago.Santiago(listeners, senders,
+            hosting, consuming,
+            save_services=False, me=keyid)
 
     def host(self, user, key, value):
         """Host the key with the value for the user."""
 
+        # FIXME replace with socket communications.
         conn = httplib.HTTPSConnection("localhost", 8080)
         freedombuddy.communicate(conn, "hosting", key, value, "POST")
         pass
