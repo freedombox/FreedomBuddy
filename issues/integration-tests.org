@@ -1,0 +1,112 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: FreedomBuddy Integration Tests
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  FreedomBuddy doesn't currently have integration (round-trip) tests.
+
+  It should.
+
+* Fixes [0/4]
+
+** TODO Validating the initial request (playing B).
+
+** TODO Validating the initial response (playing A). [0/4]
+
+   #+begin_src python
+     class HandleReply(SantiagoTest):
+
+         """
+         def handle_reply(self, from_, to, host, client,
+                          service, locations, reply_to):
+             "Process a reply from a Santiago service.
+
+             The last call in the chain that makes up the Santiago system, we now
+             take the reply from the other Santiago server and learn any new service
+             locations, if we've requested locations for that service."
+
+         """
+         def test_valid_message(self):
+             """A valid message should teach new service locations."""
+
+             self.fail()
+
+         def test_no_request_to_host(self):
+             """If I haven't asked the host for any services, ignore the reply."""
+
+             self.fail()
+
+         def test_no_request_for_service(self):
+             """If I haven't asked the host for this service, ignore the reply."""
+
+             self.fail()
+
+         def test_not_to_me(self):
+             """Ignore messages to another Santiago service.
+
+             if not self.i_am(to):
+
+             """
+
+             self.fail()
+
+         def test_for_other_client(self):
+             """Ignore messages that another Santiago is the client for.
+
+             if not self.i_am(client):
+
+             """
+
+             self.fail()
+
+         def test_learn_santiago_locations(self):
+             """New Santiago locations are learned."""
+
+             self.fail()
+
+         def test_learn_service_locations(self):
+             """New service locations are learned."""
+
+             self.fail()
+
+         def test_dequeue_service_request(self):
+             """Don't accept further service requests after the request is handled.
+
+             Of course, this has its limits.  Multiple requests to the same host
+             would create multiple outstanding requests. Should they?  Think on that.
+
+             """
+             self.fail()
+
+
+   #+end_src
+
+*** TODO Validating the silent response.
+
+*** TODO Validating the rejection response.
+
+*** TODO Validating the acceptance response.
+
+*** TODO Validating the forwarded request (playing C).
+
+** TODO Validating the forwarded request (playing D, when C isn't the target).
+
+** TODO Validating the forwarded response. [0/2]
+
+*** TODO Validating the direct response (playing A).
+
+*** TODO Validating the indirect response (playing C, B, and A).
+
+* Discussion
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 0
+  :Owner:    Nick Daly
+  :Tags:
+  :END:
