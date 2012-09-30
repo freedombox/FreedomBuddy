@@ -10,5 +10,6 @@ export PYTHONPATH
 
 python tests/test_pgpprocessor.py
 python tests/test_santiago.py
+python tests/test_santiago_listener.py
 python tests/test_gnupg.py
 python connectors/https/test_controller.py

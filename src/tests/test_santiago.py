@@ -1,19 +1,7 @@
-#! /usr/bin/env python # -*- mode: auto-fill; fill-column: 80 -*-
+#! /usr/bin/env python
+# -*- mode: python; mode: auto-fill; fill-column: 80 -*-
 
-"""Making Santiago dance, in 4 parts:
-
-- Validating the initial request (playing B).
-- Validating the initial response (playing A).
-  - Validating the silent response.
-  - Validating the rejection response.
-  - Validating the acceptance response.
-  - Validating the forwarded request (playing C).
-- Validating the forwarded request (playing D, when C isn't the target).
-- Validating the forwarded response.
-  - Validating the direct response (playing A).
-  - Validating the indirect response (playing C, B, and A).
-
-"""
+"""These tests are designed to test the main Santiago class."""
 
 import os
 import sys
@@ -23,7 +11,8 @@ import cherrypy
 import gnupg
 import json
 import logging
-import santiago
+from optparse import OptionParser
+import santiago, santiago_test
 import utilities
 
 
@@ -41,6 +30,11 @@ class SantiagoTest(unittest.TestCase):
         def assertIn(self, a, b):
             if not a in b:
                 raise self.ContainsError("%s not in %s" % (a, b))
+
+        def assertNotIn(self, a, b):
+            if a in b:
+                raise self.ContainsError("%s in %s" % (a, b))
+
 
 class UnpackRequest(SantiagoTest):
 
@@ -329,70 +323,6 @@ class HandleRequest(SantiagoTest):
             self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
             [1, 2])
 
-# class HandleReply(SantiagoTest):
-
-#     """
-#     def handle_reply(self, from_, to, host, client,
-#                      service, locations, reply_to):
-#         "Process a reply from a Santiago service.
-
-#         The last call in the chain that makes up the Santiago system, we now
-#         take the reply from the other Santiago server and learn any new service
-#         locations, if we've requested locations for that service."
-
-#     """
-#     def test_valid_message(self):
-#         """A valid message should teach new service locations."""
-
-#         self.fail()
-
-#     def test_no_request_to_host(self):
-#         """If I haven't asked the host for any services, ignore the reply."""
-
-#         self.fail()
-
-#     def test_no_request_for_service(self):
-#         """If I haven't asked the host for this service, ignore the reply."""
-
-#         self.fail()
-
-#     def test_not_to_me(self):
-#         """Ignore messages to another Santiago service.
-
-#         if not self.i_am(to):
-
-#         """
-
-#         self.fail()
-
-#     def test_for_other_client(self):
-#         """Ignore messages that another Santiago is the client for.
-
-#         if not self.i_am(client):
-
-#         """
-
-#         self.fail()
-
-#     def test_learn_santiago_locations(self):
-#         """New Santiago locations are learned."""
-
-#         self.fail()
-
-#     def test_learn_service_locations(self):
-#         """New service locations are learned."""
-
-#         self.fail()
-
-#     def test_dequeue_service_request(self):
-#         """Don't accept further service requests after the request is handled.
-
-#         Of course, this has its limits.  Multiple requests to the same host
-#         would create multiple outstanding requests. Should they?  Think on that.
-
-#         """
-#         self.fail()
-
 class OutgoingRequest(SantiagoTest):
     """Are outgoing requests properly formed?
 
@@ -537,39 +467,60 @@ class CreateConsuming(SantiagoTest):
         self.assertIn(self.location,
                        self.santiago.consuming[self.host][self.service])
 
-class ListenerTests(SantiagoTest):
-    """Tests the ``SantiagoListener`` class.
+class ArgumentTests(SantiagoTest):
+    """Tests arguments to the FreedomBuddy service."""
 
-    Mostly making sure entire requests are successfully passed down to the
-    underlying Santiago.
+    def cycle(self, freedombuddy):
+        """Send a FreedomBuddy host through its entire lifecycle."""
 
-    """
-    def setUp(self):
-        """Make sure an underlying Santiago correctly receives passed arguments.
+        freedombuddy.live = 0
+        with freedombuddy:
+            pass
 
-        Create it, set its receiving methods to save off the arguments, and set
-        a few values that we'll save off later.
+    def test_saving_services(self):
+        """Are services correctly saved?
+
+        :TODO: This isn't built out right now, as there's no way to test it
+               without blowing away the user's existing, saved, services.
 
         """
-        self.listener = santiago.SantiagoListener(santiago.Santiago())
+        pass
 
-        self.listener.santiago.incoming_request = self.acall
-        self.listener.santiago.get_client_locations = self.acall
-        self.listener.santiago.query = self.acall
-        self.listener.santiago.create_hosting_location = self.acall
+    def test_forgetting_services(self):
+        """Are services correctly forgotten?
 
-        self.x, self.y, self.z = (1, 2, 3)
+        Technically, this means "never saved."
 
-    def acall(self, *args, **kwargs):
-        """Just record the passed through arguments."""
+        Chances are good my fake service names won't ever be real services, so
+        unless somebody's trying to outsmart the test, there's nothing to worry
+        about.
 
-        self.args = args
-        self.kwargs = kwargs
+        """
+        url = "sharky_with_angry_hats"
+        service = "omg its a fake service name, haha."
 
-    def test_pass_incoming_request(self):
-        self.listener.incoming_request(self.x)
+        options = OptionParser()
+        options.config = "../data/test.cfg"
 
-        self.assertEqual(self.args, (self.x,))
+        (keyid, lang, protocols, connectors) = santiago_test.load_config(
+            options)
+
+        listeners, senders, monitors = santiago_test.configure_connectors(
+            protocols, connectors)
+
+        hosting = { keyid: { service: [url] } }
+        consuming = { keyid: { service: [url] } }
+
+        freedombuddy = santiago.Santiago(hosting=hosting, consuming=consuming,
+                                         save_services=False, me=keyid)
+        freedombuddy1 = santiago.Santiago(me=keyid)
+
+        self.cycle(freedombuddy)
+        self.cycle(freedombuddy1)
+
+        self.assertNotIn(service, freedombuddy1.hosting)
+        self.assertNotIn(service, freedombuddy1.consuming)
+
 
 if __name__ == "__main__":
     logging.disable(logging.CRITICAL)
