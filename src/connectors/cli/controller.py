@@ -1,4 +1,5 @@
-#! /usr/bin/env python # -*- mode: python; mode: auto-fill; fill-column: 80; -*-
+#! /usr/bin/env python
+# -*- mode: python; mode: auto-fill; fill-column: 80; -*-
 
 """Prints FreedomBuddy locations to screen.
 
@@ -50,6 +51,17 @@ After I implement between-request timeouts:
 
     report the list of the (now) locally known services and quit.
 
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import httplib
@@ -199,6 +211,7 @@ if __name__ == "__main__":
     validate_args(options, parser)
 
     type = "consuming" if options.host else "hosting"
+    # FIXME replace with socket communications.
     conn = httplib.HTTPSConnection(options.address, options.port)
     params={"encoding": "json"}
 
