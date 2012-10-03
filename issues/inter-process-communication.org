@@ -1,0 +1,114 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Add Reasonable Inter-process Communication
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  The [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py::#!%20/usr/bin/env%20python%20#%20-*-%20mode:%20python%3B%20mode:%20auto-fill%3B%20fill-column:%2080%3B%20-*-][CLI connector]] just pipes stuff through the HTTPS connector.  That's silly.
+  We should make a connector that doesn't rely on another connector.
+
+  - [[http://docs.python.org/howto/sockets.html][socket-based]] connector
+  - [[http://docs.python.org/library/pipes.html][pipe-based]] connector
+
+  I'm asking FBuddy to be a daemon and I need to send it input over the CLI.
+  Any asynchronous pipe support should do.
+
+** Examples
+
+   We need some way for the user to send commands to FBuddy through the command
+   line.
+
+   Arguments:
+
+   - s :: service.  The service to request or host.
+   - h :: host.  Identifies the host to request a service from.
+   - c :: client.  Host a service for a client.  If this option is specified,
+          the locations to serve at must also be specified.
+
+*** Requesting a service
+
+    : fbuddy -h 0x3 -s wiki
+
+    Request the wiki service from the "0x3" host (Dave).
+
+*** Hosting a service
+
+    : fbuddy -c 0x3 -s web 192.168.1.12
+
+    Provide Dave the "web" (proxy) service at 192.168.1.12.  The next time Dave
+    asks for a web proxy service, we'll tell him it's at 192.168.1.12.
+
+** Security Hole?
+
+   With a little bit of a stretch, this can be considered a security hole, given
+   how the connector currently allows users to specify any address to connect to,
+   and the ~httplib.HTTPSConnection~ doesn't validate the certificates.  So, you
+   could easily, accidentally, and unknowingly connect to an untrusted server.
+
+   #+begin_src sh
+     grep -nH HTTPSConnection ../src/connectors/cli/controller.py
+   #+end_src
+
+   #+results:
+   | [[../src/connectors/cli/controller.py::174]] |
+   | [[../src/connectors/cli/controller.py::181]] |
+   | [[../src/connectors/cli/controller.py::202]] |
+
+* Fixes [0/1]
+
+** TODO Convert the [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py][CLI Connector]] to a socket or pipe based system.
+
+*** Pipe System
+
+    Best I can figure, the system will need to communicate with itself through
+    two separate entry points.
+
+    - The FBuddy service will hold a reference to the CLI connector.
+
+    - The CLI will pass its data through to the main method via the
+      ~if __name__ == "__main__":~ construct.
+
+      That'll send data out to the pipe that the connector is waiting for.
+
+* Discussion
+
+** TODO Does this even have a sender or listener?
+
+   I can understand a monitor, but how does this one communicate?  Intra-machine
+   communications, maybe, but they'd be rarely used.  A listener makes sense,
+   the monitor will make incoming calls.  A sender doesn't make sense to me,
+   though.
+
+   Pick it up [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py::class%20Listener(santiago.SantiagoListener):][here]].
+
+* References
+
+  - http://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python
+
+  - http://ubuntuforums.org/showthread.php?t=1415421
+
+  - http://ubuntuforums.org/showthread.php?t=1241108
+
+  - http://code.activestate.com/recipes/66012/
+
+  - http://pypi.python.org/pypi/python-daemon/1.5.5
+
+  - http://docs.python.org/library/select.html#poll-objects
+
+  - http://code.activestate.com/recipes/576957-asynchronous-subprocess-using-asyncore/
+
+  - http://docs.python.org/library/multiprocessing.html
+
+  - http://www.lysator.liu.se/~bellman/download/asyncproc.py
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 0
+  :Owner:    Nick Daly
+  :Tags:     Security
+  :Blocking: [[file:httpsConnection-insecure.org][httplib.HTTPS Connection Insecure]]
+  :END:

@@ -160,6 +160,13 @@ def validate_args(options, parser=None):
     if options.key == None or options.service == None:
         parser.error("--key and --service must be supplied.")
 
+class Listener(santiago.SantiagoListener):
+
+    def __init__(self):
+
+
+def start(
+
 def query_remotely(address, port, key, service, params=None, timeout=1):
     """Query the remote FreedomBuddy to learn new services, then report back.
 
