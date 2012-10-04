@@ -84,6 +84,40 @@
 
    Pick it up [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py::class%20Listener(santiago.SantiagoListener):][here]].
 
+** [2012-10-03 Wed]
+
+   So, I'm playing with simple pipes, and I can get input once.  That's not
+   quite enough yet, though.
+
+** [2012-10-04 Thu]
+
+   Learning from =exmachina=, I've decided to just use bjsonrpc.  Unfortunately,
+   I'm unable to connect to the socket:
+
+   #+begin_src sh
+     $ python clitest.py
+     Traceback (most recent call last):
+       File "clitest.py", line 127, in <module>
+         sock.connect(PIPE)
+       File "<string>", line 1, in connect
+     socket.error: [Errno 111] Connection refused
+   #+end_src
+
+   Don't know why yet, need Internet!  Got as far as investigating
+   =/usr/lib/python2.6/socket.py=, but it gets all wonky with:
+
+   #+begin_src python
+     _socketmethods = (
+         'bind', 'connect', 'connect_ex', 'fileno', 'listen',
+         'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
+         'sendall', 'setblocking',
+         'settimeout', 'gettimeout', 'shutdown')
+   #+end_src
+
+   That's almost the only time "listen" occurs in the source.  I assume we're
+   calling out to some os specific C libraries, so it's un- (or ill-) defined,
+   here.
+
 * References
 
   - http://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python
