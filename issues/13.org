@@ -27,6 +27,7 @@
   :PROPERTIES:
   :Status:   Incomplete
   :Owner:    Nick Daly
-  :Blocking: [[file:field-testing.org][Field Testing]]; [[file:plinth.org][Plinth Integration]]
+  :Blocking: [[file:17.org][Field Testing]]; [[file:3.org][Plinth Integration]]
   :Priority: 10
+  :Name:     Create SSH VPN Service
   :END:

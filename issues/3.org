@@ -28,6 +28,7 @@
   :Status:     Incomplete
   :Priority:   0
   :Owner:      Nick Daly
-  :Blocked:    [[file:ssh-vpn-service.org][SSH VPN]]
+  :Blocked:    [[file:13.org][SSH VPN]]
   :Deadline:   1.0
+  :Name:       Plinth
   :END:

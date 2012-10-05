@@ -1,17 +1,6 @@
 # -*- mode: org; fill-column: 80 -*-
 
 * TODO reorganize and consolidate this todo file.                      :meta:
-* TODO Make easy introduction protocol                               :design:
-
-A self-signed message that says:
-
-    Here is my public key ID.
-
-    Here is a location.
-
-Then, I can import these messages into the local keyring and the FBuddy data
-store.
-
 * TODO figure out what other request types FBuddies should request   :design:
    from one another.
 
@@ -50,7 +39,6 @@ store.
 - Messages that exceed that maximum are queued for the next time unit.
 
 * TODO make list of oustanding requests query-able                 :requests:
-
 * TODO display errors when we quit because we can't initialize      :cleanup:
 
    The port could already be in use.

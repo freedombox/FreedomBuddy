@@ -32,5 +32,6 @@
   :Status:     Incomplete
   :Priority:   0
   :Owner:      Nick Daly
-  :Related:    [[file:proxying.org][Proxying]]; [[file:searching.org][Searching]]
+  :Related:    [[file:4.org][Proxying]]; [[file:14.org][Searching]]
+  :Name:       Rebroadcast Messages
   :END:

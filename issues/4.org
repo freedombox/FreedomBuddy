@@ -18,5 +18,6 @@
   :Status:     Incomplete
   :Priority:   0
   :Owner:      Nick Daly
-  :Related:    [[file:searching.org][Searching]]; [[file:rebroadcast.org][Rebroadcast]]
+  :Related:    [[file:14.org][Searching]]; [[file:15.org][Rebroadcast]]
+  :Name:       Proxying
   :END:

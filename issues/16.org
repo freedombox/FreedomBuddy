@@ -115,7 +115,7 @@
    #+end_src
 
    That's almost the only time "listen" occurs in the source.  I assume we're
-   calling out to some os specific C libraries, so it's un- (or ill-) defined,
+   calling out to some OS specific C libraries, so it's un- (or ill-) defined,
    here.
 
 * References
@@ -138,11 +138,14 @@
 
   - http://www.lysator.liu.se/~bellman/download/asyncproc.py
 
+  - http://stackoverflow.com/questions/12464331/socket-error-errno-111-connection-refused
+
 * Metadata
   :PROPERTIES:
   :Status:   Incomplete
   :Priority: 0
   :Owner:    Nick Daly
   :Tags:     Security
-  :Blocking: [[file:httpsConnection-insecure.org][httplib.HTTPS Connection Insecure]]
+  :Blocking: [[file:10.org][httplib.HTTPS Connection Insecure]]
+  :Name:     Local Interprocess Communication
   :END:

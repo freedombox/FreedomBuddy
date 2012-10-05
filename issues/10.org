@@ -63,4 +63,5 @@
   :Owner:    Nick Daly
   :Tags:     Security
   :Blocked:  [[file:cli-socket.org][Convert CLI To Sockets]]
+  :Name:     HTTPSConnection Insecure
   :END:
