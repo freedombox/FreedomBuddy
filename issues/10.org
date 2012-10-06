@@ -63,5 +63,5 @@
   :Owner:    Nick Daly
   :Tags:     Security
   :Blocked:  [[file:16.org][Interprocess Communication]]
-  :Name:     HTTPSConnection Insecure
+  :Description:     HTTPSConnection Insecure
   :END:

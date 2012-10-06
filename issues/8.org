@@ -47,5 +47,5 @@
   :Priority: 0
   :Owner:    Nick Daly
   :Tags:
-  :Name:     Package FreedomBuddy
+  :Description:     Package FreedomBuddy
   :END:

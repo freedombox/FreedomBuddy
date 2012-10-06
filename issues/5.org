@@ -60,5 +60,5 @@
   :Status:    Incomplete
   :Priority:  5
   :Owner:     Nick Daly
-  :Name:      Remove PGP
+  :Description:      Remove PGP
   :END:

@@ -19,5 +19,5 @@ Monitors aren't internationalized reasonably, we're duplicating code.
   :Status:     Incomplete
   :Priority:   5
   :Owner:      Nick Daly
-  :Name:       Internationalize
+  :Description:       Internationalize
   :END:

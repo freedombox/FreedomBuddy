@@ -33,5 +33,5 @@
   :Priority:   0
   :Owner:      Nick Daly
   :Related:    [[file:4.org][Proxying]]; [[file:14.org][Searching]]
-  :Name:       Rebroadcast Messages
+  :Description:       Rebroadcast Messages
   :END:

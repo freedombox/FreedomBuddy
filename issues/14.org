@@ -20,5 +20,5 @@
   :Priority:   0
   :Owner:      Nick Daly
   :Related:    [[file:4.org][Proxying]]; [[file:15.org][Rebroadcast]]
-  :Name:       Allow Searching
+  :Description:       Allow Searching
   :END:

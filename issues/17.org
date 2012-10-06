@@ -36,5 +36,5 @@
   :Owner:    Nick Daly
   :Blocked:  [[file:1.org][Full Test Suite]]; [[file:13.org][SSH VPN]]; [[file:11.org][Blammos]]; [[file:6.org][HTTP Authentication]]
   :Priority: 10
-  :Name:     Field Testing
+  :Description:     Field Testing
   :END:

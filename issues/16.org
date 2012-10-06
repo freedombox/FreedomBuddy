@@ -147,5 +147,5 @@
   :Owner:    Nick Daly
   :Tags:     Security
   :Blocking: [[file:10.org][httplib.HTTPS Connection Insecure]]
-  :Name:     Local Interprocess Communication
+  :Description:     Local Interprocess Communication
   :END:

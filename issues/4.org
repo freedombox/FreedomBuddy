@@ -19,5 +19,5 @@
   :Priority:   0
   :Owner:      Nick Daly
   :Related:    [[file:14.org][Searching]]; [[file:15.org][Rebroadcast]]
-  :Name:       Proxying
+  :Description:       Proxying
   :END:

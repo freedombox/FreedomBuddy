@@ -41,5 +41,5 @@
   :Priority:   10
   :Owner:      Nick Daly
   :Blocking:   [[file:17.org][Field Testing]]
-  :Name:       Test Suite
+  :Description:       Test Suite
   :END:
