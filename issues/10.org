@@ -33,7 +33,7 @@
    | [[../src/connectors/cli/controller.py::202]] |
 
    The only place this exists in code is in the cli controller.  This is
-   corrected by [[file:cli-socket.org][converting the CLI controller to sockets]].
+   corrected by [[file:16.org][adding reasonable interprocess communication]].
 
 ** Tests
 
@@ -52,7 +52,7 @@
 
 ** TODO Secure occurrences.
 
-   [[file:cli-socket.org][Convert the CLI controller to sockets]].
+   [[file:16.org][Add reasonable interprocess communication]].
 
 * Discussion
 
@@ -62,6 +62,6 @@
   :Priority: 100
   :Owner:    Nick Daly
   :Tags:     Security
-  :Blocked:  [[file:cli-socket.org][Convert CLI To Sockets]]
+  :Blocked:  [[file:16.org][Interprocess Communication]]
   :Name:     HTTPSConnection Insecure
   :END:

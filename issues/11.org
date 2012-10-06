@@ -57,10 +57,10 @@
     I might need both a key and a cert verified correctly.  Figure out how to
     use httplib.HTTPSConnection correctly.
 
-    As in the [[file:cli-socket.org][cli-socket]] issue, this can be considered a security hole, given
-    how the ~httplib.HTTPSConnection~ doesn't validate the certificates.  So,
-    you could easily, accidentally, and unknowingly connect to an untrusted
-    server.
+    As in the [[file:16.org][interprocess-communication]] issue, this can be considered a
+    security hole, given how the ~httplib.HTTPSConnection~ doesn't validate the
+    certificates.  So, you could easily, accidentally, and unknowingly connect
+    to an untrusted server.
 
     To do this safely, I need to make sure the certificates are in the
     certificate store.  How do we handle that going forward?  I've just added

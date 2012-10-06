@@ -7,7 +7,7 @@
 
 * Issue
 
-  We sometimes throw [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::raise%20cherrypy.HTTPError(403)][403]], 303, [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::raise%20cherrypy.HTTPError(405)][405]]s, etc, in case of errors.
+  We sometimes throw [[file:~/programs/freedombox/freedombuddy/connectors/https/controller.py::raise%20cherrypy.HTTPError(403)][403]], 303, [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::raise%20cherrypy.HTTPError(405)][405]]s, etc, in case of errors.
 
   We should stay silent or return empty 200s in case of error.
 
