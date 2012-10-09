@@ -12,7 +12,7 @@
 
 - Replies include "this service expires on".
 
-* TODO clean up [[file:~/programs/freedombox/freedombuddy/src/santiago.py::if%20not%20self.requests%5Bhost%5D:][requests]] after 5 minutes                             :expiry:
+* TODO clean up [[file:../src/santiago.py::if%20not%20self.requests%5Bhost%5D:][requests]] after 5 minutes                             :expiry:
 
   If they don't reply in that time, it times out and should be cleaned up.
 

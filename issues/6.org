@@ -10,7 +10,7 @@
   The authentication we have now is a miserable embarrassment to security,
   mostly because it isn't authentication.
 
-  With the [[file:~/programs/freedombox/freedombuddy/src/connectors/https/controller.py::def%20allow_ips(ips%20%3D%20None):][allow_ips]] decorator, we merely restrict the controllers to the
+  With the [[file:../src/connectors/https/controller.py::def%20allow_ips(ips%20%3D%20None):][allow_ips]] decorator, we merely restrict the controllers to the
   localhost, meaning that FBuddy can't be run on a shared box, because then any
   users could access the FBuddy whether they're supposed to or not.
 

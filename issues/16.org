@@ -7,7 +7,7 @@
 
 * Issue
 
-  The [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py::#!%20/usr/bin/env%20python%20#%20-*-%20mode:%20python%3B%20mode:%20auto-fill%3B%20fill-column:%2080%3B%20-*-][CLI connector]] just pipes stuff through the HTTPS connector.  That's silly.
+  The [[file:../src/connectors/cli/controller.py::#!%20/usr/bin/env%20python%20#%20-*-%20mode:%20python%3B%20mode:%20auto-fill%3B%20fill-column:%2080%3B%20-*-][CLI connector]] just pipes stuff through the HTTPS connector.  That's silly.
   We should make a connector that doesn't rely on another connector.
 
   - [[http://docs.python.org/howto/sockets.html][socket-based]] connector
@@ -59,7 +59,7 @@
 
 * Fixes [0/1]
 
-** TODO Convert the [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py][CLI Connector]] to a socket or pipe based system.
+** TODO Convert the [[file:../src/connectors/cli/controller.py][CLI Connector]] to a socket or pipe based system.
 
 *** Pipe System
 
@@ -82,7 +82,7 @@
    the monitor will make incoming calls.  A sender doesn't make sense to me,
    though.
 
-   Pick it up [[file:~/programs/freedombox/freedombuddy/src/connectors/cli/controller.py::class%20Listener(santiago.SantiagoListener):][here]].
+   Pick it up [[file:../src/connectors/cli/controller.py::class%20Listener(santiago.SantiagoListener):][here]].
 
 ** [2012-10-03 Wed]
 

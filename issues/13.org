@@ -8,7 +8,7 @@
 * Issue
 
   We need to read FreedomBuddy data to configure an [[https://help.ubuntu.com/community/SSH_VPN][SSH VPN]], similar to how the
-  [[file:~/programs/freedombox/freedombuddy/src/scripts/openvpn/static-key_client.py][Open VPN client]] does it.  We have two options:
+  [[file:../src/scripts/openvpn/static-key_client.py][Open VPN client]] does it.  We have two options:
 
   1. Edit =/etc/network/interfaces= and restart the network service.
 
