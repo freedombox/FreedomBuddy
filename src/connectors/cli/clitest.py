@@ -112,8 +112,15 @@ if __name__ == "__main__":
             def close(self):
                 self.sock.close()
 
+        try:
+            os.remove(PIPE)
+        except OSError:
+            pass
         dog = FBuddyClient()
         dog.echo("hiya!")
+        dog.sock.shutdown(socket.SHUT_RDWR)
+        dog.sock.close()
+        os.remove(PIPE)
     elif test == 5:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         import os
