@@ -21,7 +21,13 @@ time you want to change the test method.
 import socket
 import pdb
 
-test = 5
+import sys
+sys.path.append("/home/nick/programs/freedombox/bjsonrpc")
+import bjsonrpc
+import os
+
+
+test = 4
 PIPE = "fbuddy.pipe"
 
 if test == 2:
@@ -66,22 +72,11 @@ def start():
                 if x: print(x)
     elif test in (4, 5):
         # learning from exmachina: bjsonrpc fun times.
-        import sys
-        sys.path.append("/home/nick/programs/freedombox/bjsonrpc")
-        import bjsonrpc
-        import os
 
         class Monitor(bjsonrpc.handlers.BaseHandler):
-            def echo(self, input):
-                print(input)
-                return input
+            pass
 
         def run_server():
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            os.mkfifo(PIPE)
-            sock.bind(PIPE)
-            sock.listen(1)
-
             serv = bjsonrpc.server.Server(sock, handler_factory=Monitor)
             serv.serve()
 
@@ -95,8 +90,12 @@ if __name__ == "__main__":
         class FBuddyClient(object):
             def __init__(self):
                 self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                self.sock.connect(PIPE)
+                self.sock.bind(PIPE)
                 self.conn = bjsonrpc.connection.Connection(self.sock)
+
+            def echo(self, input):
+                print(input)
+                return input
 
             def __getattribute__(self, key):
                 """Wrap calls to the connection object."""
@@ -114,7 +113,6 @@ if __name__ == "__main__":
                 self.sock.close()
 
         dog = FBuddyClient()
-        import pdb; pdb.set_trace()
         dog.echo("hiya!")
     elif test == 5:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
