@@ -1,0 +1,21 @@
+# -*- mode: org; mode: refill; fill-column: 80 -*-
+
+#+TITLE: Controller Execution Process
+#+OPTIONS: d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Execution Process
+
+** Listeners, Senders, and Monitors initialized during Santiago Initialization.
+
+** Controllers' starts and stops called while entering and exiting Santiago.
+
+* Metadata
+  :PROPERTIES:
+  :Description: Controller Execution
+  :Status:      Incomplete
+  :Priority:    0
+  :Owner:       Nick Daly
+  :Tags:
+  :END:
