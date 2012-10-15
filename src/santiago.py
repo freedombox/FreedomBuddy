@@ -201,27 +201,7 @@ class Santiago(object):
         When this has finished, the Santiago will be ready to go.
 
         """
-        debug_log("Starting connectors.")
-
-        l_and_s = list()
-
-        try:
-            l_and_s += list(self.listeners.itervalues())
-        except AttributeError:
-            pass
-
-        try:
-            l_and_s += list(self.senders.itervalues())
-        except AttributeError:
-            pass
-
-        for connector in (l_and_s):
-            connector.start()
-
-        for connector in self.connectors:
-            sys.modules[Santiago.CONTROLLER_MODULE.format(connector)].start()
-
-        debug_log("Santiago started!")
+        self.change_state("start")
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Clean up and save all data to shut down the service."""
@@ -233,7 +213,20 @@ class Santiago(object):
         except KeyboardInterrupt:
             pass
 
-        debug_log("Stopping Santiago.")
+        self.change_state("stop")
+
+        if self.save_services:
+            self.save_data("hosting")
+            self.save_data("consuming")
+
+        debug_log([key for key in self.shelf])
+
+        self.shelf.close()
+
+    def change_state(self, state):
+        """Start or stop listeners and senders."""
+
+        debug_log("Connectors: {0}".format(state))
 
         l_and_s = list()
 
@@ -248,18 +241,12 @@ class Santiago(object):
             pass
 
         for connector in (l_and_s):
-            connector.stop()
+            getattr(connector, state)()
 
         for connector in self.connectors:
-            sys.modules[Santiago.CONTROLLER_MODULE.format(connector)].stop()
+            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], state)()
 
-        if self.save_services:
-            self.save_data("hosting")
-            self.save_data("consuming")
-
-        debug_log([key for key in self.shelf])
-
-        self.shelf.close()
+        debug_log("Santiago: {0}".format(state))
 
     def load_data(self, key):
         """Load hosting or consuming data from the shelf.
