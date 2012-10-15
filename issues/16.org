@@ -138,6 +138,43 @@
 
       - http://code.activestate.com/recipes/259148-simple-http-server-based-on-asyncoreasynchat/
 
+      - http://code.activestate.com/recipes/440665/
+
+   "If your program is processor bound, then pre-emptive scheduled threads are
+   probably what you really need.  Network servers are rarely processor bound,
+   however." - As long as I can file requests to a queue, that should also do
+   the trick.
+
+   It seems like I could rewrite the sleepy-wait loop I have going on
+   in [[file:../src/santiago.py::while%20self.live:][Santiago.__exit__]] with asyncore.loop, which should handle the many
+   listeners I need.  It might also be possible to just make all the listeners,
+   senders, and monitors inherit from something that handles most of this
+   scheduling for me.
+
+   If only [[http://www.python.org/dev/peps/pep-3153/][PEP 3153]] were implemented.  It asks for (but does not seem to
+   provide) exactly what I'm looking for, down to "separation between protocol
+   and transport."  Expanding on my thoughts in an email to the PEP's author,
+   I'm looking to use out-of-the-box protocol-specific servers as clients in a
+   non-blocking manner.  That's difficult: when even one server wants to be lazy
+   and handle IO in a simpler, blocking, way, it hangs the rest of the servers.
+   That's why bjsonrpc won't work.  So, I might need to roll all my own servers,
+   which is a terrifying thought.
+
+   I just want servers that listen for input without blocking, unwrap a
+   request's data, and pass that data along.  Why is it so annoying to find
+   servers that do that job for me, between multiple protocols?
+
+*** [2012-10-15 Mon 11:20]
+
+    Laurens suggests "Twisted without a doubt" for my use case over the next 5
+    years.  So, I guess that's my solution.  It may be heavier than I want, but
+    at least it'll do the job without a lot of (non-intrinsic) mess.
+
+    http://twistedmatrix.com/
+
+    I don't care much about intrinsic mess, I can hide that for my controllers,
+    pretty effectively.
+
 * References
 
   - http://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python
@@ -163,6 +200,8 @@
   - http://stackoverflow.com/questions/3591505/how-can-i-organise-program-which-should-have-non-blocking-connection-on-python
 
   - http://code.activestate.com/recipes/259148-simple-http-server-based-on-asyncoreasynchat/
+
+  - http://twistedmatrix.com/
 
 * Metadata
   :PROPERTIES:
