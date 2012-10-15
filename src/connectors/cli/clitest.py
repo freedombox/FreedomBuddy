@@ -74,11 +74,21 @@ def start():
         # learning from exmachina: bjsonrpc fun times.
 
         class Monitor(bjsonrpc.handlers.BaseHandler):
-            pass
+            def echo(self, input):
+                print(input)
+                return input
 
         def run_server():
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            try:
+                os.remove(PIPE)
+            except OSError:
+                pass
+            sock.bind(PIPE)
             serv = bjsonrpc.server.Server(sock, handler_factory=Monitor)
             serv.serve()
+
+        run_server()
 
 
 if __name__ == "__main__":
@@ -90,12 +100,8 @@ if __name__ == "__main__":
         class FBuddyClient(object):
             def __init__(self):
                 self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                self.sock.bind(PIPE)
+                self.sock.connect(PIPE)
                 self.conn = bjsonrpc.connection.Connection(self.sock)
-
-            def echo(self, input):
-                print(input)
-                return input
 
             def __getattribute__(self, key):
                 """Wrap calls to the connection object."""
@@ -112,10 +118,6 @@ if __name__ == "__main__":
             def close(self):
                 self.sock.close()
 
-        try:
-            os.remove(PIPE)
-        except OSError:
-            pass
         dog = FBuddyClient()
         dog.echo("hiya!")
         dog.sock.shutdown(socket.SHUT_RDWR)
