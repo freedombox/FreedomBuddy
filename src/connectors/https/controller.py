@@ -288,7 +288,6 @@ class HttpHosting(santiago.Hosting, HttpMonitor):
 
 class HttpHostedClient(santiago.HostedClient, HttpMonitor):
 
-    # FIXME correct direct key access
     @cherrypy.tools.ip_filter()
     def GET(self, client, **kwargs):
         return self.respond("hostedClient.tmpl",
