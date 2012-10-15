@@ -1,6 +1,6 @@
 #! /usr/bin/env python # -*- mode: python; mode: auto-fill; fill-column: 80; -*-
 
-"""The Santiago service.
+"""The FreedomBuddy (FBuddy) service.
 
 Santiago is designed to let users negotiate services without third party
 interference.  By sending OpenPGP signed and encrypted messages over HTTPS (or
@@ -48,6 +48,10 @@ import urlparse
 
 import pgpprocessor
 import utilities
+
+
+DEBUG = 0
+
 
 def debug_log(message):
     frame = inspect.stack()
@@ -332,6 +336,8 @@ class Santiago(object):
         """Verify whether this server is the specified server."""
 
         return self.me == server
+
+    # FIXME: unify create_hosting and create_consuming, to reduce redundancy.
 
     def create_hosting_client(self, client):
         """Create a hosting client if one doesn't currently exist."""
@@ -896,3 +902,9 @@ class ConsumedService(SantiagoMonitor):
 
         if location in self.santiago.consuming[host][service]:
             self.santiago.consuming[host][service].remove(location)
+
+
+if __name__ == "__main__":
+    if "-d" in sys.argv:
+        global DEBUG
+        DEBUG=1
