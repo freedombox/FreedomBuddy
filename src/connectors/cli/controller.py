@@ -71,7 +71,10 @@ import sys
 import time
 import urllib
 
-import connectors.https.controller as httpcontroller
+#import santiago
+import sys
+sys.path.append("/home/nick/programs/freedombox/bjsonrpc")
+import bjsonrpc
 
 
 def interpret_args(args, parser=None):
@@ -160,12 +163,45 @@ def validate_args(options, parser=None):
     if options.key == None or options.service == None:
         parser.error("--key and --service must be supplied.")
 
-class Listener(santiago.SantiagoListener):
 
-    def __init__(self):
+class Monitor(santiago.SantiagoMonitor, bjsonrpc.handlers.BaseHandler):
+    """The command line interface FBuddy monitor.
 
+    FIXME: look into asyncore_ and asynchat_.  bjsonrpc blocks.
 
-def start(
+    I need something that has non-blocking IO.  I don't care if the request is
+    synchronous or not (this client should wait), but we can't block the
+    Santiago server while waiting for input (as then we could only have a single
+    listener).  I might just need to master threading as well.
+
+    .. _asyncore: http://docs.python.org/library/asyncore.html
+    .. _asynchat: http://docs.python.org/library/asynchat.html
+
+    """
+    def __init__(self, aSantiago, **kwargs):
+        santiago.debug_log("Initializing Monitor.")
+
+        super(Monitor, self).__init__(aSantiago, **kwargs)
+
+    def echo(self, data):
+        print(data)
+
+
+def start(*args, **kwargs):
+    """The final startup step in the system.
+
+    Create the server.
+
+    """
+    s = bjsonrpc.createserver(host="0.0.0.0", handler_factory=Monitor)
+    s.serve()
+    print("served!")
+
+def stop(*args, **kwargs):
+    """Shut down the server."""
+
+    pass
+
 
 def query_remotely(address, port, key, service, params=None, timeout=1):
     """Query the remote FreedomBuddy to learn new services, then report back.
@@ -213,26 +249,33 @@ def query(*args, **kwargs):
 
 if __name__ == "__main__":
 
-    parser = OptionParser()
-    (options, args) = interpret_args(sys.argv[1:], parser)
-    validate_args(options, parser)
+    # self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    # self.sock.connect(PIPE)
+    # self.conn = bjsonrpc.connection.Connection(self.sock)
 
-    type = "consuming" if options.host else "hosting"
-    # FIXME replace with socket communications.
-    conn = httplib.HTTPSConnection(options.address, options.port)
-    params={"encoding": "json"}
+    c = bjsonrpc.connect()
+    c.call.echo("whee!")
 
-    if not options.action:
-        options.action = "GET"
+    # parser = OptionParser()
+    # (options, args) = interpret_args(sys.argv[1:], parser)
+    # validate_args(options, parser)
 
-    if options.host == False or options.query == False:
-        response = query(conn, type, options.key,
-                         options.service, options.action, params=params)
-    else:
-        response = query_remotely(options.address, options.port, options.key,
-                                  options.service, params=params)
+    # type = "consuming" if options.host else "hosting"
+    # # FIXME replace with socket communications.
+    # conn = httplib.HTTPSConnection(options.address, options.port)
+    # params={"encoding": "json"}
 
-    conn.close()
+    # if not options.action:
+    #     options.action = "GET"
 
-    if response:
-        print(response)
+    # if options.host == False or options.query == False:
+    #     response = query(conn, type, options.key,
+    #                      options.service, options.action, params=params)
+    # else:
+    #     response = query_remotely(options.address, options.port, options.key,
+    #                               options.service, params=params)
+
+    # conn.close()
+
+    # if response:
+    #     print(response)

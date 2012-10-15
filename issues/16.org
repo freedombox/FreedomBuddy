@@ -118,6 +118,26 @@
    calling out to some OS specific C libraries, so it's un- (or ill-) defined,
    here.
 
+** [2012-10-15 Mon]
+
+   Unfortuntately, as I found this weekend, bjsonrpc blocks.  So, my options
+   are:
+
+   1. Avoid blocking by spawning off another thread.  That'll need more
+      research, as I think I'll have sufficient references between objects to
+      ensure addressability, but multi-threaded access to a shared memory state
+      terrifies me.  I'd need to implement some sort of locking there, and I
+      don't such locking is a language feature, outside of pypy, so I'd be
+      rolling my own locking.  Eww.
+
+   2. Use non-blocking IO, possibly through non-blocking sockets.  Yeah, they
+      exist well enough, I just need to make sure they pass control back and
+      listen for events appropriately.  Not overly difficult to test.
+
+      - http://stackoverflow.com/questions/3591505/how-can-i-organise-program-which-should-have-non-blocking-connection-on-python
+
+      - http://code.activestate.com/recipes/259148-simple-http-server-based-on-asyncoreasynchat/
+
 * References
 
   - http://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python
@@ -139,6 +159,10 @@
   - http://www.lysator.liu.se/~bellman/download/asyncproc.py
 
   - http://stackoverflow.com/questions/12464331/socket-error-errno-111-connection-refused
+
+  - http://stackoverflow.com/questions/3591505/how-can-i-organise-program-which-should-have-non-blocking-connection-on-python
+
+  - http://code.activestate.com/recipes/259148-simple-http-server-based-on-asyncoreasynchat/
 
 * Metadata
   :PROPERTIES:
