@@ -514,29 +514,28 @@ class Santiago(object):
 
                 if not unpacked:
                     debug_log("opaque request.")
-                    return
-
-                debug_log("unpacked {0}".format(str(unpacked)))
-
-                if unpacked["locations"]:
-                    debug_log("handling reply")
-
-                    self.handle_reply(
-                        unpacked["from"], unpacked["to"],
-                        unpacked["host"], unpacked["client"],
-                        unpacked["service"], unpacked["locations"],
-                        unpacked["reply_to"],
-                        unpacked["request_version"],
-                        unpacked["reply_versions"])
                 else:
-                    debug_log("handling request")
+                    debug_log("unpacked {0}".format(str(unpacked)))
 
-                    self.handle_request(
-                        unpacked["from"], unpacked["to"],
-                        unpacked["host"], unpacked["client"],
-                        unpacked["service"], unpacked["reply_to"],
-                        unpacked["request_version"],
-                        unpacked["reply_versions"])
+                    if unpacked["locations"]:
+                        debug_log("handling reply")
+
+                        self.handle_reply(
+                            unpacked["from"], unpacked["to"],
+                            unpacked["host"], unpacked["client"],
+                            unpacked["service"], unpacked["locations"],
+                            unpacked["reply_to"],
+                            unpacked["request_version"],
+                            unpacked["reply_versions"])
+                    else:
+                        debug_log("handling request")
+
+                        self.handle_request(
+                            unpacked["from"], unpacked["to"],
+                            unpacked["host"], unpacked["client"],
+                            unpacked["service"], unpacked["reply_to"],
+                            unpacked["request_version"],
+                            unpacked["reply_versions"])
 
         except Exception as e:
             logging.exception(e)
