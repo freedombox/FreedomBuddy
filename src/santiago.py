@@ -605,6 +605,14 @@ class Santiago(object):
         - Reply to the client on the appropriate connector.
 
         """
+        # give up if we don't host this service for the sender.
+        try:
+            self.hosting[from_][self.reply_service]
+        except KeyError:
+            debug_log("no {0} hosting for {1}".format(self.reply_service,
+                                                      from_))
+            return
+
         # give up if we won't host the service for the client.
         try:
             self.hosting[client][service]
