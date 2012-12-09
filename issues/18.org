@@ -31,15 +31,30 @@
     Data points:
 
     - login:
+
       - user
       - server
       - password / cert
+
     - ports:
+
       - in port
       - out port
       - server
 
+    This doesn't make multi-hop tunneling easy.  That's out of scope for now.
+
 * Discussion
+
+* References
+
+  - http://www.revsys.com/writings/quicktips/ssh-tunnel.html
+
+  - http://www.engadget.com/2006/03/21/how-to-ssh-tunnels-for-secure-network-access/
+
+  - http://www.linuxjournal.com/content/ssh-tunneling-poor-techies-vpn
+
+  - http://www.howtogeek.com/118145/vpn-vs.-ssh-tunnel-which-is-more-secure/
 
 * Metadata
   :PROPERTIES:
