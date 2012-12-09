@@ -23,6 +23,12 @@
 
 ** TODO SSH Client
 
+* References
+
+  - http://bodhizazen.net/Tutorials/VPN-Over-SSH
+
+  - https://help.ubuntu.com/community/SSH_VPN
+
 * Metadata
   :PROPERTIES:
   :Status:   Incomplete
