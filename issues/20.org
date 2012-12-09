@@ -1,0 +1,44 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Be Explicit About Key-Handling Errors
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  I don't recall how key expiry or key revocation is handled.  I believe it
+  is already and implicitly handled by errors raised in python-gnupg.  However,
+  there should be tests that verify how FBuddy handles those cases.
+
+* Fixes [0/4]
+
+  Bail out in error conditions.  Make sure super-keys and sub-keys are handled
+  appropriately: if the super-key is expired or revoked, the sub-key should also
+  be considered equally expired or revoked.
+
+  Add tests for the following.  Fix any failing tests:
+
+** TODO Reject messages signed by expired keys.
+
+** TODO Reject messages signed by revoked keys.
+
+** TODO Reject messages signed by un-expired sub-keys of an expired super-key.
+
+** TODO Reject messages signed by un-revoked sub-keys of a revoked super-key.
+
+* Discussion
+
+  This construction does, correctly, place the onus of key management on the
+  user: FBuddy should never update the user's keyring.  We consume the keyring
+  and it's up to the user to manage their keys as appropriate.  DOTDIWADMWTU:
+  do one thing, do it well, and don't mess with the user.
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 0
+  :Owner:    Nick Daly
+  :Description: Handling Bad Keys
+  :Tags: security
+  :END:
