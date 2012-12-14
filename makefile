@@ -60,6 +60,6 @@ clean:
 	rm -rf build
 	rm -f $(CERTIFICATE)
 	rm -rf $(KEYS_TEST)
-	rm -f $(TEST_CRYPT_FILE)
+	rm -f $(TEST_CRYPT_FILE)*
 	rm -f predepend
 
