@@ -13,6 +13,7 @@ import santiago
 import utilities
 
 import logging
+import gnupg
 
 
 logging.getLogger("cherrypy")
@@ -58,6 +59,7 @@ class MonitorTest(RestTester):
         self.santiago.__enter__()
 
     def create_santiago(self):
+	gpg_to_use = gnupg.GPG(gnupghome='../data/test_gpg_home')
         # get my key, if possible
         try:
             mykey = utilities.load_config("../data/test.cfg").get(
@@ -87,7 +89,8 @@ class MonitorTest(RestTester):
         # go!
         return santiago.Santiago(listeners, senders,
                                  hosting, consuming,
-                                 me=mykey, monitors=monitors)
+                                 me=mykey, monitors=monitors,
+				 gpg = gpg_to_use)
 
     def tearDown(self):
         self.santiago.live = 0
