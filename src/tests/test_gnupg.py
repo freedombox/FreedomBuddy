@@ -16,11 +16,11 @@ class GnuPGWrapper(unittest.TestCase):
     """
     def setUp(self):
 
-       self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
-	config = utilities.load_config()
-    	self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
-	self.recipient = "joe@foo.bar"
-	self.message = {'lol': 'cats'}
+        self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
+        config = utilities.load_config()
+        self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
+        self.recipient = "joe@foo.bar"
+        self.message = {'lol': 'cats'}
 
 class CryptionTest(GnuPGWrapper):
     """Verify that we can unwrap multiply-signed PGP messages correctly."""
