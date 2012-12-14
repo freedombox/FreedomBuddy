@@ -46,7 +46,7 @@ create-test-key:
 	rm -f $(TEST_CRYPT_FILE)*
 
 predepend:
-	sudo sh -c "apt-get install python-routes python-socksipy"
+	sudo sh -c "apt-get install python-routes python-socksipy python-cheetah python-openssl"
 	touch predepend
 
 $(CFG_PRODUCTION):
