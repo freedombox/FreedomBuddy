@@ -483,13 +483,34 @@ class ArgumentTests(SantiagoTest):
             pass
 
     def test_saving_services(self):
-        """Are services correctly saved?
+        """Are services correctly saved?"""
 
-        :TODO: This isn't built out right now, as there's no way to test it
-               without blowing away the user's existing, saved, services.
+        url = "sharky_with_angry_hats"
+        service = "omg its a fake service name, haha."
+        gpg_to_use = gnupg.GPG(gnupghome='../data/test_gpg_home')
 
-        """
-        pass
+        options = OptionParser()
+        options.config = "../data/test.cfg"
+
+        (keyid, lang, protocols, connectors) = santiago_test.load_config(
+            options)
+
+        listeners, senders, monitors = santiago_test.configure_connectors(
+            protocols, connectors)
+
+        hosting = { keyid: { service: [url] } }
+        consuming = { keyid: { service: [url] } }
+
+        freedombuddy = santiago.Santiago(hosting=hosting, consuming=consuming,
+                                         save_dir='../data/test_gpg_home',
+                                         me=keyid, gpg=gpg_to_use)
+
+        self.cycle(freedombuddy)
+        freedombuddy1 = santiago.Santiago(me=keyid, gpg=gpg_to_use,
+                                          save_dir='../data/test_gpg_home')
+
+        self.assertIn(service, freedombuddy1.hosting[keyid])
+        self.assertIn(service, freedombuddy1.consuming[keyid])
 
     def test_forgetting_services(self):
         """Are services correctly forgotten?
@@ -503,7 +524,7 @@ class ArgumentTests(SantiagoTest):
         """
         url = "sharky_with_angry_hats"
         service = "omg its a fake service name, haha."
-	gpg_to_use = gnupg.GPG(gnupghome='../data/test_gpg_home')
+        gpg_to_use = gnupg.GPG(gnupghome='../data/test_gpg_home')
 
         options = OptionParser()
         options.config = "../data/test.cfg"
