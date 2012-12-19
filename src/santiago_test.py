@@ -54,26 +54,26 @@ without overwriting your existing data.""")
 def load_config(options):
     """Load data from the specified configuration file."""
 
+    listify_string = lambda x: [item.strip() for item in x.split(",")]
+
     config = utilities.load_config(options.config)
 
     mykey = safe_load(config, "pgpprocessor", "keyid", 0)
     lang = safe_load(config, "general", "locale", "en")
-    protocols = [safe_load(config, "connectors", "protocols", {})]
+    protocols = listify_string(safe_load(config, "connectors", "protocols"))
     connectors = {}
 
-    if protocols == [{}]:
+    if protocols == ['']:
         raise RuntimeError("No protocols detected.  Have you run 'make'?")
 
     # loop through the protocols, finding connectors each protocol uses
     # load the settings for each connector.
     for protocol in protocols:
-        protocol_connectors = safe_load(config, protocol, "connectors",
-            [ protocol + "-listener", protocol + "-sender",
-              protocol + "-monitor" ])
+        protocol_connectors = listify_string(
+            safe_load(config, protocol, "connectors"))
 
-        # when we do load data from the file, it's a comma-delimited string
-        if hasattr(protocol_connectors, "split"):
-            protocol_connectors = protocol_connectors.split(", ")
+        if not protocol_connectors:
+            continue
 
         for connector in protocol_connectors:
             connectors[connector] = dict(safe_load(config, connector, None, {}))
@@ -86,11 +86,11 @@ def configure_connectors(protocols, connectors):
 
     for protocol in protocols:
         for connector in connectors:
-            if connector.endswith("listener"):
+            if connector == protocol + "-listener":
                 listeners[protocol] = dict(connectors[protocol + "-listener"])
-            elif connector.endswith("sender"):
+            elif connector == protocol + "-sender":
                 senders[protocol] = dict(connectors[protocol + "-sender"])
-            elif connector.endswith("monitor"):
+            elif connector == protocol + "-monitor":
                 monitors[protocol] = dict(connectors[protocol + "-monitor"])
 
     return listeners, senders, monitors
@@ -148,6 +148,7 @@ if __name__ == "__main__":
 
     # run
     with freedombuddy:
-        webbrowser.open_new_tab(url + "/freedombuddy")
+        if "https" in protocols:
+            webbrowser.open_new_tab(url + "/freedombuddy")
 
     santiago.debug_log("Santiago finished!")
