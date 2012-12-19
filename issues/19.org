@@ -52,5 +52,5 @@
   :Owner:    Nick Daly
   :Description:
   :Tags:
-  :Related:  [[5.org]]
+  :Related:  [[file:5.org][Remove PGP Requirement]]
   :END:
