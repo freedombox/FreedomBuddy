@@ -72,12 +72,13 @@ def stop(*args, **kwargs):
 
 class Listener(santiago.SantiagoListener):
 
-    def __init__(self, my_santiago, socket_port=0,
-                 ssl_certificate="", ssl_private_key="", **kwargs):
+    def __init__(self, socket_port=0,
+                 ssl_certificate="", ssl_private_key="",
+                 *args, **kwargs):
 
         santiago.debug_log("Creating Listener.")
 
-        super(santiago.SantiagoListener, self).__init__(my_santiago, **kwargs)
+        super(santiago.SantiagoListener, self).__init__(*args, **kwargs)
 
         cherrypy.server.socket_port = int(socket_port)
         cherrypy.server.ssl_certificate = ssl_certificate
@@ -108,13 +109,13 @@ class Listener(santiago.SantiagoListener):
 
 class Sender(santiago.SantiagoSender):
 
-    def __init__(self, my_santiago,
+    def __init__(self,
                  proxy_type = socks.PROXY_TYPE_SOCKS5,
                  proxy_host = "",
                  proxy_port = 0,
-                 **kwargs):
+                 *args, **kwargs):
 
-        super(santiago.SantiagoSender, self).__init__(my_santiago, **kwargs)
+        super(santiago.SantiagoSender, self).__init__(*args, **kwargs)
 
         self.proxy = None
 
@@ -154,10 +155,10 @@ class Sender(santiago.SantiagoSender):
 
 class Monitor(santiago.SantiagoMonitor):
 
-    def __init__(self, aSantiago, **kwargs):
+    def __init__(self, *args, **kwargs):
         santiago.debug_log("Creating Monitor.")
 
-        super(Monitor, self).__init__(aSantiago, **kwargs)
+        super(Monitor, self).__init__(*args, **kwargs)
 
         try:
             d = cherrypy.tree.apps[""].config["/"]["request.dispatch"]
@@ -213,7 +214,7 @@ class HttpMonitor(object):
     # http://ha.ckers.org/xss.html
 
     def __init__(self, *args, **kwargs):
-        super(HttpMonitor, self).__init__()
+        super(HttpMonitor, self).__init__(*args, **kwargs)
         self.relative_path = "connectors/https/templates"
 
     def _parse_query(self, query_input):

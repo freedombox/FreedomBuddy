@@ -87,7 +87,8 @@ class Santiago(object):
     def __init__(self, listeners=None, senders=None,
                  hosting=None, consuming=None, monitors=None,
                  me=0, reply_service=None,
-                 locale="en", save_dir=".", save_services=True):
+                 locale="en", save_dir=".", save_services=True,
+                 *args, **kwargs):
         """Create a Santiago with the specified parameters.
 
         listeners and senders are both connector-specific dictionaries containing
@@ -127,6 +128,8 @@ class Santiago(object):
           the session", but that's mostly semantics.
 
         """
+        super(Santiago, self).__init__(*args, **kwargs)
+
         self.live = 1
         self.requests = DefaultDict(set)
         self.me = me
@@ -170,8 +173,10 @@ class Santiago(object):
             module = Santiago._get_connector_module(protocol)
 
             try:
+                # use the module's connector as the protocol's connector.
                 connectors[protocol] = \
-                    getattr(module, connector)(self, **settings[protocol])
+                    getattr(module, connector)(santiago = self,
+                                               **settings[protocol])
 
             # log a type error, assume all others are fatal.
             except TypeError:
@@ -230,15 +235,11 @@ class Santiago(object):
 
         l_and_s = list()
 
-        try:
-            l_and_s += list(self.listeners.itervalues())
-        except AttributeError:
-            pass
-
-        try:
-            l_and_s += list(self.senders.itervalues())
-        except AttributeError:
-            pass
+        for connectors in (self.listeners, self.senders):
+            try:
+                l_and_s += list(connectors.itervalues())
+            except AttributeError:
+                pass
 
         for connector in (l_and_s):
             getattr(connector, state)()
@@ -693,8 +694,8 @@ class SantiagoConnector(object):
     "controllers" in the MVC paradigm.
 
     """
-    def __init__(self, santiago, *args, **kwargs):
-        super(SantiagoConnector, self).__init__()
+    def __init__(self, santiago = None, *args, **kwargs):
+        super(SantiagoConnector, self).__init__(*args, **kwargs)
         self.santiago = santiago
 
     def start(self, *args, **kwargs):
