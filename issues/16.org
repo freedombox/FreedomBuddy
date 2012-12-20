@@ -175,6 +175,16 @@
     I don't care much about intrinsic mess, I can hide that for my controllers,
     pretty effectively.
 
+
+** [2012-12-11 Tue] Allows Externalization
+
+   I again realized last night that this is of a very high priority, as it
+   allows any external system to connect to FBUddy, taking the onus off FBuddy
+   to supply connectors for every protocol, etc.  This allows us to externalize
+   nearly all other details: other protocol's connectors would no longer act in
+   concert, but perhaps that's best.  Thankfully, I finally remembered to write
+   this down.  Thank Pete for dinner napkins.
+
 * References
 
   - http://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python

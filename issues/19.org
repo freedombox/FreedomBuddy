@@ -1,0 +1,56 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Improve Identity Scheme
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  Right now, the FBuddy identity scheme supports only PGP identities.  It should
+  support others, like SSL certificates.
+
+  This is not planned for immediate implementation.  I want to get other pieces,
+  like the SSH service, out the door first.
+
+* Fixes [0/0]
+
+  None yet.
+
+* Discussion
+
+** Person Concept
+
+   FBuddy's understanding of what a person *is* will need to change.  Right now,
+   we act as if we assume a 1 to 1, PGP key to "person" correspondence, which is
+   inaccurate (one person could have more than one key, and one key could be
+   shared by many people).  We use the neat and inappropriate shortcut that a
+   key is a complete identity.  Well, it is appropriate, but it's limiting: we
+   exclude SSL certificates and all other identity types from the mix.
+
+   To fix this, we should create an additional data structure, that of a person.
+   This is mostly orthogonal to the existing key concept: I can set up a
+   dictionary of entities that map to identity documents of different types.  In
+   the following structure, Alice has several PGP keys and an SSL certificate.
+   Bob has no PGP keys, but several SSL certificates, and in fact shares one SSL
+   certificate with Alice:
+
+   #+begin_src python
+     { "alice": { "PGP": [ 12345, 56789 ],
+                  "SSL": [ 98765 ] },
+       "bob":   { "SSL": [ 54321, 98765 ] } }
+   #+end_src
+
+   Thus, any document validated by the 98765 certificate could have come from
+   Bob or Alice.  Any permissions granted to that certificate are implicitly
+   granted to both Alice and Bob.
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 0
+  :Owner:    Nick Daly
+  :Description:
+  :Tags:
+  :Related:  [[file:5.org][Remove PGP Requirement]]
+  :END:

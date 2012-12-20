@@ -1,0 +1,66 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Create an SSH Tunnel Service
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  SSH Tunnels are pretty darn easy to put together.  We can build one of these
+  pretty quickly.
+
+* Fixes [0/1]
+
+** TODO Build Tunnel
+
+*** [2012-10-27 Sat]
+
+    Dissecting the command line:
+
+    #+begin_ascii
+    $ ssh -f user@personal-server.com -L 2000:personal-server.com:25 -N
+
+    The -f tells ssh to go into the background just before it executes the
+    command.  This is followed by the username and server you are logging into.
+    The -L 2000:personal-server.com:25 is in the form of -L
+    local-port:host:remote-port.  Finally the -N instructs OpenSSH to not
+    execute a command on the remote system.
+    #+end_ascii
+
+    Data points:
+
+    - login:
+
+      - user
+      - server
+      - password / cert
+
+    - ports:
+
+      - in port
+      - out port
+      - server
+
+    This doesn't make multi-hop tunneling easy.  That's out of scope for now.
+
+* Discussion
+
+* References
+
+  - http://www.revsys.com/writings/quicktips/ssh-tunnel.html
+
+  - http://www.engadget.com/2006/03/21/how-to-ssh-tunnels-for-secure-network-access/
+
+  - http://www.linuxjournal.com/content/ssh-tunneling-poor-techies-vpn
+
+  - http://www.howtogeek.com/118145/vpn-vs.-ssh-tunnel-which-is-more-secure/
+
+* Metadata
+  :PROPERTIES:
+  :Status:      Incomplete
+  :Priority:    0
+  :Owner:       Nick Daly
+  :Description: Create an SSH Tunnel.
+  :Tags:
+  :END:

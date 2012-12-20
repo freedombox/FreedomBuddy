@@ -71,7 +71,7 @@ import sys
 import time
 import urllib
 
-#import santiago
+import santiago
 import sys
 sys.path.append("/home/nick/programs/freedombox/bjsonrpc")
 import bjsonrpc
@@ -178,13 +178,13 @@ class Monitor(santiago.SantiagoMonitor, bjsonrpc.handlers.BaseHandler):
     .. _asynchat: http://docs.python.org/library/asynchat.html
 
     """
-    def __init__(self, aSantiago, **kwargs):
-        santiago.debug_log("Initializing Monitor.")
+    def __init__(self, *args, **kwargs):
+        santiago.debug_log("Initializing CLI Monitor.")
 
-        super(Monitor, self).__init__(aSantiago, **kwargs)
+        super(Monitor, self).__init__(*args, **kwargs)
 
     def echo(self, data):
-        print(data)
+        return data
 
 
 def start(*args, **kwargs):
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     # self.conn = bjsonrpc.connection.Connection(self.sock)
 
     c = bjsonrpc.connect()
-    c.call.echo("whee!")
+    print c.call.echo("whee!")
 
     # parser = OptionParser()
     # (options, args) = interpret_args(sys.argv[1:], parser)

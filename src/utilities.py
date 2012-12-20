@@ -10,9 +10,7 @@ import ConfigParser as configparser
 def load_config(configfile="../data/test.cfg"):
     """Returns data from the named config file."""
 
-    config = configparser.ConfigParser(
-        {"KEYID":
-             "D95C32042EE54FFDB25EC3489F2733F40928D23A"})
+    config = configparser.ConfigParser()
     config.read([configfile])
     return config
 
