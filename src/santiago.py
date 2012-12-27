@@ -48,7 +48,7 @@ import urlparse
 
 import pgpprocessor
 import utilities
-
+from pprint import pprint
 
 global DEBUG
 
@@ -134,9 +134,9 @@ class Santiago(object):
         self.live = 1
         self.requests = DefaultDict(set)
         self.me = me
-	 if gpg is None:        
+        if gpg is None:        
 	     self.gpg = gnupg.GPG(use_agent = True)
-	 else:
+        else:
 	     self.gpg = gpg
         self.connectors = set()
         self.reply_service = reply_service or Santiago.SERVICE_NAME
