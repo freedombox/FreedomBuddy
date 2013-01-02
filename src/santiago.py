@@ -84,7 +84,8 @@ class Santiago(object):
                  hosting=None, consuming=None, monitors=None,
                  me=0, reply_service=None,
                  locale="en", save_dir=".", save_services=True,
-                 *args, **kwargs):
+                 gpg=None, *args, **kwargs):
+
         """Create a Santiago with the specified parameters.
 
         listeners and senders are both connector-specific dictionaries containing
@@ -129,7 +130,10 @@ class Santiago(object):
         self.live = 1
         self.requests = DefaultDict(set)
         self.me = me
-        self.gpg = gnupg.GPG(use_agent = True)
+	 if gpg is None:
+	     self.gpg = gnupg.GPG(use_agent = True)
+	 else:
+	     self.gpg = gpg
         self.connectors = set()
         self.reply_service = reply_service or Santiago.SERVICE_NAME
         self.locale = locale
@@ -899,4 +903,4 @@ class ConsumedService(SantiagoMonitor):
 if __name__ == "__main__":
     if "-d" in sys.argv:
         global DEBUG
-        DEBUG=1
+        DEBUG = 1

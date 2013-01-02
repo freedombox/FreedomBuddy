@@ -34,10 +34,13 @@ class MessageWrapper(unittest.TestCase):
     def setUp(self):
 
         self.iterations = 3
-        self.gpg = gnupg.GPG(use_agent = True)
+        self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
+	config = utilities.load_config()
+    	self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
         self.messages = utilities.multi_sign(
             gpg = self.gpg,
-            iterations = self.iterations)
+            iterations = self.iterations,
+	    keyid = self.key_id)
 
 class UnwrapperTest(MessageWrapper):
     """Verify that we can unwrap multiply-signed PGP messages correctly."""
@@ -71,7 +74,6 @@ class UnwrapperTest(MessageWrapper):
 
     def test_iterator_unwraps_correctly(self):
         """The iterator should correctly unwrap each stage of the message."""
-
         unwrapped_messages = self.messages[:-1]
 
         for message in reversed(unwrapped_messages):

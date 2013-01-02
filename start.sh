@@ -4,9 +4,10 @@
 cd src
 
 PYTHONPATH=$PYTHONPATH:../../..
-PYTHONPATH=$PYTHONPATH:/home/nick/programs/python-gnupg/python-gnupg-0.2.9
-PYTHONPATH=$PYTHONPATH:/home/nick/programs/freedombox/plinth
-PYTHONPATH=$PYTHONPATH:/home/nick/programs/freedombox/bjsonrpc
+PYTHONPATH=$PYTHONPATH:../build/plinth
+PYTHONPATH=$PYTHONPATH:../build/python-gnupg-0.2.9
+PYTHONPATH=$PYTHONPATH:../build/bjsonrpc
 export PYTHONPATH
 
 python santiago_test.py "$@"
+

@@ -58,9 +58,9 @@ def load_config(options):
 
     config = utilities.load_config(options.config)
 
-    mykey = safe_load(config, "pgpprocessor", "keyid", 0)
-    lang = safe_load(config, "general", "locale", "en")
-    protocols = listify_string(safe_load(config, "connectors", "protocols"))
+    mykey = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
+    lang = utilities.safe_load(config, "general", "locale", "en")
+    protocols = listify_string(utilities.safe_load(config, "connectors", "protocols"))
     connectors = {}
 
     if protocols == ['']:
@@ -70,13 +70,13 @@ def load_config(options):
     # load the settings for each connector.
     for protocol in protocols:
         protocol_connectors = listify_string(
-            safe_load(config, protocol, "connectors"))
+            utilities.safe_load(config, protocol, "connectors"))
 
         if not protocol_connectors:
             continue
 
         for connector in protocol_connectors:
-            connectors[connector] = dict(safe_load(config, connector, None, {}))
+            connectors[connector] = dict(utilities.safe_load(config, connector, None, {}))
 
     return mykey, lang, protocols, connectors
 
@@ -94,18 +94,6 @@ def configure_connectors(protocols, connectors):
                 monitors[protocol] = dict(connectors[protocol + "-monitor"])
 
     return listeners, senders, monitors
-
-def safe_load(config, section, key=None, default=None):
-    """Safely load data from a configuration file."""
-
-    try:
-        if key is not None:
-            return config.get(section, key)
-        else:
-            return config.items(section)
-    except configparser.NoSectionError:
-        return default
-
 
 if __name__ == "__main__":
 

@@ -29,6 +29,16 @@ def multi_sign(message="hi", iterations=3, keyid=None, gpg=None):
 
     return messages
 
+def safe_load(config, section, key=None, default=None):
+    """Safely load data from a configuration file."""
+
+    try:
+        if key is not None:
+            return config.get(section, key)
+        else:
+            return config.items(section)
+    except configparser.NoSectionError:
+        return default
 
 class SignatureError(Exception):
     """Base class for signature-related errors."""

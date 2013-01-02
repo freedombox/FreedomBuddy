@@ -1,190 +1,48 @@
+#! /usr/bin/env python # -*- mode: auto-fill; fill-column: 80 -*-
 from pprint import pprint
 import gnupg
 import santiago
+import utilities
+import unittest
 
+class GnuPGWrapper(unittest.TestCase):
+    """Basic setup for message-signing tests.
 
-# important variables.
-
-key_id = ""
-pass_phrase = ""
-recipient = ""
-gpg = gnupg.GPG(use_agent=True)
-
-# utility functions
-
-def show(name, item, iterations=1):
-    format = "rst"
-    if format == "rst":
-        headers = "=-+~`*'"
-        print name
-        print headers[iterations-1] * 40
-    elif format == "mkdn":
-        print "#" * iterations, name
-
-    if hasattr(item, "__dict__"):
-        for k, v in item.__dict__.iteritems():
-            show(k, v, iterations + 1)
-    elif type(item) in (str, unicode):
-        if format == "rst":
-            print "::\n    "
-            print "\n    ".join(str(item).splitlines())
-        elif format == "mkdn":
-            print item
-    else:
-        if format == "rst":
-            print "::\n    "
-            pprint("\n    ".join(str(item).splitlines()))
-        elif format == "mkdn":
-            pprint(item)
-    if format == "rst":
-        print
-
-
-# basic data printing tests.
-
-def encrypted_test(data):
-    global key_id, pass_phrase, gpg
-
-    encrypted_data = gpg.encrypt(data, recipient, passphrase=pass_phrase)
-    encrypted_string = str(encrypted_data)
-    encrypted(encrypted_data, encrypted_string, data)
-
-def encrypted(encrypted_data, encrypted_string, unencrypted_string):
-    """Print out some basic important items."""
-
-    print "encrypted data!"
-    print 'ok: ', encrypted_data.ok
-    print 'status: ', encrypted_data.status
-    print 'stderr: ', encrypted_data.stderr
-    print 'unencrypted_string: ', unencrypted_string
-    print 'encrypted_string: ', encrypted_string
-    show("encrypted_data", encrypted_data)
-
-def decrypted_test(encrypted_string):
-    global key_id, pass_phrase, gpg
-
-    decrypted_data = gpg.decrypt(encrypted_string, passphrase=pass_phrase)
-    decrypted_data = gpg.decrypt(encrypted_string)
-    decrypted(decrypted_data)
-
-def decrypted(decrypted_data):
-    """Print out some basic important items."""
-
-    print "decrypted data!"
-    print 'ok: ', decrypted_data.ok
-    print 'status: ', decrypted_data.status
-    print 'stderr: ', decrypted_data.stderr
-    print 'decrypted string: ', decrypted_data.data
-    show("decrypted_data", decrypted_data)
-
-# interactive, value-returning tests
-
-def sign_test(message):
-    signed = gpg.sign(message)
-    show("signed", signed)
-    return signed
-
-def signcrypt_test(data):
-    global key_id, pass_phrase, gpg
-
-    encrypted_data = gpg.encrypt(data, recipient, passphrase=pass_phrase)
-    return encrypted_data
-
-def example_test():
-    """Almost directly out of the Python-Gnupg docs."""
-
-    gpg = gnupg.GPG(gnupghome="keys")
-    show("gpg", gpg)
-    input_ = gpg.gen_key_input(passphrase='foo')
-    show("input_", input_)
-    result = gpg.gen_key(input_)
-    show("result", result)
-    print1 = result.fingerprint
-    show("print1", print1)
-    input_ = gpg.gen_key_input()
-    show("input_", input_)
-    result = gpg.gen_key(input_)
-    show("result", result)
-    print2 = result.fingerprint
-    show("print2", print2)
-    result = gpg.encrypt("hello",print2)
-    show("result", result)
-    message = str(result)
-    show("message", message)
-    return message
-
-def verify_test(message):
-    """The two important results of the verify method are valid and fingerprint.
+    These tests would run much faster if I could use setUpClass (>30x faster:
+    signing three messages for each test consumes lots of entropy that needs to
+    be rebuilt?), but that's a Python 2.7 feature.  I'll rewrite this when
+    Debian Stable includes Python 2.7 or Python 3.X.  It's much prettier.
 
     """
-    verify = gpg.verify(str(message))
-    show("verify", verify)
-    # show(verify.valid)
-    # show(verify.fingerprint)
-    return verify
+    def setUp(self):
 
-def unwrapper_test(data):
-    """Does the PgpUnwrapper do its job?"""
-    global key_id, pass_phrase, gpg
+        self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
+        config = utilities.load_config()
+        self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
+        self.recipient = "joe@foo.bar"
+        self.message = {'lol': 'cats'}
 
-    # create a new key if we don't have one.
-    if not key_id:
-        key_id = None
+class CryptionTest(GnuPGWrapper):
+    """Verify that we can unwrap multiply-signed PGP messages correctly."""
 
-        gpg = gnupg.GPG(gnupghome="keys", use_agent=True)
+    def setUp(self):
+        super(CryptionTest, self).setUp()
 
-        print "key input..."
-        input_ = gpg.gen_key_input(key_length = 1, passphrase=pass_phrase)
-        print "key..."
-        result = gpg.gen_key(input_)
+    def test_encrypt_then_decrypt(self):
 
-    # first signing
+    	#Encrypt data
+    	encrypted_data = self.gpg.encrypt(str(self.message), self.recipient)
+    	#Decrypt data
+    	decrypted_data = self.gpg.decrypt(str(encrypted_data))
+    	#Test decrypted is same as original
+    	self.assertEqual(str(self.message), str(decrypted_data))
 
-    print "sign..."
-    data = gpg.sign(data, keyid=key_id)
-    # believe it or not, this is transformative.
-    data = str(data)
-    print "data:\n", data, "\n:data"
-
-    # second signing
-
-    data = gpg.sign(data, keyid=key_id)
-    data = str(data)
-    print "data:\n", data, "\n:data"
-
-    # unwrap it!
-
-    dog = pgpprocessor.Unwrapper(str(data))
-
-    print "unwrapping..."
-    for message in dog:
-        print "type:", dog.type
-        print "message:", message
-
+    def test_sign_then_verify(self):
+    	signed = self.gpg.sign(str(self.message),keyid=self.key_id)
+	verified = self.gpg.verify(str(signed.data))
+	self.assertEqual(verified.fingerprint,self.key_id)
+	self.assertEqual(True,verified.valid)
 
 if __name__ == "__main__":
-    """Below, each set of lines is a set of tests:
+    unittest.main()
 
-    1. encrypted_test, decrypted_test
-    2. example_test
-    3. signcrypt_test
-    4. sign_test, verify_test
-    5. unwrapper_test
-
-    """
-    key_id = "D95C32042EE54FFDB25EC3489F2733F40928D23A"
-    recipient = "nick.m.daly@gmail.com"
-
-    data = {'lol': 'cats'}
-
-    # encrypted_data = encrypted_test(str(data))
-    # decrypted_test(str(encrypted_data))
-
-    # example_test()
-
-    # crypt_data = signcrypt_test(str(data))
-
-    # signed = sign_test(str(data))
-    # verify = verify_test(signed)
-
-    # unwrapper_test(str(data))
