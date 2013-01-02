@@ -22,10 +22,6 @@ is that we learn a new set of locations for the service.
 
 This dead-drop approach is what came of my trying to learn from bug 4185.
 
-                                  Santiago, he
-                          smiles like a Buddah, 'neath
-                               his red sombrero.
-
 This file is distributed under the GNU Affero General Public License, Version 3
 or later.  A copy of GPLv3 is available [from the Free Software Foundation]
 <https://www.gnu.org/licenses/agpl.html>.
@@ -245,7 +241,7 @@ class Santiago(object):
             getattr(connector, state)()
 
         for connector in self.connectors:
-            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], state)()
+            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], state)(santiago=self)
 
         debug_log("Santiago: {0}".format(state))
 
@@ -283,7 +279,8 @@ class Santiago(object):
                 pass
 
             try:
-                # FIXME there's gotta be something safer we can use here, right?
+                # Per Python's documentation, this is safe enough:
+                # http://docs.python.org/2/library/ast.html#ast.literal_eval
                 data = ast.literal_eval(str(message))
             except (ValueError, SyntaxError) as e:
                 logging.exception(e)
