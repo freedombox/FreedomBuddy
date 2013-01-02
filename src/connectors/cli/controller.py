@@ -76,7 +76,7 @@ import santiago
 import sys
 import subprocess
 
-SANTIAGO_INSTANCE = None
+SANTIAGO_INSTANCE = BJSONRPC_SERVER = None
 
 def interpret_args(args, parser=None):
     """Convert command-line arguments into options."""
@@ -171,62 +171,17 @@ def start(santiago, *args, **kwargs):
     Create the server.
 
     """
-    global SANTIAGO_INSTANCE
+    global SANTIAGO_INSTANCE, BJSONRPC_SERVER
     SANTIAGO_INSTANCE = santiago
-    s = bjsonrpc.createserver(host="127.0.0.1", handler_factory=BjsonRpcHost)
-    s.serve()
+    BJSONRPC_SERVER = bjsonrpc.createserver(host="127.0.0.1",
+                                            handler_factory=BjsonRpcHost)
+    BJSONRPC_SERVER.serve()
     print("served!")
 
 def stop(santiago, *args, **kwargs):
     """Shut down the server."""
 
     pass
-
-
-def query_remotely(address, port, key, service, params=None, timeout=1):
-    """Query the remote FreedomBuddy to learn new services, then report back.
-
-    :conn: The HTTP(S) connection to send the request along.  Requires
-    ``conn.request`` and ``conn.get_response``.
-
-    :key: The other FreedomBuddy service to query.
-
-    :service: The particular data to ask the other FBuddy for.
-
-    For example, if I wanted to ask Dave (who's key was "0x3") for his
-    "wikipedia" service (he makes parody articles, he's a funny guy), I'd have
-    to ask my FreedomBuddy service to find him:
-
-    query_remotely(
-        "localhost", 8080, # my FreedomBuddy service
-        0x3,         # will ask Dave's FreedomBuddy service
-        "wikipedia") # for the address of his wikipedia service
-
-    Neat, huh?
-
-    """
-    # FIXME use socket, not http, especially since it doesn't validate certs.
-    conn = httplib.HTTPSConnection(address, port)
-    query(conn=conn, type="learn", id=key, service=service, params="POST")
-    conn.close()
-
-    time.sleep(timeout)
-
-    # FIXME use socket, not http, especially since it doesn't validate certs.
-    conn = httplib.HTTPSConnection(address, port)
-    locations = query(conn=conn, type="consuming",
-                      id=key, service=service, params=params)
-    conn.close()
-
-    return locations
-
-def query(*args, **kwargs):
-    """Unwrap controller's json."""
-
-    try:
-        return httpcontroller.query(*args, **kwargs)
-    except (ValueError, TypeError):
-        pass
 
 
 class Monitor(santiago.SantiagoListener, santiago.SantiagoMonitor):
@@ -289,6 +244,10 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
     def outgoing_request(self, *args, **kwargs):
         return self.sender.outgoing_request(*args, **kwargs)
 
+    def stop(self):
+        global BJSONRPC_SERVER
+        BJSONRPC_SERVER.stop()
+
 
 
 def main():
@@ -299,6 +258,8 @@ def main():
 
     c = bjsonrpc.connect()
     c.call.outgoing_request("cli://asdf")
+    import time; time.sleep(5)
+    c.call.stop()
 
 if __name__ == "__main__":
 
