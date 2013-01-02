@@ -64,6 +64,7 @@ You should have received a copy of the GNU Affero General Public License along
 with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import bjsonrpc
 import httplib
 import json
 from optparse import OptionParser
@@ -73,9 +74,9 @@ import urllib
 
 import santiago
 import sys
-sys.path.append("/home/nick/programs/freedombox/bjsonrpc")
-import bjsonrpc
+import subprocess
 
+SANTIAGO_INSTANCE = None
 
 def interpret_args(args, parser=None):
     """Convert command-line arguments into options."""
@@ -162,42 +163,21 @@ def validate_args(options, parser=None):
 
     if options.key == None or options.service == None:
         parser.error("--key and --service must be supplied.")
-
-
-class Monitor(santiago.SantiagoMonitor, bjsonrpc.handlers.BaseHandler):
-    """The command line interface FBuddy monitor.
-
-    FIXME: look into asyncore_ and asynchat_.  bjsonrpc blocks.
-
-    I need something that has non-blocking IO.  I don't care if the request is
-    synchronous or not (this client should wait), but we can't block the
-    Santiago server while waiting for input (as then we could only have a single
-    listener).  I might just need to master threading as well.
-
-    .. _asyncore: http://docs.python.org/library/asyncore.html
-    .. _asynchat: http://docs.python.org/library/asynchat.html
-
-    """
-    def __init__(self, *args, **kwargs):
-        santiago.debug_log("Initializing CLI Monitor.")
-
-        super(Monitor, self).__init__(*args, **kwargs)
-
-    def echo(self, data):
-        return data
 
 
-def start(*args, **kwargs):
+def start(santiago, *args, **kwargs):
     """The final startup step in the system.
 
     Create the server.
 
     """
-    s = bjsonrpc.createserver(host="0.0.0.0", handler_factory=Monitor)
+    global SANTIAGO_INSTANCE
+    SANTIAGO_INSTANCE = santiago
+    s = bjsonrpc.createserver(host="127.0.0.1", handler_factory=BjsonRpcHost)
     s.serve()
     print("served!")
 
-def stop(*args, **kwargs):
+def stop(santiago, *args, **kwargs):
     """Shut down the server."""
 
     pass
@@ -227,14 +207,15 @@ def query_remotely(address, port, key, service, params=None, timeout=1):
     """
     # FIXME use socket, not http, especially since it doesn't validate certs.
     conn = httplib.HTTPSConnection(address, port)
-    query(conn, "learn", key, service, "POST")
+    query(conn=conn, type="learn", id=key, service=service, params="POST")
     conn.close()
 
     time.sleep(timeout)
 
     # FIXME use socket, not http, especially since it doesn't validate certs.
     conn = httplib.HTTPSConnection(address, port)
-    locations = query(conn, "consuming", key, service, params=params)
+    locations = query(conn=conn, type="consuming",
+                      id=key, service=service, params=params)
     conn.close()
 
     return locations
@@ -246,20 +227,82 @@ def query(*args, **kwargs):
         return httpcontroller.query(*args, **kwargs)
     except (ValueError, TypeError):
         pass
+
+
+class Monitor(santiago.SantiagoListener, santiago.SantiagoMonitor):
+    """The command line interface FBuddy Monitor and Listener.
+
+    FIXME: Separate the Monitor and Listener, this exposes the core to any
+    FIXME: authentication bugs in each client.  It *should* follow the structure
+    FIXME: of the HTTPS Controller module, where clients can selectively expose
+    FIXME: the listener while keeping the monitor hidden.
+
+    """
+    def incoming_request(self, request):
+        """Process a signed and encrypted data-store update request.
+
+        This may be exposed to external and untrusted input, the Santiago Core
+        validates and rejects untrustworthy input.  No other methods may be
+        exposed to untrustworthy input.
+
+        """
+        self.incoming_request(request)
+
+
+class Sender(santiago.SantiagoSender):
+    def __init__(self, https_sender = None, cli_sender = None, *args, **kwargs):
+        super(Sender, self).__init__(*args, **kwargs)
+
+        stuff = {"https": https_sender, "cli": cli_sender}
+        self.senders = dict((x, y.split()) for x, y in stuff.iteritems())
+
+    def outgoing_request(self, request):
+        """Send a request out through the command line interface.
+
+        Don't queue, just immediately send the reply to each location we know.
+
+        """
+        protocol = request.split(":")[0]
+        subprocess.Popen(" ".join(self.senders[protocol]).format(request).split())
+
+
+def load_connector(attr):
+    """Load the cli-specific connector from the Santiago Instance.
+
+    Ignore KeyErrors, if they occur: in these cases, the user didn't want to
+    engage optional functionality.
+
+    """
+    try:
+        return getattr(SANTIAGO_INSTANCE, attr)["cli"]
+    except KeyError:
+        pass
+
+
+class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
+
+    def _setup(self):
+        self.monitor = load_connector("monitors")
+        self.listener = load_connector("listeners")
+        self.sender = load_connector("senders")
+
+    def outgoing_request(self, *args, **kwargs):
+        return self.sender.outgoing_request(*args, **kwargs)
+
+
+
+def main():
+
+    parser = OptionParser()
+    (options, args) = interpret_args(sys.argv[1:], parser)
+    validate_args(options, parser)
+
+    c = bjsonrpc.connect()
+    c.call.outgoing_request("cli://asdf")
 
 if __name__ == "__main__":
 
-    # self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    # self.sock.connect(PIPE)
-    # self.conn = bjsonrpc.connection.Connection(self.sock)
-
-    c = bjsonrpc.connect()
-    print c.call.echo("whee!")
-
-    # parser = OptionParser()
-    # (options, args) = interpret_args(sys.argv[1:], parser)
-    # validate_args(options, parser)
-
+    main()
     # type = "consuming" if options.host else "hosting"
     # # FIXME replace with socket communications.
     # conn = httplib.HTTPSConnection(options.address, options.port)
