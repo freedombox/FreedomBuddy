@@ -130,10 +130,10 @@ class Santiago(object):
         self.live = 1
         self.requests = DefaultDict(set)
         self.me = me
-	 if gpg is None:
-	     self.gpg = gnupg.GPG(use_agent = True)
-	 else:
-	     self.gpg = gpg
+        if gpg is None:
+            self.gpg = gnupg.GPG(use_agent = True)
+        else:
+            self.gpg = gpg
         self.connectors = set()
         self.reply_service = reply_service or Santiago.SERVICE_NAME
         self.locale = locale
