@@ -44,7 +44,6 @@ import urlparse
 
 import pgpprocessor
 import utilities
-from pprint import pprint
 
 DEBUG = 0
 
