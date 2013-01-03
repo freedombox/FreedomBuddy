@@ -9,7 +9,7 @@ CFG_TEST = $(DATA_DIR)/test.cfg
 KEYS_TEST = $(DATA_DIR)/test_gpg_home/
 TEST_CRYPT_FILE = test_crypt_file
 
-freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(BUILD_DIR)/python-gnupg $(CFG_PRODUCTION) $(CFG_TEST) create-test-key predepend
+freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(BUILD_DIR)/python-gnupg $(BUILD_DIR)/bjsonrpc $(CFG_PRODUCTION) $(CFG_TEST) create-test-key predepend
 
 build:
 	mkdir -p build
@@ -31,10 +31,14 @@ $(BUILD_DIR)/python-gnupg: build
 	wget http://python-gnupg.googlecode.com/files/python-gnupg-0.2.9.tar.gz
 	tar -xzf python-gnupg-0.2.9.tar.gz
 	mv python-gnupg-0.2.9 build/
+	ln -s build/python-gnupg-0.2.9 build/gnupg
 	rm -f python-gnupg-0.2.9.tar.gz
 
 $(BUILD_DIR)/plinth: build
 	git clone git://github.com/NickDaly/Plinth.git $(BUILD_DIR)/plinth
+
+$(BUILD_DIR)/bjsonrpc: build
+	git clone git://github.com/deavid/bjsonrpc.git $(BUILD_DIR)/bjsonrpc
 
 create-test-key:
 	mkdir $(KEYS_TEST)

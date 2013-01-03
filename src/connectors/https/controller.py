@@ -78,7 +78,7 @@ class Listener(santiago.SantiagoListener):
 
         santiago.debug_log("Creating Listener.")
 
-        super(santiago.SantiagoListener, self).__init__(*args, **kwargs)
+        super(Listener, self).__init__(*args, **kwargs)
 
         cherrypy.server.socket_port = int(socket_port)
         cherrypy.server.ssl_certificate = ssl_certificate
@@ -115,7 +115,7 @@ class Sender(santiago.SantiagoSender):
                  proxy_port = 0,
                  *args, **kwargs):
 
-        super(santiago.SantiagoSender, self).__init__(*args, **kwargs)
+        super(Sender, self).__init__(*args, **kwargs)
 
         self.proxy = None
 

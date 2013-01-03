@@ -22,10 +22,6 @@ is that we learn a new set of locations for the service.
 
 This dead-drop approach is what came of my trying to learn from bug 4185.
 
-                                  Santiago, he
-                          smiles like a Buddah, 'neath
-                               his red sombrero.
-
 This file is distributed under the GNU Affero General Public License, Version 3
 or later.  A copy of GPLv3 is available [from the Free Software Foundation]
 <https://www.gnu.org/licenses/agpl.html>.
@@ -50,7 +46,7 @@ import pgpprocessor
 import utilities
 from pprint import pprint
 
-global DEBUG
+DEBUG = 0
 
 
 def debug_log(message):
@@ -134,10 +130,10 @@ class Santiago(object):
         self.live = 1
         self.requests = DefaultDict(set)
         self.me = me
-        if gpg is None:        
-	     self.gpg = gnupg.GPG(use_agent = True)
+        if gpg is None:
+            self.gpg = gnupg.GPG(use_agent = True)
         else:
-	     self.gpg = gpg
+            self.gpg = gpg
         self.connectors = set()
         self.reply_service = reply_service or Santiago.SERVICE_NAME
         self.locale = locale
@@ -249,7 +245,7 @@ class Santiago(object):
             getattr(connector, state)()
 
         for connector in self.connectors:
-            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], state)()
+            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], state)(santiago=self)
 
         debug_log("Santiago: {0}".format(state))
 
@@ -287,7 +283,8 @@ class Santiago(object):
                 pass
 
             try:
-                # FIXME there's gotta be something safer we can use here, right?
+                # Per Python's documentation, this is safe enough:
+                # http://docs.python.org/2/library/ast.html#ast.literal_eval
                 data = ast.literal_eval(str(message))
             except (ValueError, SyntaxError) as e:
                 logging.exception(e)
@@ -905,4 +902,5 @@ class ConsumedService(SantiagoMonitor):
 
 if __name__ == "__main__":
     if "-d" in sys.argv:
-        DEBUG=1
+        global DEBUG
+        DEBUG = 1
