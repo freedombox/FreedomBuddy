@@ -45,7 +45,6 @@ import urlparse
 import pgpprocessor
 import utilities
 
-
 DEBUG = 0
 
 
@@ -141,10 +140,16 @@ class Santiago(object):
 
         if listeners is not None:
             self.listeners = self.create_connectors(listeners, "Listener")
+        else:
+            self.listeners = None
         if senders is not None:
             self.senders = self.create_connectors(senders, "Sender")
+        else:
+            self.senders = None
         if monitors is not None:
             self.monitors = self.create_connectors(monitors, "Monitor")
+        else:
+            self.monitors = None
 
         self.shelf = shelve.open(save_dir.rstrip(os.sep) + os.sep +
                                  str(self.me) + ".dat")
