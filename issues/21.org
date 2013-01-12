@@ -51,6 +51,10 @@
    - The most recent response from each request supercedes any previous response
      for that request.
 
+   - This must be stored per service from each host.  That's the only way we'll
+     know we're processing the most updated reply, even across restarts.  Stupid
+     more data points.
+
 * Rejected Fixes
 
 ** Apply most recent response time per ID
@@ -125,6 +129,36 @@
    Until they're based on additional out-of-band-verifiable data, Request IDs
    are inherently meaningless and will be faked by any competent attacker, and
    there isn't shit we can do about it because GPG is our defense.
+
+** [2013-01-12 Sat 13:13] Nick Daly: Response IDs as Tracking Tools?
+
+   Is there anything I can gain by tracking the response ID?  I can keep track
+   of which responses are outstanding and haven't received responses yet.
+   That'll let me dequeue any response using the first protocol that answers.  I
+   still don't think that's useful though.  Am I infinitely complicating the
+   tool without any useful benefit?  Perhaps.
+
+   Fucknuts.  All responses across all protocols should be submitted and should
+   contain the same data.  So, again, only the most recent reply need be
+   recorded.  Request IDs add nothing here.
+
+   However, there is still something that I can use, maybe.  There are two
+   considerations I have:
+
+   - If I use most recent request, I can't de-queue the outstanding requests,
+     ever, unless I say that only one request is ever permitted to be
+     outstanding, which is nuts.
+
+   - I can record sent time and reject all responses before the previous sent
+     time.  But, the only ones that I really care to reject are the ones sent
+     before the first request and before the most recent response.  Again,
+     request timing gains me nearly nothing here.
+
+   If I care about only the most recent response, when do I de-queue requests?
+   I don't think I can ever forget the most-recent-response time.  Messages
+   could come back in any order, at any time, even between service restarts.
+   So, I can never forget the most recent response, that has to be stored in the
+   data structure, so I know what's the most updated answer.
 
 * Metadata
   :PROPERTIES:
