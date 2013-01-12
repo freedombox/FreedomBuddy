@@ -45,7 +45,6 @@ import urlparse
 import pgpprocessor
 import utilities
 
-
 global DEBUG
 DEBUG = 0
 
@@ -140,12 +139,9 @@ class Santiago(object):
         self.locale = locale
         self.save_services = save_services
 
-        if listeners is not None:
-            self.listeners = self.create_connectors(listeners, "Listener")
-        if senders is not None:
-            self.senders = self.create_connectors(senders, "Sender")
-        if monitors is not None:
-            self.monitors = self.create_connectors(monitors, "Monitor")
+        self.listeners = self.create_connectors(listeners, "Listener")
+        self.senders = self.create_connectors(senders, "Sender")
+        self.monitors = self.create_connectors(monitors, "Monitor")
 
         self.shelf = shelve.open(save_dir.rstrip(os.sep) + os.sep +
                                  str(self.me) + ".dat")
@@ -153,6 +149,8 @@ class Santiago(object):
         self.consuming = consuming if consuming else self.load_data("consuming")
 
     def create_connectors(self, data, type):
+        if data == None:
+            return
         connectors = self._create_connectors(data, type)
         self.connectors |= set(connectors.keys())
 
