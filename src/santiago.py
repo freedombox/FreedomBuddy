@@ -478,18 +478,26 @@ class Santiago(object):
         """
         self.requests[host].add(service)
 
-        request = self.gpg.encrypt(
-            json.dumps({ "host": host, "client": client,
+        request = self.pack_request({ "host": host, "client": client,
                   "service": service, "locations": list(locations or ""),
                   "reply_to": list(reply_to),
                   "request_version": 1,
-                  "reply_versions": list(Santiago.SUPPORTED_CONNECTORS),}),
-            host,
-            sign=self.me)
+                  "reply_versions": list(Santiago.SUPPORTED_CONNECTORS),})
 
         for destination in self.consuming[host][self.reply_service]:
             o = urlparse.urlparse(destination)
             self.senders[o.scheme].outgoing_request(request, destination)
+
+    def pack_request(self, host, client, service, locations, reply_to):
+        """Pack up a request for transport."""
+
+        return self.gpg.encrypt(json.dumps(
+                { "host": host, "client": client,
+                  "service": service, "locations": list(locations or ""),
+                  "reply_to": list(reply_to),
+                  "request_version": 1,
+                  "reply_versions": list(Santiago.SUPPORTED_CONNECTORS),}),
+            host, sign=self.me)
 
     def incoming_request(self, request_list):
         """Provide a service to a client.
