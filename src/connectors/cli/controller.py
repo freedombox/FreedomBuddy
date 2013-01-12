@@ -16,6 +16,9 @@ HTTP(S).
 :FIXME: Fix the timeout
 :TODO: unit test the below:
 
+For Outgoing Requests
+=====================
+
 If key or service isn't specified: quit.
 
 If host == False: just pull the list of locations I host from the cache and
@@ -50,6 +53,12 @@ After I implement between-request timeouts:
     timeout elapses.
 
     report the list of the (now) locally known services and quit.
+
+For Incoming Requests
+=====================
+
+-r (request-text): Sent by another client, this is the request the connector
+    receives.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
@@ -151,8 +160,16 @@ Must be one of:
 
 If this option is specified, you must also specify the rest of the
 connection arguments.
-
 """)
+    parser.add_option("-r", "--request", dest="request", default="",
+                       help="""\
+Handle an incoming request.
+""")
+    parser.add_option("", "--stop", dest="stop", default="",
+                      action="store_true", help="""\
+Stop the connector.
+""")
+
     return parser.parse_args(args)
 
 def validate_args(options, parser=None):
@@ -161,8 +178,22 @@ def validate_args(options, parser=None):
     if parser == None:
         parser = OptionParser()
 
-    if options.key == None or options.service == None:
-        parser.error("--key and --service must be supplied.")
+    if options.key != None or options.service != None:
+        pass
+    elif options.request:
+        pass
+    elif options.stop:
+        pass
+    else:
+        parser.error("""\
+Usage Instructions:
+
+    One of the following is required:
+
+    --key and --service to request a new service location.
+    --stop to stop this connector.
+    --request to handle an incoming request.
+""")
 
 
 def start(santiago, *args, **kwargs):
@@ -184,15 +215,9 @@ def stop(santiago, *args, **kwargs):
     pass
 
 
-class Monitor(santiago.SantiagoListener, santiago.SantiagoMonitor):
-    """The command line interface FBuddy Monitor and Listener.
+class Listener(santiago.SantiagoListener):
+    """The command line interface FBuddy Listener."""
 
-    FIXME: Separate the Monitor and Listener, this exposes the core to any
-    FIXME: authentication bugs in each client.  It *should* follow the structure
-    FIXME: of the HTTPS Controller module, where clients can selectively expose
-    FIXME: the listener while keeping the monitor hidden.
-
-    """
     def incoming_request(self, request):
         """Process a signed and encrypted data-store update request.
 
@@ -202,7 +227,7 @@ class Monitor(santiago.SantiagoListener, santiago.SantiagoMonitor):
 
         """
         self.incoming_request(request)
-
+
 
 class Sender(santiago.SantiagoSender):
     def __init__(self, https_sender = None, cli_sender = None, *args, **kwargs):
@@ -219,7 +244,39 @@ class Sender(santiago.SantiagoSender):
         """
         protocol = request.split(":")[0]
         subprocess.Popen(" ".join(self.senders[protocol]).format(request).split())
+
 
+class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
+    """
+
+    FIXME: Separate the Monitor and Listener, this exposes the core to any
+    FIXME: authentication bugs in each client.  It *should* follow the structure
+    FIXME: of the HTTPS Controller module, where clients can selectively expose
+    FIXME: the listener while keeping the monitor hidden.
+
+    """
+    def _setup(self):
+        self.listener = load_connector("listeners")
+        self.sender = load_connector("senders")
+        # monitor actions
+        for name in ("Hosting", "HostedClient", "HostedService", "Stop",
+                     "Consuming", "ConsumedHost", "ConsumedService"):
+            # i.e.: self.hostedclient = santiago.HostedClient(SANTIAGO_INSTANCE)
+            setattr(self, name.lower(), getattr(santiago, name)(SANTIAGO_INSTANCE))
+
+    def incoming_request(self, *args, **kwargs):
+        return self.listener.incoming_request(*args, **kwargs)
+
+    def outgoing_request(self, *args, **kwargs):
+        return self.sender.outgoing_request(*args, **kwargs)
+
+    def get_clients(self):
+        return self.hosting.GET()
+
+    def stop(self):
+        global BJSONRPC_SERVER
+        BJSONRPC_SERVER.stop()
+        self.stop.POST()
 
 def load_connector(attr):
     """Load the cli-specific connector from the Santiago Instance.
@@ -233,21 +290,6 @@ def load_connector(attr):
     except KeyError:
         pass
 
-
-class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
-
-    def _setup(self):
-        self.monitor = load_connector("monitors")
-        self.listener = load_connector("listeners")
-        self.sender = load_connector("senders")
-
-    def outgoing_request(self, *args, **kwargs):
-        return self.sender.outgoing_request(*args, **kwargs)
-
-    def stop(self):
-        global BJSONRPC_SERVER
-        BJSONRPC_SERVER.stop()
-
 
 
 def main():
@@ -257,9 +299,14 @@ def main():
     validate_args(options, parser)
 
     c = bjsonrpc.connect()
-    c.call.outgoing_request("cli://asdf")
-    import time; time.sleep(5)
-    c.call.stop()
+
+    if options.request:
+        print(c.call.incoming_request(options.request))
+    elif options.stop:
+        print(c.call.stop())
+    else:
+        pass
+
 
 if __name__ == "__main__":
 
