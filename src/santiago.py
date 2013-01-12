@@ -183,6 +183,8 @@ class Santiago(object):
             except TypeError:
                 logging.error("Could not create %s %s with %s",
                               protocol, connector, str(settings[protocol]))
+            except AttributeError:
+                logging.error("No %s.%s", protocol, connector)
 
         return connectors
 
