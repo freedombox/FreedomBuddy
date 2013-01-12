@@ -1,0 +1,136 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Validate Response Time
+#+OPTIONS:   d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Issue
+
+  FBuddy doesn't currently validate incoming responses as much as it could.
+
+  In both of the following examples, the logging code is elided.  Every time we
+  send an [[file:../src/santiago.py::def%20outgoing_request(self,%20from_,%20to,%20host,%20client,][outgoing request]], we store the service and the host it was requested
+  from:
+
+  #+begin_src python
+    def outgoing_request(self, from_, to, host, client,
+                         service, locations="", reply_to=""):
+        # ...
+        self.requests[host].add(service)
+  #+end_src
+
+  We reject all responses that aren't on that queue:
+
+  #+begin_src python
+    def handle_reply(self, from_, to, host, client,
+                     service, locations, reply_to,
+                     request_version, reply_versions):
+        # ...
+        try:
+            if service not in self.requests[host]:
+                # ...
+                return
+        except KeyError:
+            # ...
+            return
+  #+end_src
+
+  This feels insufficient to me.  It would be simple to add request IDs to each
+  outgoing and incoming request.  If the host replies with something other than
+  the client's outgoing request ID, the reply is rejected.
+
+  However, I can't tell whether that's necessary or appropriate.
+
+* Fixes [0/1]
+
+** TODO Track response time
+
+   - Responses to later requests supercede any responses to previous requests.
+
+   - The most recent response from each request supercedes any previous response
+     for that request.
+
+* Rejected Fixes
+
+** Apply most recent response time per ID
+
+   Outstanding Requests:
+
+   #1, sent: 10:30 AM
+   #2, sent: 11:53 AM
+
+   Responses to request 1 will be used until a response to request 2 is
+   received.
+
+*** Rejection
+
+    Request IDs are meaningless.  The Service itself is what we care about.
+
+** Track response ID
+
+   An ordered set of random numbers.  Sequential in these docs for ease of
+   understanding.
+
+*** Rejection
+
+    Request IDs are meaningless.  The Service itself is what we care about.
+
+* Discussion
+
+** [2013-01-12 Sat 09:00] Nick Daly: Necessary and Appropriate?
+
+   How could an attacker fake a reply message?  They'd have to either:
+
+   - Know the host's secret key and intercept the outgoing message, while making
+     sure that their reply reached you before the host's reply did.
+
+   - Control the destination server (and implicitly, the secret key), meaning
+     that no data from this host should be trusted.
+
+   No additional information I can add to the request will ever fix either of
+   those points.  The only way to fix the first issue is to add some out-of-band
+   counter negotiation, where the request's reply ID is unpredictable.  However,
+   isn't that why we're using PGP in the first place?
+
+** [2013-01-12 Sat 11:00] Nick Daly: Other Uses?
+
+   If we treat this like a timestamp, we can handle out-of-order requests in
+   case of service updates.  This might be important, in the likely case that
+   one protocol is significantly faster than another, while multiple requests
+   are outstanding.  Otherwise, previous responses could overwrite current ones.
+
+   1. I request your wiki service.
+   2. You receive the wiki request over protocol 1 and reply by protocol 1.
+   3. You update your wiki service.
+   4. You receive the wiki request over protocol 2 and reply by protocol 2.
+   5. I receive your reply by protocol 2.
+   6. I receive your reply by protocol 1.
+
+   Here, there's time-based inconsistency in a single response.  Across
+   protocols, we can't assume any request or response order.  A timestamp would
+   be appropriate to simplify these concerns, to reject anything older than the
+   most recent response.  We'd necessarily pick the most recent timestamp on the
+   most recent response ID.
+
+** [2013-01-12 Sat 13:06] Nick Daly: Waitaminute.
+
+   I don't give two flying figs about the request ID.  I only care about the
+   response time.  Request IDs (keys) are valuable only when they aren't
+   predictable (when they aren't recorded in the outgoing request), which isn't
+   the case at this point.
+
+   Also, I only ever care about *the most recent* reply to any response because
+   it's, by definition, the most updated answer for that particular service.
+   Until they're based on additional out-of-band-verifiable data, Request IDs
+   are inherently meaningless and will be faked by any competent attacker, and
+   there isn't shit we can do about it because GPG is our defense.
+
+* Metadata
+  :PROPERTIES:
+  :Status:   Incomplete
+  :Priority: 0
+  :Owner:    Nick Daly
+  :Description: Add Response-Time to Replies
+  :Tags:
+  :END:
