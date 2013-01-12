@@ -46,6 +46,7 @@ import pgpprocessor
 import utilities
 
 
+global DEBUG
 DEBUG = 0
 
 
@@ -231,6 +232,7 @@ class Santiago(object):
     def change_state(self, state):
         """Start or stop listeners and senders."""
 
+        print("Santiago: {0}".format(state))
         debug_log("Connectors: {0}".format(state))
 
         l_and_s = list()
@@ -902,5 +904,4 @@ class ConsumedService(SantiagoMonitor):
 
 if __name__ == "__main__":
     if "-d" in sys.argv:
-        global DEBUG
         DEBUG = 1
