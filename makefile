@@ -30,8 +30,7 @@ $(BUILD_DIR)/cert-depends: build
 $(BUILD_DIR)/python-gnupg: build
 	wget http://python-gnupg.googlecode.com/files/python-gnupg-0.2.9.tar.gz
 	tar -xzf python-gnupg-0.2.9.tar.gz
-	mv python-gnupg-0.2.9 build/
-	ln -s build/python-gnupg-0.2.9 build/gnupg
+	mv python-gnupg-0.2.9 build/gnupg
 	rm -f python-gnupg-0.2.9.tar.gz
 
 $(BUILD_DIR)/plinth: build
