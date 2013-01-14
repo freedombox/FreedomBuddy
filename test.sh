@@ -4,8 +4,8 @@
 cd src
 
 PYTHONPATH=$PYTHONPATH:../../..
+PYTHONPATH=$PYTHONPATH:../build/gnupg
 PYTHONPATH=$PYTHONPATH:../build/plinth
-PYTHONPATH=$PYTHONPATH:../build/python-gnupg-0.2.9
 export PYTHONPATH
 
 python tests/test_pgpprocessor.py
