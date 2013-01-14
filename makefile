@@ -9,7 +9,7 @@ CFG_TEST = $(DATA_DIR)/test.cfg
 KEYS_TEST = $(DATA_DIR)/test_gpg_home/
 TEST_CRYPT_FILE = test_crypt_file
 
-freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(BUILD_DIR)/python-gnupg $(BUILD_DIR)/bjsonrpc $(CFG_PRODUCTION) $(CFG_TEST) create-test-key predepend
+freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(BUILD_DIR)/python-gnupg $(CFG_PRODUCTION) $(CFG_TEST) create-test-key predepend
 
 build:
 	mkdir -p build
@@ -37,9 +37,6 @@ $(BUILD_DIR)/python-gnupg: build
 $(BUILD_DIR)/plinth: build
 	git clone git://github.com/NickDaly/Plinth.git $(BUILD_DIR)/plinth
 
-$(BUILD_DIR)/bjsonrpc: build
-	git clone git://github.com/deavid/bjsonrpc.git $(BUILD_DIR)/bjsonrpc
-
 create-test-key:
 	mkdir $(KEYS_TEST)
 	gpg --homedir $(KEYS_TEST) --gen-key --always-trust --batch data/test_GPG_Key_Values.cfg
@@ -50,7 +47,7 @@ create-test-key:
 	rm -f $(TEST_CRYPT_FILE)*
 
 predepend:
-	sudo sh -c "apt-get install python-routes python-socksipy python-cheetah python-openssl"
+	sudo sh -c "apt-get install python-routes python-socksipy python-cheetah python-openssl python-bjsonrpc"
 	touch predepend
 
 $(CFG_PRODUCTION):
