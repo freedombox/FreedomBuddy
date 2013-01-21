@@ -45,8 +45,8 @@ $(BUILD_DIR)/plinth: build
 create-test-key:
 	mkdir $(KEYS_TEST)
 	chmod 700 $(KEYS_TEST)
-	chmod 600 $(KEYS_TEST)*
 	gpg --homedir $(KEYS_TEST) --gen-key --always-trust --batch data/test_GPG_Key_Values.cfg
+	chmod 600 $(KEYS_TEST)*
 	touch $(TEST_CRYPT_FILE)
 	python update_test_key.py $(CFG_TEST) $(KEYS_TEST) $(TEST_CRYPT_FILE)
 	rm -f $(TEST_CRYPT_FILE)*
