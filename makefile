@@ -13,7 +13,7 @@ TEST_CRYPT_FILE = test_crypt_file
 TEST_EXPIRED_KEY_DATA_ORIGINAL = $(DATA_DIR)/F57526CDF701605B1DAB2A64F111ED7A4F7B0542_original.dat
 TEST_EXPIRED_KEY_DATA_TO_USE = $(DATA_DIR)/F57526CDF701605B1DAB2A64F111ED7A4F7B0542.dat
 
-freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(BUILD_DIR)/python-gnupg $(CFG_PRODUCTION) $(CFG_TEST) $(CFG_EXPIRED) create-test-key create-expired-test-key predepend
+freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(BUILD_DIR)/python-gnupg $(CFG_PRODUCTION) $(CFG_TEST) $(CFG_TEST_EXPIRED) create-test-key create-expired-test-key predepend
 
 build:
 	mkdir -p build
@@ -69,8 +69,8 @@ $(CFG_PRODUCTION):
 $(CFG_TEST):
 	cp $(CFG_TEMPLATE) $(CFG_TEST)
 
-$(CFG_EXPIRED):
-	cp $(CFG_TEMPLATE) $(CFG_EXIPRED_TEST)
+$(CFG_TEST_EXPIRED):
+	cp $(CFG_TEMPLATE) $(CFG_TEST_EXPIRED)
 
 clean:
 	rm -rf build
