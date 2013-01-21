@@ -44,9 +44,9 @@ $(BUILD_DIR)/plinth: build
 
 create-test-key:
 	mkdir $(KEYS_TEST)
-	gpg --homedir $(KEYS_TEST) --gen-key --always-trust --batch data/test_GPG_Key_Values.cfg
 	chmod 700 $(KEYS_TEST)
 	chmod 600 $(KEYS_TEST)*
+	gpg --homedir $(KEYS_TEST) --gen-key --always-trust --batch data/test_GPG_Key_Values.cfg
 	touch $(TEST_CRYPT_FILE)
 	python update_test_key.py $(CFG_TEST) $(KEYS_TEST) $(TEST_CRYPT_FILE)
 	rm -f $(TEST_CRYPT_FILE)*
@@ -55,9 +55,6 @@ create-expired-test-key:
 	cp $(TEST_EXPIRED_KEY_DATA_ORIGINAL) $(TEST_EXPIRED_KEY_DATA_TO_USE)
 	chmod 700 $(KEYS_EXPIRED_TEST)
 	chmod 600 $(KEYS_EXPIRED_TEST)*
-	touch $(TEST_CRYPT_FILE)
-	python update_test_key.py $(CFG_TEST_EXPIRED) $(KEYS_EXPIRED_TEST) $(TEST_CRYPT_FILE)
-	rm -f $(TEST_CRYPT_FILE)*
 
 predepend:
 	sudo sh -c "apt-get install python-routes python-socksipy python-cheetah python-openssl python-bjsonrpc"
