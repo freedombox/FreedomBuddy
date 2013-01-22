@@ -1,6 +1,6 @@
 #! /usr/bin/env python # -*- mode: auto-fill; fill-column: 80 -*-
 import sys
-sys.path.append('build/python-gnupg-0.2.9')
+sys.path.append('build/gnupg')
 
 import ConfigParser as configparser
 import gnupg

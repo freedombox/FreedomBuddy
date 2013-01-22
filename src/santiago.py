@@ -475,11 +475,10 @@ class Santiago(object):
         """
         self.requests[host].add(service)
 
-        request = self.pack_request({ "host": host, "client": client,
-                  "service": service, "locations": list(locations or ""),
-                  "reply_to": list(reply_to),
-                  "request_version": 1,
-                  "reply_versions": list(Santiago.SUPPORTED_CONNECTORS),})
+        request = self.pack_request(host=host, client=client,
+                  service=service, locations=list(locations or ""),
+                  reply_to=list(reply_to),
+                  )
 
         for destination in self.consuming[host][self.reply_service]:
             o = urlparse.urlparse(destination)
