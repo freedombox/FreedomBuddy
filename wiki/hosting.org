@@ -1,4 +1,4 @@
-# -*- mode: org; mode: refill; fill-column: 80 -*-
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Hosting FreedomBuddy
 #+OPTIONS: d:t
@@ -77,7 +77,5 @@ reverse proxies, to make your publication easy to access.
 * Metadata
   :PROPERTIES:
   :Description: How FreedomBuddy can easily host itself on any system.
-  :Status:      Complete
-  :Priority:    0
   :Owner:       Nick Daly
   :END:

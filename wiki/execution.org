@@ -1,4 +1,4 @@
-# -*- mode: org; mode: refill; fill-column: 80 -*-
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
 #+TITLE: Controller Execution Process
 #+OPTIONS: d:t
@@ -15,7 +15,5 @@
   :PROPERTIES:
   :Description: Controller Execution
   :Status:      Incomplete
-  :Priority:    0
-  :Owner:       Nick Daly
   :Tags:
   :END:

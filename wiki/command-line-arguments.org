@@ -1,0 +1,77 @@
+# -*- mode: org; mode: auto-fill; fill-column: 80 -*-
+
+#+TITLE: Command Line Arguments
+#+OPTIONS: d:t
+#+LINK_UP:  ./
+#+LINK_HOME: ../
+
+* Command Line Arguments
+
+  Command line arguments are broken down into two types: those that list data,
+  and those that modify data.  A command is made up of up to four parts:
+
+  1. The action (list, add, remove): how the rest of the request will affect the
+     underlying data structure.
+
+     - list :: Does not modify data, merely returns the existing data on stdout.
+
+     - add :: Modifies data.  Adds a new entry (or hierarchy of entries) to the
+              data store, containing the other specified pieces.
+
+     - remove :: Modifies data.  Removes an existing entry (or hierarchy of
+                 entries) from the data store.  For example, if you removed a
+                 ~host~, all of that host's ~services~ and ~locations~ would
+                 also be removed.
+
+  2. The server (hosting, consuming): whether we're modifying the list of
+     services that we provide for others or whether we're modifying the list of
+     services we receive from others.
+
+     Servers are currently identified by PGP/GPG key ids.  This will likely be
+     expanded in the future, though I'm not sure how.
+
+     Note that it doesn't make much sense to modify service locations that
+     others have said they'll provide for you.  Thus, in most cases, you'll pass
+     "hosting" as the argument when modifying data.  You'll probably pass
+     "consuming" when you want to list data.
+
+  3. The service's name: this part lists the name of the service we care about.
+     Can be any valid text.  Probably should be human readable, when intended
+     for human consumption.
+
+  4. Locations: the true meat of the request.  This part can modify the
+     locations that a service is hosted or consumed from.
+
+  Parts must be supplied in order (i.e., asking for the service without a host
+  ID makes no sense, in this construct).  While such requests may actually be
+  meaningful (perhaps you're looking for a list of hosts and locations for that
+  particular service), I have better things to do right now than interpret all
+  24 or so possible argument combinations; we're stuck with a limited vocabulary
+  for now.
+
+  Also see the notes on the [[data-structure.org][data structure]].
+
+* Formal Representation
+
+  The formal representation is as follows.  Interpretation of the relevant
+  arguments should be self-explanatory::
+
+      [--(list|add|remove) [--(host|client) [PGP-KEY-ID [--service [SERVICE
+          [--location [LOCATION]]]]]]]
+
+      [--help]
+
+  - If no arguments are given, help text appears.
+
+  - If no command argument is given, ~list~ is implied.
+
+  This construction allows the end user to modify the locations of both locally
+  hosted services (services hosted for others) as well as external service
+  locations (services others host for you).  I don't know why you'd want to
+  modify the latter, but the option's there anyway.
+
+* Metadata
+  :PROPERTIES:
+  :Description: Command Line Interface Arguments
+  :Tags: cli
+  :END:
