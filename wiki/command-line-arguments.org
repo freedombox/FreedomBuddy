@@ -7,6 +7,16 @@
 
 * Command Line Arguments
 
+  There are three different sets of command line arguments.
+
+  1. Processing an incoming request.
+
+  2. Sending a reply.
+
+  3. Updating local data.
+
+** Updating Local Data
+
   Command line arguments are broken down into two types: those that list data,
   and those that modify data.  A command is made up of up to four parts:
 
@@ -54,12 +64,16 @@
 * Formal Representation
 
   The formal representation is as follows.  Interpretation of the relevant
-  arguments should be self-explanatory::
+  arguments should be self-explanatory:
 
-      [--(list|add|remove) [--(host|client) [PGP-KEY-ID [--service [SERVICE
-          [--location [LOCATION]]]]]]]
+  #+begin_src text
+    [--(list|add|remove)
+        [--(host|client) [PGP-KEY-ID
+            [--service [SERVICE
+                [--location [LOCATION]]]]]]]
 
-      [--help]
+    [--help]
+  #+end_src
 
   - If no arguments are given, help text appears.
 
