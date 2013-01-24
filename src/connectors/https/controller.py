@@ -8,14 +8,11 @@ import santiago
 
 from Cheetah.Template import Template
 import cherrypy
-import httplib2, socks
 import urllib, urlparse
+import httplib
+import httplib2, socks
 import sys
 import logging
-
-
-if cherrypy.__version__ < "3.2":
-    raise RuntimeError("CherryPy versions less than 3.2.0 are not supported.")
 
 
 def allow_ips(ips = None):
@@ -149,9 +146,12 @@ class Sender(santiago.SantiagoSender):
 
         if self.proxy:
             destination = str(destination)
-
-        connection = httplib2.Http(proxy_info = self.proxy)
-        connection.request(destination, "POST", body)
+            connection = httplib2.Http(proxy_info = self.proxy)
+            connection.request(destination, "POST", body)
+        else:
+            connection = httplib.HTTPSConnection(destination.split("//")[1])
+            connection.request("POST", "/", body)
+            connection.close()
 
 class Monitor(santiago.SantiagoMonitor):
 
