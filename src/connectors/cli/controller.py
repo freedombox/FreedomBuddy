@@ -304,7 +304,14 @@ def main():
         print(c.call.incoming_request(options.request))
     elif options.stop:
         print(c.call.stop())
+    elif options.action == "add":
+        pass
+    elif options.action == "remove":
+        pass
+    elif options.action == "list":
+        pass
     else:
+        # help!
         pass
 
 
