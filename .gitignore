@@ -4,6 +4,7 @@ TAGS
 README.html
 production.cfg
 test.cfg
+test_expired.cfg
 freedombuddy.crt
 *.dat
 keys/
@@ -12,3 +13,4 @@ build/
 publish
 current.tar.gz
 predepend
+data/test_gpg_home/
