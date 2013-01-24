@@ -97,10 +97,6 @@ def interpret_args(args, parser=None):
                       help="Find services for or by this buddy.")
     parser.add_option("-s", "--service", dest="service",
                       help="Find this service's locations.")
-    parser.add_option("-t", "--timeout", dest="timeout", default=1,
-                      help="""\
-Maximum time, in seconds, to wait for the request to finish.
-""")
     parser.add_option("-a", "--address", dest="address", default="localhost",
                       help="""\
 The "local" FreedomBuddy address to query for services.
@@ -218,16 +214,7 @@ def stop(santiago, *args, **kwargs):
 class Listener(santiago.SantiagoListener):
     """The command line interface FBuddy Listener."""
 
-    def incoming_request(self, request):
-        """Process a signed and encrypted data-store update request.
-
-        This may be exposed to external and untrusted input, the Santiago Core
-        validates and rejects untrustworthy input.  No other methods may be
-        exposed to untrustworthy input.
-
-        """
-        self.incoming_request(request)
-
+    pass
 
 class Sender(santiago.SantiagoSender):
     def __init__(self, https_sender = None, cli_sender = None, *args, **kwargs):
@@ -258,11 +245,24 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
     def _setup(self):
         self.listener = load_connector("listeners")
         self.sender = load_connector("senders")
-        # monitor actions
+
+        parent = santiago.SantiagoMonitor
+
+        # let bjsonrpc see monitors' actions
         for name in ("Hosting", "HostedClient", "HostedService", "Stop",
                      "Consuming", "ConsumedHost", "ConsumedService"):
+
             # i.e.: self.hostedclient = santiago.HostedClient(SANTIAGO_INSTANCE)
-            setattr(self, name.lower(), getattr(santiago, name)(SANTIAGO_INSTANCE))
+            setattr(self, name.lower(),
+                    getattr(santiago, name)(SANTIAGO_INSTANCE))
+
+            # i.e.: self.hostedclient_GET = self.hostedclient.GET
+            for verb in [x for x in dir(parent)
+                         if callable(getattr(parent, x)) and not
+                         x.startswith("_") and x == x.upper()]:
+
+                setattr(self, "{0}_{1}".format(name.lower(), verb),
+                        getattr(getattr(self, name.lower()), verb))
 
     def incoming_request(self, *args, **kwargs):
         return self.listener.incoming_request(*args, **kwargs)
