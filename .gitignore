@@ -4,7 +4,6 @@ TAGS
 README.html
 production.cfg
 test.cfg
-test_expired.cfg
 freedombuddy.crt
 *.dat
 keys/
