@@ -140,7 +140,7 @@ last one wins.
 
 TODO: Implement this option.
 """)
-    parser.add_option("-i", "--action", dest="action", default="",
+    parser.add_option("-i", "--action", dest="action", default=None,
                       help="""\
 Sends commands directly to the FreedomBuddy system.
 
@@ -157,13 +157,17 @@ Must be one of:
 If this option is specified, you must also specify the rest of the
 connection arguments.
 """)
-    parser.add_option("-r", "--request", dest="request", default="",
+    parser.add_option("-r", "--request", dest="request", default=None,
                        help="""\
 Handle an incoming request.
 """)
-    parser.add_option("", "--stop", dest="stop", default="",
+    parser.add_option("", "--stop", dest="stop", default=None,
                       action="store_true", help="""\
 Stop the connector.
+""")
+    parser.add_option("-l", "--location", dest="location", default=None,
+                      help="""\
+The service locations.
 """)
 
     return parser.parse_args(args)
@@ -174,14 +178,24 @@ def validate_args(options, parser=None):
     if parser == None:
         parser = OptionParser()
 
-    if options.key != None or options.service != None:
+    if options.action != None:
+        pass
+    elif options.key != None:
         pass
     elif options.request:
         pass
     elif options.stop:
         pass
     else:
-        parser.error("""\
+        help_me(parser)
+
+def help_me(parser=None):
+    """Help text."""
+
+    if parser == None:
+        parser = OptionParser()
+
+    parser.error("""\
 Usage Instructions:
 
     One of the following is required:
@@ -246,24 +260,6 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
         self.listener = load_connector("listeners")
         self.sender = load_connector("senders")
 
-        parent = santiago.SantiagoMonitor
-
-        # let bjsonrpc see monitors' actions
-        for name in ("Hosting", "HostedClient", "HostedService", "Stop",
-                     "Consuming", "ConsumedHost", "ConsumedService"):
-
-            # i.e.: self.hostedclient = santiago.HostedClient(SANTIAGO_INSTANCE)
-            setattr(self, name.lower(),
-                    getattr(santiago, name)(SANTIAGO_INSTANCE))
-
-            # i.e.: self.hostedclient_GET = self.hostedclient.GET
-            for verb in [x for x in dir(parent)
-                         if callable(getattr(parent, x)) and not
-                         x.startswith("_") and x == x.upper()]:
-
-                setattr(self, "{0}_{1}".format(name.lower(), verb),
-                        getattr(getattr(self, name.lower()), verb))
-
     def incoming_request(self, *args, **kwargs):
         return self.listener.incoming_request(*args, **kwargs)
 
@@ -278,11 +274,60 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
         BJSONRPC_SERVER.stop()
         self.stop.POST()
 
+    def consuming(self, operation, host, service=None, location=None):
+        """Update a service I consume from others."""
+
+        return self._change(operation, True, host, service, location)
+
+    def hosting(self, operation, client, service=None, location=None):
+        """Update a service I am hosting for others."""
+
+        return self._change(operation, False, client, service, location)
+
+    def _change(self, operation, i_host, key, service=None, location=None):
+        if location != None:
+            actor = santiago.HostedService if i_host else santiago.ConsumedService
+        elif service != None:
+            actor = santiago.HostedClient if i_host else santiago.ConsumedClient
+        elif key != None:
+            actor = santiago.Hosting if i_host else santiago.Consuming
+
+        if operation == "add":
+            action = "PUT"
+        elif operation == "list":
+            action = "GET"
+        elif operation == "remove":
+            action = "DELETE"
+
+        # think:
+        #     x = santiago.ConsumedService(SANTIAGO_INSTANCE)
+        #     x.GET(key, service, location)
+        return getattr(actor(SANTIAGO_INSTANCE), action)(key,
+                                                  service=service,
+                                                  location=location)
+
+def add_callable(thing, template):
+        for name in ("Hosting", "HostedClient", "HostedService",
+                     "Consuming", "ConsumedHost", "ConsumedService"):
+
+            # i.e.: self.hostedclient = santiago.HostedClient(SANTIAGO_INSTANCE)
+            setattr(self, name.lower(),
+                    getattr(santiago, name)(SANTIAGO_INSTANCE))
+
+            # i.e.: self.hostedclient_GET = self.hostedclient.GET
+            for verb in [x for x in dir(parent)
+                         if callable(getattr(parent, x)) and not
+                         x.startswith("_") and x == x.upper()]:
+
+                setattr(self, "{0}_{1}".format(name.lower(), verb),
+                        getattr(getattr(self, name.lower()), verb))
+
+
 def load_connector(attr):
     """Load the cli-specific connector from the Santiago Instance.
 
     Ignore KeyErrors, if they occur: in these cases, the user didn't want to
-    engage optional functionality.
+    use optional functionality.
 
     """
     try:
@@ -296,7 +341,7 @@ def main():
 
     parser = OptionParser()
     (options, args) = interpret_args(sys.argv[1:], parser)
-    validate_args(options, parser)
+    #validate_args(options, parser)
 
     c = bjsonrpc.connect()
 
@@ -304,15 +349,12 @@ def main():
         print(c.call.incoming_request(options.request))
     elif options.stop:
         print(c.call.stop())
-    elif options.action == "add":
-        pass
-    elif options.action == "remove":
-        pass
-    elif options.action == "list":
-        pass
-    else:
-        # help!
-        pass
+    elif options.host:
+        print(c.call.consuming(options.action, options.host,
+                         options.service, options.location))
+    elif options.client:
+        print(c.call.hosting(options.action, options.client,
+                       options.service, options.location))
 
 
 if __name__ == "__main__":
