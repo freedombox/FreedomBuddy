@@ -36,8 +36,9 @@
 
 ** Updating Local Data
 
-   Command line arguments are broken down into two types: those that list data,
-   and those that modify data.  A command is made up of up to four parts:
+   This set of command line arguments is broken down into two types: those that
+   list data, and those that modify data.  A command is made up of up to four
+   parts:
 
    1. The action (list, add, remove): how the rest of the request will affect
       the underlying data structure.
@@ -80,6 +81,11 @@
    vocabulary for now.
 
    Also see the notes on the [[./data-structure.org][data structure]].
+
+*** TODO Update to Match [[file:../src/connectors/cli/controller.py][CLI Cnotroller]]'s documentation
+
+    It's pretty inconsistent now, but I just want to get something on
+    disk and out of my head at this point.
 
 * Formal Representation
 
