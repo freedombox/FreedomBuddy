@@ -237,14 +237,19 @@ class Sender(santiago.SantiagoSender):
         stuff = {"https": https_sender, "cli": cli_sender}
         self.senders = dict((x, y.split()) for x, y in stuff.iteritems())
 
-    def outgoing_request(self, request):
+    def outgoing_request(self, request, destination):
         """Send a request out through the command line interface.
 
         Don't queue, just immediately send the reply to each location we know.
 
         """
-        protocol = request.split(":")[0]
-        subprocess.Popen(" ".join(self.senders[protocol]).format(request).split())
+        # FIXME this is kinda broken now.  I'll fix it on the plane.
+        protocol = destination.split(":")[0]
+        export $REQUEST, $DESTINATION
+        subprocess.Popen(
+            " ".join(self.senders[protocol]).format(
+                destination, request),
+            shell=True)
 
 
 class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
@@ -346,7 +351,7 @@ def main():
     c = bjsonrpc.connect()
 
     if options.request:
-        print(c.call.incoming_request(options.request))
+        print(c.call.incoming_request([options.request]))
     elif options.stop:
         print(c.call.stop())
     elif options.host:

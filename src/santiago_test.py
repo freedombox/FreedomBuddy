@@ -60,8 +60,10 @@ def load_config(options):
 
     mykey = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
     lang = utilities.safe_load(config, "general", "locale", "en")
-    protocols = listify_string(utilities.safe_load(config, "connectors", "protocols"))
+    protocols = listify_string(
+        utilities.safe_load(config, "connectors", "protocols"))
     connectors = {}
+    force_sender = utilities.safe_load(config, "connectors", "force_sender")
 
     if protocols == ['']:
         raise RuntimeError("No protocols detected.  Have you run 'make'?")
@@ -76,9 +78,10 @@ def load_config(options):
             continue
 
         for connector in protocol_connectors:
-            connectors[connector] = dict(utilities.safe_load(config, connector, None, {}))
+            connectors[connector] = dict(
+                utilities.safe_load(config, connector, None, {}))
 
-    return mykey, lang, protocols, connectors
+    return mykey, lang, protocols, connectors, force_sender
 
 def configure_connectors(protocols, connectors):
 
@@ -109,7 +112,7 @@ if __name__ == "__main__":
         logging.getLogger("cherrypy.error").setLevel(logging.DEBUG)
 
     # load configuration settings
-    (mykey, lang, protocols, connectors) = load_config(options)
+    (mykey, lang, protocols, connectors, force_sender) = load_config(options)
 
     # create listeners and senders
     listeners, senders, monitors = configure_connectors(protocols, connectors)
@@ -125,14 +128,13 @@ if __name__ == "__main__":
                              service + "-monitor" : [url + "/freedombuddy"] } }
         consuming = { mykey: { service: [url],
                              service + "-monitor" : [url + "/freedombuddy"] } }
-
-        freedombuddy = santiago.Santiago(listeners, senders, hosting, consuming,
-                                         me=mykey, monitors=monitors,
-                                         locale=lang, save_dir="../data")
     else:
-        freedombuddy = santiago.Santiago(listeners, senders, me=mykey,
-                                         monitors=monitors, locale=lang,
-                                         save_dir="../data")
+        hosting = consuming = None
+
+    freedombuddy = santiago.Santiago(listeners, senders, hosting, consuming,
+                                     me=mykey, monitors=monitors,
+                                     locale=lang, save_dir="../data",
+                                     force_sender=force_sender)
 
     # run
     with freedombuddy:

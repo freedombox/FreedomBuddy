@@ -84,7 +84,7 @@ class Santiago(object):
                  hosting=None, consuming=None, monitors=None,
                  me=0, reply_service=None,
                  locale="en", save_dir=".", save_services=True,
-                 gpg=None, *args, **kwargs):
+                 gpg=None, force_sender=None, *args, **kwargs):
 
         """Create a Santiago with the specified parameters.
 
@@ -135,6 +135,7 @@ class Santiago(object):
         self.reply_service = reply_service or Santiago.SERVICE_NAME
         self.locale = locale
         self.save_services = save_services
+        self.force_sender = force_sender #if force_sender in senders else None
 
         self.listeners = self.create_connectors(listeners, "Listener")
         self.senders = self.create_connectors(senders, "Sender")
@@ -152,7 +153,6 @@ class Santiago(object):
         self.connectors |= set(connectors.keys())
 
         return connectors
-
 
     def _create_connectors(self, settings, connector):
         """Iterates through each connector given, creating connectors for all.
@@ -472,6 +472,9 @@ class Santiago(object):
         The outgoing ``request`` is literally the request's text.  It needs to
         be wrapped for transport across the connector.
 
+        All outgoing requests can (and probably should) be forced through the
+        client connector.
+
         """
         self.requests[host].add(service)
 
@@ -479,11 +482,27 @@ class Santiago(object):
 
         for destination in self.consuming[host][self.reply_service]:
             o = urlparse.urlparse(destination)
-            self.senders[o.scheme].outgoing_request(request, destination)
+            if self.force_sender:
+                self.senders[self.force_sender].outgoing_request(request,
+                                                                 destination)
+            else:
+                self.senders[o.scheme].outgoing_request(request, destination)
 
     def pack_request(self, host, client, service, locations, reply_to):
-        """Pack up a request for transport."""
+        """Pack up a request for transport.
 
+        :host: The host's PGP key.
+
+        :client: The client's PGP key.
+
+        :service: The service's name.
+
+        :locations: a ``list`` of places the *client* can consume the *service*.
+
+        :reply_to: a ``list`` of places the *client* should send future requests
+            to.
+
+        """
         return self.gpg.encrypt(json.dumps(
                 { "host": host, "client": client,
                   "service": service, "locations": list(locations or ""),

@@ -37,7 +37,7 @@ def safe_load(config, section, key=None, default=None):
             return config.get(section, key)
         else:
             return config.items(section)
-    except configparser.NoSectionError:
+    except (configparser.NoSectionError, configparser.NoOptionError):
         return default
 
 class SignatureError(Exception):
