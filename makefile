@@ -22,11 +22,15 @@ build:
 ssl-certificate: $(CERTIFICATE)
 
 $(CERTIFICATE): build $(BUILD_DIR)/cert-depends
+ifeq ($(wildcard $(CERTIFICATE)),)
 	sudo make-ssl-cert generate-default-snakeoil
 	sudo make-ssl-cert /usr/share/ssl-cert/ssleay.cnf $(CERTIFICATE)
 	sudo chgrp 1000 $(CERTIFICATE)
 	sudo chmod g+r $(CERTIFICATE)
 	sudo touch $(CERTIFICATE)
+else
+	echo $(CERTIFICATE) already exists
+endif	
 
 $(BUILD_DIR)/cert-depends: build
 	sudo apt-get install ssl-cert
@@ -38,19 +42,25 @@ python-gnupg-0.3.1:
 	rm -f python-gnupg-0.3.1.tar.gz
 
 $(BUILD_DIR)/python-gnupg: build python-gnupg-0.3.1
+	rm -rf build/gnupg
 	mv python-gnupg-0.3.1 build/gnupg
 
 $(BUILD_DIR)/plinth: build
-	git clone git://github.com/NickDaly/Plinth.git $(BUILD_DIR)/plinth
+	test -d $(BUILD_DIR)/plinth || git clone git://github.com/NickDaly/Plinth.git $(BUILD_DIR)/plinth
+	cd $(BUILD_DIR)/plinth; git pull
 
 create-test-key:
-	mkdir $(KEYS_TEST)
+ifeq ($(wildcard $(KEYS_TEST)/secring.gpg),)
+	mkdir -p $(KEYS_TEST)
 	chmod 700 $(KEYS_TEST)
 	gpg --homedir $(KEYS_TEST) --gen-key --always-trust --batch data/test_GPG_Key_Values.cfg
 	chmod 600 $(KEYS_TEST)*
 	touch $(TEST_CRYPT_FILE)
 	python update_test_key.py $(CFG_TEST) $(KEYS_TEST) $(TEST_CRYPT_FILE)
 	rm -f $(TEST_CRYPT_FILE)*
+else
+	echo $(KEYS_TEST)/secring.gpg already exists
+endif	
 
 create-expired-test-key:
 	cp $(TEST_EXPIRED_KEY_DATA_ORIGINAL) $(TEST_EXPIRED_KEY_DATA_TO_USE)
