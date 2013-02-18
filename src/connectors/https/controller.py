@@ -129,7 +129,7 @@ class HttpsListener(santiago.SantiagoListener):
         except Exception as e:
             logging.exception(e)
 
-class Sender(santiago.SantiagoSender):
+class HttpsSender(santiago.SantiagoSender):
 
     def __init__(self,
                  proxy_type = socks.PROXY_TYPE_SOCKS5,
@@ -206,13 +206,13 @@ class HttpsMonitor(santiago.SantiagoMonitor):
             ('/consuming/:host/:service', HttpConsumedService(self.santiago)),
             ('/consuming/:host', HttpConsumedHost(self.santiago)),
             ('/consuming', HttpConsuming(self.santiago)),
-            ('/learn/:host/:service', HttpLearn(self.santiago)),
+            ('/query/:host/:service', HttpQuery(self.santiago)),
             ("/stop", HttpStop(self.santiago)),
             ("/freedombuddy", root),
             )
 
         for location, handler in routing_pairs:
-            Monitor.rest_connect(d, location, handler)
+            HttpsMonitor.rest_connect(d, location, handler)
 
         cherrypy.tree.mount(root, "", {"/": {"request.dispatch": d}})
 
