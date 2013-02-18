@@ -59,7 +59,6 @@ def load_config(options):
     config = utilities.load_config(options.config)
 
     mykey = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
-    lang = utilities.safe_load(config, "general", "locale", "en")
     protocols = listify_string(
         utilities.safe_load(config, "connectors", "protocols"))
     connectors = {}
@@ -81,7 +80,7 @@ def load_config(options):
             connectors[connector] = dict(
                 utilities.safe_load(config, connector, None, {}))
 
-    return mykey, lang, protocols, connectors, force_sender
+    return mykey, protocols, connectors, force_sender
 
 def configure_connectors(protocols, connectors):
 
@@ -112,7 +111,7 @@ if __name__ == "__main__":
         logging.getLogger("cherrypy.error").setLevel(logging.DEBUG)
 
     # load configuration settings
-    (mykey, lang, protocols, connectors, force_sender) = load_config(options)
+    (mykey, protocols, connectors, force_sender) = load_config(options)
 
     # create listeners and senders
     listeners, senders, monitors = configure_connectors(protocols, connectors)
@@ -133,7 +132,7 @@ if __name__ == "__main__":
 
     freedombuddy = santiago.Santiago(listeners, senders, hosting, consuming,
                                      me=mykey, monitors=monitors,
-                                     locale=lang, save_dir="../data",
+                                     save_dir="../data",
                                      force_sender=force_sender)
 
     # run
