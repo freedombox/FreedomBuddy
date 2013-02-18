@@ -325,14 +325,13 @@ def load_connector(attr):
         return getattr(SANTIAGO_INSTANCE, attr)["cli"]
     except KeyError:
         pass
-
 
 
 def main():
 
     parser = OptionParser()
     (options, args) = interpret_args(sys.argv[1:], parser)
-    #validate_args(options, parser)
+    validate_args(options, parser)
 
     c = bjsonrpc.connect()
 
@@ -340,33 +339,18 @@ def main():
         print(c.call.incoming_request([options.request]))
     elif options.stop:
         print(c.call.stop())
-    elif options.host:
-        print(c.call.consuming(options.action, options.host,
+    elif options.consuming:
+        print(c.call.consuming(options.action, options.key,
                          options.service, options.location))
-    elif options.client:
-        print(c.call.hosting(options.action, options.client,
+    elif options.hosting:
+        print(c.call.hosting(options.action, options.key,
                        options.service, options.location))
+    elif options.query:
+        print(c.call.query(host=options.key, service=options.service))
+    else:
+        help_me()
 
 
 if __name__ == "__main__":
 
     main()
-    # type = "consuming" if options.host else "hosting"
-    # # FIXME replace with socket communications.
-    # conn = httplib.HTTPSConnection(options.address, options.port)
-    # params={"encoding": "json"}
-
-    # if not options.action:
-    #     options.action = "GET"
-
-    # if options.host == False or options.query == False:
-    #     response = query(conn, type, options.key,
-    #                      options.service, options.action, params=params)
-    # else:
-    #     response = query_remotely(options.address, options.port, options.key,
-    #                               options.service, params=params)
-
-    # conn.close()
-
-    # if response:
-    #     print(response)
