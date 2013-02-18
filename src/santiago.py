@@ -1,4 +1,5 @@
-#! /usr/bin/env python # -*- mode: python; mode: auto-fill; fill-column: 80; -*-
+#! /usr/bin/env python
+# -*- mode: python; mode: auto-fill; fill-column: 80; -*-
 
 """The FreedomBuddy (FBuddy) service.
 
@@ -83,7 +84,7 @@ class Santiago(object):
     def __init__(self, listeners=None, senders=None,
                  hosting=None, consuming=None, monitors=None,
                  me=0, reply_service=None,
-                 locale="en", save_dir=".", save_services=True,
+                 save_dir=".", save_services=True,
                  gpg=None, force_sender=None, *args, **kwargs):
 
         """Create a Santiago with the specified parameters.
@@ -115,8 +116,6 @@ class Santiago(object):
           check for reply locations in messages.  This is usually
           "freedombuddy".
 
-        :locale: The locale to use for the UI.
-
         :save_dir: The directory to save service data to, for storage between
           sessions.
 
@@ -133,7 +132,6 @@ class Santiago(object):
         self.gpg = gpg or gnupg.GPG(use_agent = True)
         self.connectors = set()
         self.reply_service = reply_service or Santiago.SERVICE_NAME
-        self.locale = locale
         self.save_services = save_services
         self.force_sender = force_sender #if force_sender in senders else None
 
@@ -167,19 +165,24 @@ class Santiago(object):
 
         for protocol in settings.iterkeys():
             module = Santiago._get_connector_module(protocol)
+            protocol_connector = protocol.capitalize() + connector
 
             try:
-                # use the module's connector as the protocol's connector.
-                connectors[protocol] = \
-                    getattr(module, connector)(santiago = self,
-                                               **settings[protocol])
+                # use the module's connector as the protocol's connector:
+                #
+                # connectors["https"] = connectors.https.controller.HttpsSender(
+                #         santiago=self, **settings["https"])
+                connectors[protocol] = getattr(
+                    module, protocol_connector)(
+                        santiago = self, **settings[protocol])
 
             # log a type error, assume all others are fatal.
             except TypeError:
                 logging.error("Could not create %s %s with %s",
-                              protocol, connector, str(settings[protocol]))
+                              protocol, protocol_connector,
+                              str(settings[protocol]))
             except AttributeError:
-                logging.debug("No %s.%s", protocol, connector)
+                logging.debug("No %s.%s", protocol, protocol_connector)
 
         return connectors
 
@@ -481,11 +484,11 @@ class Santiago(object):
         request = self.pack_request(host, client, service, locations, reply_to)
 
         for destination in self.consuming[host][self.reply_service]:
-            o = urlparse.urlparse(destination)
             if self.force_sender:
                 self.senders[self.force_sender].outgoing_request(request,
                                                                  destination)
             else:
+                o = urlparse.urlparse(destination)
                 self.senders[o.scheme].outgoing_request(request, destination)
 
     def pack_request(self, host, client, service, locations, reply_to):
@@ -786,16 +789,25 @@ class SantiagoMonitor(RestController, SantiagoConnector):
 
 
 class Stop(SantiagoMonitor):
+    """Stop the service."""
+
     def POST(self, *args, **kwargs):
         self.santiago.live = 0
 
-class Learn(SantiagoMonitor):
+class Query(SantiagoMonitor):
+    """A local-only interface to start the outgoing request process.
+
+    This service request is eventually sent out to the host.
+
+    """
     def POST(self, host, service, *args, **kwargs):
-        super(Learn, self).POST(host, service, *args, **kwargs)
+        super(Query, self).POST(host, service, *args, **kwargs)
 
         self.santiago.query(host, service)
 
 class Hosting(SantiagoMonitor):
+    """List clients I'm hosting services for."""
+
     def GET(self, *args, **kwargs):
         super(Hosting, self).GET(*args, **kwargs)
 
@@ -813,6 +825,7 @@ class Hosting(SantiagoMonitor):
             del self.santiago.hosting[client]
 
 class HostedClient(SantiagoMonitor):
+    """List the services I'm hosting for the client."""
 
     def GET(self, client, *args, **kwargs):
         super(HostedClient, self).GET(*args, **kwargs)
@@ -834,6 +847,7 @@ class HostedClient(SantiagoMonitor):
             del self.santiago.hosting[client][service]
 
 class HostedService(SantiagoMonitor):
+    """List locations I'm hosting the service for the client."""
 
     def GET(self, client, service, *args, **kwargs):
         super(HostedService, self).GET(client, service, *args, **kwargs)
@@ -849,7 +863,7 @@ class HostedService(SantiagoMonitor):
 
         self.santiago.create_hosting_location(client, service, [location])
 
-    # Have to remove instead of delete for locations as $service is a list
+    # Have to remove instead of delete for locations as ``service`` is a list
     def DELETE(self, client, service, location, *args, **kwargs):
         super(HostedService, self).DELETE(client, service, location,
                                           *args, **kwargs)
@@ -859,6 +873,7 @@ class HostedService(SantiagoMonitor):
                 self.santiago.hosting[client][service].remove(location)
 
 class Consuming(SantiagoMonitor):
+    """Get the hosts I'm consuming services from."""
 
     def GET(self, *args, **kwargs):
         super(Consuming, self).GET(*args, **kwargs)
@@ -877,6 +892,7 @@ class Consuming(SantiagoMonitor):
             del self.santiago.consuming[host]
 
 class ConsumedHost(SantiagoMonitor):
+    """Get the services I'm consuming from the host."""
 
     def GET(self, host, *args, **kwargs):
         super(ConsumedHost, self).GET(host, *args, **kwargs)
@@ -898,6 +914,7 @@ class ConsumedHost(SantiagoMonitor):
             del self.santiago.consuming[host][service]
 
 class ConsumedService(SantiagoMonitor):
+    """Get the locations of the service I'm consuming from the host."""
 
     def GET(self, host, service, *args, **kwargs):
         super(ConsumedService, self).GET(host, service, *args, **kwargs)
