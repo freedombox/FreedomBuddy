@@ -211,17 +211,16 @@ def stop(santiago, *args, **kwargs):
     pass
 
 
-class Listener(santiago.SantiagoListener):
+class CliListener(santiago.SantiagoListener):
     """The command line interface FBuddy Listener."""
 
     pass
 
-class Sender(santiago.SantiagoSender):
+class CliSender(santiago.SantiagoSender):
     def __init__(self, https_sender = None, cli_sender = None, *args, **kwargs):
-        super(Sender, self).__init__(*args, **kwargs)
+        super(CliSender, self).__init__(*args, **kwargs)
 
-        stuff = {"https": https_sender, "cli": cli_sender}
-        self.senders = dict((x, y.split()) for x, y in stuff.iteritems())
+        self.senders = {"https": https_sender, "cli": cli_sender}
 
     def outgoing_request(self, request, destination):
         """Send a request out through the command line interface.
