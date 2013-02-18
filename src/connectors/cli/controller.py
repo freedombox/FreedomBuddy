@@ -250,6 +250,7 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
     def _setup(self):
         self.listener = load_connector("listeners")
         self.sender = load_connector("senders")
+        self.querier = santiago.Query(SANTIAGO_INSTANCE)
 
     def incoming_request(self, *args, **kwargs):
         return self.listener.incoming_request(*args, **kwargs)
@@ -257,62 +258,67 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
     def outgoing_request(self, *args, **kwargs):
         return self.sender.outgoing_request(*args, **kwargs)
 
-    def get_clients(self):
-        return self.hosting.GET()
+    def query(self, *args, **kwargs):
+        return self.querier.POST(*args, **kwargs)
 
     def stop(self):
-        global BJSONRPC_SERVER
+        """Quit the server and stop Santiago."""
+
         BJSONRPC_SERVER.stop()
-        self.stop.POST()
+        santiago.Stop(SANTIAGO_INSTANCE).POST()
 
     def consuming(self, operation, host, service=None, location=None):
-        """Update a service I consume from others."""
+        """Update a service I consume from other hosts."""
 
-        return self._change(operation, True, host, service, location)
+        return self._change(operation, False, host, service, location)
 
     def hosting(self, operation, client, service=None, location=None):
-        """Update a service I am hosting for others."""
+        """Update a service I am hosting for other clients."""
 
-        return self._change(operation, False, client, service, location)
+        return self._change(operation, True, client, service, location)
 
     def _change(self, operation, i_host, key, service=None, location=None):
-        if location != None:
-            actor = santiago.HostedService if i_host else santiago.ConsumedService
-        elif service != None:
-            actor = santiago.HostedClient if i_host else santiago.ConsumedClient
-        elif key != None:
-            actor = santiago.Hosting if i_host else santiago.Consuming
+        """Change Santiago's known clients, servers, services, and locations."""
 
         if operation == "add":
             action = "PUT"
-        elif operation == "list":
-            action = "GET"
         elif operation == "remove":
             action = "DELETE"
+        elif operation == "list":
+            action = "GET"
+        else:
+            action = "GET"
+
+        # if we're modifying data
+        if action != "GET":
+            if location != None:
+                actor = santiago.HostedService if i_host else santiago.ConsumedService
+            elif service != None:
+                actor = santiago.HostedClient if i_host else santiago.ConsumedHost
+            elif key != None:
+                actor = santiago.Hosting if i_host else santiago.Consuming
+            else:
+                actor = None
+        # just listing data, don't need to handle listing indvidiual locations.
+        elif action == "GET":
+            if service != None:
+                actor = santiago.HostedService if i_host else santiago.ConsumedService
+            elif key != None:
+                actor = santiago.HostedClient if i_host else santiago.ConsumedHost
+            else:
+                actor = santiago.Hosting if i_host else santiago.Consuming
+
+        # for the day that I change things up and completely forget to update
+        # this line.
+        else:
+            raise RuntimeError("Invalid Action.")
 
         # think:
         #     x = santiago.ConsumedService(SANTIAGO_INSTANCE)
         #     x.GET(key, service, location)
-        return getattr(actor(SANTIAGO_INSTANCE), action)(key,
+        return json.dumps(getattr(actor(SANTIAGO_INSTANCE), action)(key,
                                                   service=service,
-                                                  location=location)
-
-def add_callable(thing, template):
-        for name in ("Hosting", "HostedClient", "HostedService",
-                     "Consuming", "ConsumedHost", "ConsumedService"):
-
-            # i.e.: self.hostedclient = santiago.HostedClient(SANTIAGO_INSTANCE)
-            setattr(self, name.lower(),
-                    getattr(santiago, name)(SANTIAGO_INSTANCE))
-
-            # i.e.: self.hostedclient_GET = self.hostedclient.GET
-            for verb in [x for x in dir(parent)
-                         if callable(getattr(parent, x)) and not
-                         x.startswith("_") and x == x.upper()]:
-
-                setattr(self, "{0}_{1}".format(name.lower(), verb),
-                        getattr(getattr(self, name.lower()), verb))
-
+                                                  location=location))
 
 def load_connector(attr):
     """Load the cli-specific connector from the Santiago Instance.
