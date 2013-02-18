@@ -125,7 +125,7 @@ class HttpsListener(santiago.SantiagoListener):
 
             kwargs = urlparse.parse_qs(body)
 
-            self.incoming_request(kwargs["request"])
+            command("--request {0}".format(pipes.quote(kwargs["request"][0])))
         except Exception as e:
             logging.exception(e)
 
@@ -299,24 +299,35 @@ class HttpRoot(santiago.SantiagoMonitor, MonitorUtilities):
     def GET(self, **kwargs):
         return self.respond("root.tmpl", {})
 
-class HttpStop(santiago.Stop, HttpMonitor):
+class HttpStop(santiago.Stop, MonitorUtilities):
+    """Stop the service."""
+
     @cherrypy.tools.ip_filter()
     def POST(self, **kwargs):
-        super(HttpStop, self).POST(**kwargs)
+        command("--stop")
         raise cherrypy.HTTPRedirect("/freedombuddy")
 
-class HttpLearn(santiago.Learn, HttpMonitor):
+class HttpQuery(santiago.Query, MonitorUtilities):
+    """A local-only interface to start the outgoing request process.
+
+    This service request is eventually sent out to the host.
+
+    """
     @cherrypy.tools.ip_filter()
     def POST(self, host, service):
-        super(HttpLearn, self).POST(host, service)
+        command("--query --key {0} --service {1}".format(host, service))
         raise cherrypy.HTTPRedirect("/consuming/%s/%s" % (host, service))
 
-class HttpHosting(santiago.Hosting, HttpMonitor):
+class HttpHosting(santiago.Hosting, MonitorUtilities):
+    """List clients I'm hosting services for."""
+
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
-        return self.respond("hosting.tmpl",
-                            super(HttpHosting, self).GET(**kwargs),
-                            **kwargs)
+
+        return self.respond(
+            "hosting.tmpl",
+            command("--action list --hosting"),
+            **kwargs)
 
     @cherrypy.tools.ip_filter()
     def POST(self, put="", delete="", **kwargs):
@@ -327,19 +338,21 @@ class HttpHosting(santiago.Hosting, HttpMonitor):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, client, **kwargs):
-        super(HttpHosting, self).PUT(client)
+        command("--action add --hosting --key {0}".format(client))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, client):
-        super(HttpHosting, self).DELETE(client)
+        command("--action remove --hosting --key {0}".format(client))
 
-class HttpHostedClient(santiago.HostedClient, HttpMonitor):
+class HttpHostedClient(santiago.HostedClient, MonitorUtilities):
+    """List the services I'm hosting for the client."""
 
     @cherrypy.tools.ip_filter()
     def GET(self, client, **kwargs):
-        return self.respond("hostedClient.tmpl",
-                            super(HttpHostedClient, self).GET(client, **kwargs),
-                            **kwargs)
+        return self.respond(
+            "hostedClient.tmpl",
+            command("--action list --hosting --key {0}".format(client)),
+            **kwargs)
 
     @cherrypy.tools.ip_filter()
     def POST(self, client="", put="", delete="", **kwargs):
@@ -352,18 +365,23 @@ class HttpHostedClient(santiago.HostedClient, HttpMonitor):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, client, service):
-        super(HttpHostedClient, self).PUT(client, service)
+        command("--action add --hosting --key {0} --service {1}".format(
+                client, service))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, client, service):
-        super(HttpHostedClient, self).DELETE(client, service)
+        command("--action remove --hosting --key {0} --service {1}".format(
+                client, service))
 
-class HttpHostedService(santiago.HostedService, HttpMonitor):
+class HttpHostedService(santiago.HostedService, MonitorUtilities):
+    """List locations I'm hosting the service for the client."""
+
     @cherrypy.tools.ip_filter()
     def GET(self, client, service, **kwargs):
         return self.respond(
             "hostedService.tmpl",
-            super(HttpHostedService, self).GET(client, service, **kwargs),
+            command("--action list --hosting --key {0} --service {1}".format(
+                    client, service)),
             **kwargs)
 
     @cherrypy.tools.ip_filter()
@@ -377,19 +395,23 @@ class HttpHostedService(santiago.HostedService, HttpMonitor):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, client, service, location, **kwargs):
-        super(HttpHostedService, self).PUT(client, service, location, **kwargs)
+        command(("--action add --hosting --key {0} --service {1}" +
+                 " --location {2}").format(client, service, location)),
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, client, service, location, **kwargs):
-        super(HttpHostedService, self).DELETE(client, service, location,
-                                              **kwargs)
+        command(("--action remove --hosting --key {0} --service {1}" +
+                 " --location {2}").format(client, service, location)),
 
-class HttpConsuming(santiago.Consuming, HttpMonitor):
+class HttpConsuming(santiago.Consuming, MonitorUtilities):
+    """Get the hosts I'm consuming services from."""
+
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
-        return self.respond("consuming.tmpl",
-                            super(HttpConsuming, self).GET(**kwargs),
-                            **kwargs)
+        return self.respond(
+            "consuming.tmpl",
+            command("--action list --consuming"),
+            **kwargs)
 
     @cherrypy.tools.ip_filter()
     def POST(self, put="", delete="", **kwargs):
@@ -402,18 +424,20 @@ class HttpConsuming(santiago.Consuming, HttpMonitor):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, host, **kwargs):
-        super(HttpConsuming, self).PUT(host, **kwargs)
+        command("--action add --consuming --key {0}".format(host))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, host, **kwargs):
-        super(HttpConsuming, self).DELETE(host, **kwargs)
+        command("--action remove --consuming --key {0}".format(host))
 
-class HttpConsumedHost(santiago.ConsumedHost, HttpMonitor):
+class HttpConsumedHost(santiago.ConsumedHost, MonitorUtilities):
+    """Get the services I'm consuming from the host."""
+
     @cherrypy.tools.ip_filter()
     def GET(self, host, **kwargs):
         return self.respond(
             "consumedHost.tmpl",
-            super(HttpConsumedHost, self).GET(host, **kwargs),
+            command("--action list --consuming --key {0}".format(host)),
             **kwargs)
 
     @cherrypy.tools.ip_filter()
@@ -427,18 +451,23 @@ class HttpConsumedHost(santiago.ConsumedHost, HttpMonitor):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, host, service, **kwargs):
-        super(HttpConsumedHost, self).PUT(host, service, **kwargs)
+        command("--action add --consuming --key {0} --service {1}".format(
+                host, service))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, host, service, **kwargs):
-        super(HttpConsumedHost, self).DELETE(host, service, **kwargs)
+        command("--action remove --consuming --key {0} --service {1}".format(
+                host, service))
 
-class HttpConsumedService(santiago.ConsumedService, HttpMonitor):
+class HttpConsumedService(santiago.ConsumedService, MonitorUtilities):
+    """Get the locations of the service I'm consuming from the host."""
+
     @cherrypy.tools.ip_filter()
     def GET(self, host, service, **kwargs):
         return self.respond(
             "consumedService.tmpl",
-            super(HttpConsumedService, self).GET(host, service, **kwargs),
+            command("--action list --consuming --key {0} --service {1}".format(
+                    host, service)),
             **kwargs)
 
     @cherrypy.tools.ip_filter()
@@ -452,7 +481,8 @@ class HttpConsumedService(santiago.ConsumedService, HttpMonitor):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, host, service, location, **kwargs):
-        super(HttpConsumedService, self).PUT(host, service, location, **kwargs)
+        command(("--action add --consuming --key {0} --service {1}" +
+                 " --location {2}").format(host, service, location))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, host, service, location, **kwargs):
