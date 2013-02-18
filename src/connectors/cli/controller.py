@@ -100,53 +100,26 @@ def interpret_args(args, parser=None):
 
     parser.add_option("-k", "--key", dest="key",
                       help="Find services for or by this buddy.")
-    parser.add_option("-s", "--service", dest="service",
-                      help="Find this service's locations.")
-    parser.add_option("-a", "--address", dest="address", default="localhost",
-                      help="""\
-The "local" FreedomBuddy address to query for services.
 
-Doesn't necessarily have to be local, just has to be reachable and trusted.
-""")
-    parser.add_option("-p", "--port", dest="port", default=8080,
-                      help="Localhost's FreedomBuddy port.")
-    parser.add_option("-o", "--host", dest="host", default=True,
-                      action="store_true", help="""\
+    parser.add_option("-c", "--consuming", dest="consuming", action="store_true",
+                      help="""\
 Query the named key's FreedomBuddy service for the named service's location.
 
-If neither --host nor --client are provided, --host is assumed.  If both are
-supplied, the last one wins.
+I'm consuming that service from the host.
 """)
-    parser.add_option("-c", "--client", dest="host", action="store_false",
+    parser.add_option("-o", "--hosting", dest="hosting", action="store_true",
                       help="""\
 Query my FreedomBuddy service for locations I'm hosting the service for the
 client.
 
-Overridden by --host.  If neither --host nor --client are provided, --host is
-assumed.  If both are supplied, the last one wins.
+I'm hosting that service for the client.
 """)
-    parser.add_option("-n", "--no-query", dest="query", action="store_false",
-                      help="""\
-Use locally cached services and don't query the host whether the between-request
-timeout has expired or not.
-
-Implied when --client is used.  If neither --no-query or --force-query are
-specified, query with normal respect for the timeout.  If both are supplied, the
-last one wins.
+    parser.add_option("-s", "--service", dest="service",
+                      help="Find this service's locations.")
+    parser.add_option("-l", "--location", dest="location", help="""\
+The service locations to add or remove.
 """)
-    parser.add_option("-f", "--force-query", dest="query",
-                      action="store_true", help="""\
-Ignore locally cached services and query the host whether the between-request
-timeout has expired or not.
-
-Ignored when --client is used.  If neither --no-query or --force-query are
-specified, query with normal respect for the timeout.  If both are supplied, the
-last one wins.
-
-TODO: Implement this option.
-""")
-    parser.add_option("-i", "--action", dest="action", default=None,
-                      help="""\
+    parser.add_option("-a", "--action", dest="action", help="""\
 Sends commands directly to the FreedomBuddy system.
 
 This option is meant to be used by utilities that need direct access to the
@@ -162,17 +135,20 @@ Must be one of:
 If this option is specified, you must also specify the rest of the
 connection arguments.
 """)
-    parser.add_option("-r", "--request", dest="request", default=None,
-                       help="""\
-Handle an incoming request.
+
+    # request actions: handle external I/O
+    parser.add_option("-r", "--request", dest="request", help="""\
+Handle an incoming request response.
 """)
+    parser.add_option("-q", "--query", dest="query", action="store_true",
+                      help="""\
+Create an outgoing request query.
+""")
+
+    # state actions: start or terminate FreedomBuddy.
     parser.add_option("", "--stop", dest="stop", default=None,
                       action="store_true", help="""\
 Stop the connector.
-""")
-    parser.add_option("-l", "--location", dest="location", default=None,
-                      help="""\
-The service locations.
 """)
 
     return parser.parse_args(args)
