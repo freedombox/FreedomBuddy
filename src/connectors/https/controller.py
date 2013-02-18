@@ -1,19 +1,44 @@
+#! /usr/bin/env python
+# -*- mode: python; mode: auto-fill; fill-column: 80; -*-
+
 """The HTTPS Santiago listener and sender.
 
 FIXME: add real authentication.
 
 """
 
-import santiago
-
+import ast
 from Cheetah.Template import Template
 import cherrypy
-import urllib, urlparse
 import httplib
 import httplib2, socks
+import json
+from optparse import OptionParser
+import os
+import pipes
+import shlex
+import subprocess
 import sys
 import logging
+import urllib, urlparse
+
+import santiago
 
+
+COMMAND_LINE = "python connectors/cli/controller.py"
+def command(aCommand):
+    """Pass the request to the command line client and unwrap the reply."""
+
+    myCommand = shlex.split(COMMAND_LINE + " " + aCommand)
+    x = subprocess.Popen(myCommand, stdout=subprocess.PIPE)
+    stdout = x.communicate()[0]
+
+    try:
+        jsonstr = str(json.loads(stdout))
+    except ValueError:
+        return
+
+    return ast.literal_eval(jsonstr)
 
 def allow_ips(ips = None):
     """Refuse connections from non-whitelisted IPs.
