@@ -82,6 +82,7 @@ import bjsonrpc
 import httplib
 import json
 from optparse import OptionParser
+import pipes
 import sys
 import time
 import urllib
@@ -228,13 +229,13 @@ class CliSender(santiago.SantiagoSender):
         Don't queue, just immediately send the reply to each location we know.
 
         """
-        # FIXME this is kinda broken now.  I'll fix it on the plane.
         protocol = destination.split(":")[0]
-        export $REQUEST, $DESTINATION
-        subprocess.Popen(
-            " ".join(self.senders[protocol]).format(
-                destination, request),
-            shell=True)
+
+        code = self.senders[protocol]
+        code = code.replace("$DESTINATION", pipes.quote(str(destination)))
+        code = code.replace("$REQUEST", pipes.quote(str(request)))
+
+        subprocess.call(code)
 
 
 class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
