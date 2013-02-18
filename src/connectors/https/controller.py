@@ -276,12 +276,25 @@ class MonitorUtilities(object):
             except KeyError:
                 pass
 
+        try:
+            mySearchList = [dict(values)]
+        except TypeError:
+            raise cherrypy.HTTPError(500, "No values.")
+        # return page content only if no errors.
         return [str(Template(
                     file="/".join((self.relative_path, encoding,
-                                   self.santiago.locale, template)),
-                    searchList = [dict(values)]))]
+                                   os.environ["LANG"].split("_")[0],
+                                   template)),
+                    searchList=mySearchList))]
 
-class HttpRoot(santiago.SantiagoMonitor, HttpMonitor):
+class HttpRoot(santiago.SantiagoMonitor, MonitorUtilities):
+    """Present the user with the basic actions:
+
+    - Stop
+    - Hosting
+    - Consuming
+
+    """
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
         return self.respond("root.tmpl", {})
