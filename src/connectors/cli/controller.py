@@ -16,6 +16,8 @@ HTTP(S).
 :FIXME: Fix the timeout
 :TODO: unit test the below:
 
+:FIXME: Fix the description below.
+
 For Outgoing Requests
 =====================
 
@@ -59,6 +61,9 @@ For Incoming Requests
 
 -r (request-text): Sent by another client, this is the request the connector
     receives.
+
+License
+=======
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
