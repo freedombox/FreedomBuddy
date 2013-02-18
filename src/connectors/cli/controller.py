@@ -159,13 +159,18 @@ def validate_args(options, parser=None):
     if parser == None:
         parser = OptionParser()
 
-    if options.action != None:
-        pass
-    elif options.key != None:
-        pass
-    elif options.request:
+    if options.request:
         pass
     elif options.stop:
+        pass
+    # if consuming or hosting, key is required.
+    elif (options.key != None and
+             (options.consuming, options.hosting) != (None, None)):
+        pass
+    elif  (options.consuming, options.hosting) != (None, None):
+        pass
+    # if query, key and service are required.
+    elif None not in (options.query, options.key, options.service):
         pass
     else:
         help_me(parser)
