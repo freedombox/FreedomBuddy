@@ -67,7 +67,7 @@ def stop(*args, **kwargs):
     cherrypy.engine.exit()
 
 
-class Listener(santiago.SantiagoListener):
+class HttpsListener(santiago.SantiagoListener):
 
     def __init__(self, socket_port=0,
                  ssl_certificate="", ssl_private_key="",
@@ -75,7 +75,7 @@ class Listener(santiago.SantiagoListener):
 
         santiago.debug_log("Creating Listener.")
 
-        super(Listener, self).__init__(*args, **kwargs)
+        super(HttpsListener, self).__init__(*args, **kwargs)
 
         cherrypy.server.socket_port = int(socket_port)
         cherrypy.server.ssl_certificate = ssl_certificate
@@ -112,7 +112,7 @@ class Sender(santiago.SantiagoSender):
                  proxy_port = 0,
                  *args, **kwargs):
 
-        super(Sender, self).__init__(*args, **kwargs)
+        super(HttpsSender, self).__init__(*args, **kwargs)
 
         self.proxy = None
 
@@ -153,12 +153,19 @@ class Sender(santiago.SantiagoSender):
             connection.request("POST", "/", body)
             connection.close()
 
-class Monitor(santiago.SantiagoMonitor):
+class HttpsMonitor(santiago.SantiagoMonitor):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, socket_port=0,
+                 ssl_certificate="", ssl_private_key="",
+                 *args, **kwargs):
+
         santiago.debug_log("Creating Monitor.")
 
-        super(Monitor, self).__init__(*args, **kwargs)
+        super(HttpsMonitor, self).__init__(*args, **kwargs)
+
+        cherrypy.server.socket_port = int(socket_port)
+        cherrypy.server.ssl_certificate = ssl_certificate
+        cherrypy.server.ssl_private_key = ssl_private_key
 
         try:
             d = cherrypy.tree.apps[""].config["/"]["request.dispatch"]
@@ -204,7 +211,8 @@ class Monitor(santiago.SantiagoMonitor):
 
         return dispatcher
 
-class HttpMonitor(object):
+class MonitorUtilities(object):
+    """Utilities for the HTTP monitors."""
 
     # FIXME filter input and escape output properly.
     # FIXME This input shows evidence of vulnerability: <SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>
@@ -214,7 +222,7 @@ class HttpMonitor(object):
     # http://ha.ckers.org/xss.html
 
     def __init__(self, *args, **kwargs):
-        super(HttpMonitor, self).__init__(*args, **kwargs)
+        super(MonitorUtilities, self).__init__(*args, **kwargs)
         self.relative_path = "connectors/https/templates"
 
     def _parse_query(self, query_input):
