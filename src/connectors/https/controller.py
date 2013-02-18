@@ -486,52 +486,44 @@ class HttpConsumedService(santiago.ConsumedService, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, host, service, location, **kwargs):
-        super(HttpConsumedService, self).DELETE(host, service, location,
-                                                **kwargs)
+        command(("--action remove --consuming --key {0} --service {1}" +
+                 " --location {2}").format(host, service, location))
 
-def query(conn, type="", id="", service="",
-          action="GET", url="", params=None, body=None):
-    """A helper method to request tests for the HTTPS controller.
+def interpret_args(args, parser):
+    if parser == None:
+        parser = OptionParser()
 
-    :conn: a httplib.HTTPSConnection.
+    parser.add_option("-o", "--outgoing", dest="outgoing",
+                      help="The outgoing request.")
+    parser.add_option("-d", "--destination", dest="destination",
+                      help="The request's destination.")
+    parser.add_option("-l", "--listen", dest="listen", action="store_true",
+                      help="Whether to listen for requests or not.")
+    parser.add_option("-m", "--monitor", dest="monitor", action="store_true",
+                      help="Whether to display the Santiago monitor UI.")
 
-    :type: the type of request (consuming, learning, hosting, stop, /).
+    return parser.parse_args(args)
 
-    :id: the gpg key we're querying about
+if __name__ == "__main__":
+    parser = OptionParser()
+    (options, args) = interpret_args(sys.argv[1:], parser)
+    port = 8080
+    cert = "../data/freedombuddy.crt"
+    key = "../data/freedombuddy.crt"
 
-    :service: the service to request data for
-
-    :action: GET, POST, PUT, DELETE (required when posting)
-
-    :url: the url to query (required for weird controllers).  Defaults to
-    ``/%(type)s/%(id)s/%(service)s?%(params)s``
-
-    :params: the request parameters.  defaults to {}
-
-    :body: the request's body.  ignored unless posting.
-
-    """
-    if params is None:
-        params = {}
-    params = urllib.urlencode(params)
-
-    if action not in ("GET", "POST", "PUT", "DELETE"):
-        return
-
-    if action == "POST":
-        if not body:
-            body = urllib.urlencode({"host": id, "service": service})
-        else:
-            body = urllib.urlencode(body)
-
-    if url:
-        location = url % locals()
+    if options.outgoing and options.destination:
+        HttpsSender().outgoing_request(options.outgoing, options.destination)
+    elif options.listen:
+        HttpsListener(socket_port=port,
+                      ssl_certificate=cert, ssl_private_key=key)
+        cherrypy.engine.start()
+    elif options.monitor:
+        port += 1
+        santiago = lambda: None
+        santiago.locale = "en"
+        santiago.debug_log = lambda *args, **kwargs: None
+        HttpsMonitor(santiago=santiago, socket_port=port,
+                     ssl_certificate=cert, ssl_private_key=key)
+        cherrypy.engine.start()
     else:
-        location = "/{0}/{1}/{2}?{3}".format(type, id, service, params)
-
-    conn.request(action, location, body)
-
-    response = conn.getresponse()
-    data = response.read()
-
-    return data
+        print("TODO: Write Help.")
