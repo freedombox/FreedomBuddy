@@ -9,10 +9,74 @@ quits the interpreter, so testing stops whenever we test an error condition.
 
 """
 
+import gnupg
 import subprocess
 import unittest
 
 import connectors.cli.controller
+
+class OutgoingRequest(unittest.TestCase):
+
+    def setUp(self):
+        self.gpg = gnupg.GPG(use_agent = True)
+        self.request = gpg.encrypt(json.dumps(
+                { "host": 1, "client": 2,
+                  "service": 3, "locations": [4]
+                  "reply_to": [5]
+                  "request_version": 1,
+                  "reply_versions": [1],}),
+                                   host, sign=self.me)
+        self.sender = controller.Sender()
+
+    def test_quote_objects(self):
+        """Quoting objects should not error.
+
+        Objects should be properly stringified.
+
+        """
+        destination = "https://localhost:8080"
+        self.assertEqual(None,
+                         self.sender.outgoing_request(self.request,
+                                                      destination))
+
+
+class ValidateArgs(unittest.TestCase):
+    """Verify argument combinations.
+
+    Verify that valid argument combinations are accepted and that invalid ones
+    are rejected.
+
+    """
+    def setUp(self):
+        self.parser = optparse.OptionParser()
+
+    def test_outgoing_request_accepts_both(self):
+        """Outgoing request requires all of -q, -k, and -d."""
+        (options, args) = controller.interpret_args(
+            ["-q", "-k 12345", "-d 12345"],
+            self.parser)
+
+        self.assertIsNone(validate_args(options, self.parser))
+
+    def test_outgoing_request_requires_both(self):
+        """Outgoing request rejects only one of -q, -k or -d."""
+
+        options = ["-q", "-o 12345", "-d 12345"]
+
+        for x in range(len(options)):
+            # munge a copy of the option list.
+            munge = options[:]
+            del munge[x]
+
+            (options, args) = controller.interpret_args(
+                self.parser)
+
+            self.assertRaises(optparse.OptionError,
+                              controller.validate_args(options, self.parser))
+
+# Here be dragons...
+#
+# I don't know what in here will actually run.
 
 class ArgumentInterpretation(unittest.TestCase):
     """Verify arguments set data as expected.
@@ -170,7 +234,6 @@ class LocalRemoteInteractions(FreedomBuddyTest):
 
         """
         pass
-
 
 if __name__ == "__main__":
     unittest.main()

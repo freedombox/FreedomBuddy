@@ -12,7 +12,7 @@
   <body>
     <p>You are <a href="/consuming">consuming</a> $service from
       <a href="/consuming/$host">$host</a> at:</p>
-    <form method="post" action="/learn/$host/$service">
+    <form method="post" action="/query/$host/$service">
       <input type="submit" value="Learn More Locations?" />
     </form>
     #if $locations
@@ -21,7 +21,7 @@
       #set $location = $cgi.escape($location)
       <li>
         <a href="$location">$location</a>
-        <form method="post" 
+        <form method="post"
               action="/consuming/$host/$service">
           <input type="hidden" name="delete" value="$location" />
           <input type="submit" value="Delete" />
@@ -31,7 +31,7 @@
     </ul>
     #end if
     <hr />
-    <form method="post" 
+    <form method="post"
           action="/consuming/$host/$service">
       <label>Location: <input name="put" /></label>
       <input type="submit" value="Create New Location" />

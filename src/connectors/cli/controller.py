@@ -16,6 +16,8 @@ HTTP(S).
 :FIXME: Fix the timeout
 :TODO: unit test the below:
 
+:FIXME: Fix the description below.
+
 For Outgoing Requests
 =====================
 
@@ -60,6 +62,9 @@ For Incoming Requests
 -r (request-text): Sent by another client, this is the request the connector
     receives.
 
+License
+=======
+
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
 Software Foundation, either version 3 of the License, or (at your option) any
@@ -77,6 +82,7 @@ import bjsonrpc
 import httplib
 import json
 from optparse import OptionParser
+import pipes
 import sys
 import time
 import urllib
@@ -95,53 +101,26 @@ def interpret_args(args, parser=None):
 
     parser.add_option("-k", "--key", dest="key",
                       help="Find services for or by this buddy.")
-    parser.add_option("-s", "--service", dest="service",
-                      help="Find this service's locations.")
-    parser.add_option("-a", "--address", dest="address", default="localhost",
-                      help="""\
-The "local" FreedomBuddy address to query for services.
 
-Doesn't necessarily have to be local, just has to be reachable and trusted.
-""")
-    parser.add_option("-p", "--port", dest="port", default=8080,
-                      help="Localhost's FreedomBuddy port.")
-    parser.add_option("-o", "--host", dest="host", default=True,
-                      action="store_true", help="""\
+    parser.add_option("-c", "--consuming", dest="consuming", action="store_true",
+                      help="""\
 Query the named key's FreedomBuddy service for the named service's location.
 
-If neither --host nor --client are provided, --host is assumed.  If both are
-supplied, the last one wins.
+I'm consuming that service from the host.
 """)
-    parser.add_option("-c", "--client", dest="host", action="store_false",
+    parser.add_option("-o", "--hosting", dest="hosting", action="store_true",
                       help="""\
 Query my FreedomBuddy service for locations I'm hosting the service for the
 client.
 
-Overridden by --host.  If neither --host nor --client are provided, --host is
-assumed.  If both are supplied, the last one wins.
+I'm hosting that service for the client.
 """)
-    parser.add_option("-n", "--no-query", dest="query", action="store_false",
-                      help="""\
-Use locally cached services and don't query the host whether the between-request
-timeout has expired or not.
-
-Implied when --client is used.  If neither --no-query or --force-query are
-specified, query with normal respect for the timeout.  If both are supplied, the
-last one wins.
+    parser.add_option("-s", "--service", dest="service",
+                      help="Find this service's locations.")
+    parser.add_option("-l", "--location", dest="location", help="""\
+The service locations to add or remove.
 """)
-    parser.add_option("-f", "--force-query", dest="query",
-                      action="store_true", help="""\
-Ignore locally cached services and query the host whether the between-request
-timeout has expired or not.
-
-Ignored when --client is used.  If neither --no-query or --force-query are
-specified, query with normal respect for the timeout.  If both are supplied, the
-last one wins.
-
-TODO: Implement this option.
-""")
-    parser.add_option("-i", "--action", dest="action", default=None,
-                      help="""\
+    parser.add_option("-a", "--action", dest="action", help="""\
 Sends commands directly to the FreedomBuddy system.
 
 This option is meant to be used by utilities that need direct access to the
@@ -157,17 +136,20 @@ Must be one of:
 If this option is specified, you must also specify the rest of the
 connection arguments.
 """)
-    parser.add_option("-r", "--request", dest="request", default=None,
-                       help="""\
-Handle an incoming request.
+
+    # request actions: handle external I/O
+    parser.add_option("-r", "--request", dest="request", help="""\
+Handle an incoming request response.
 """)
+    parser.add_option("-q", "--query", dest="query", action="store_true",
+                      help="""\
+Create an outgoing request query.
+""")
+
+    # state actions: start or terminate FreedomBuddy.
     parser.add_option("", "--stop", dest="stop", default=None,
                       action="store_true", help="""\
 Stop the connector.
-""")
-    parser.add_option("-l", "--location", dest="location", default=None,
-                      help="""\
-The service locations.
 """)
 
     return parser.parse_args(args)
@@ -178,13 +160,18 @@ def validate_args(options, parser=None):
     if parser == None:
         parser = OptionParser()
 
-    if options.action != None:
-        pass
-    elif options.key != None:
-        pass
-    elif options.request:
+    if options.request:
         pass
     elif options.stop:
+        pass
+    # if consuming or hosting, key is required.
+    elif (options.key != None and
+             (options.consuming, options.hosting) != (None, None)):
+        pass
+    elif  (options.consuming, options.hosting) != (None, None):
+        pass
+    # if query, key and service are required.
+    elif None not in (options.query, options.key, options.service):
         pass
     else:
         help_me(parser)
@@ -225,17 +212,16 @@ def stop(santiago, *args, **kwargs):
     pass
 
 
-class Listener(santiago.SantiagoListener):
+class CliListener(santiago.SantiagoListener):
     """The command line interface FBuddy Listener."""
 
     pass
 
-class Sender(santiago.SantiagoSender):
+class CliSender(santiago.SantiagoSender):
     def __init__(self, https_sender = None, cli_sender = None, *args, **kwargs):
-        super(Sender, self).__init__(*args, **kwargs)
+        super(CliSender, self).__init__(*args, **kwargs)
 
-        stuff = {"https": https_sender, "cli": cli_sender}
-        self.senders = dict((x, y.split()) for x, y in stuff.iteritems())
+        self.senders = {"https": https_sender, "cli": cli_sender}
 
     def outgoing_request(self, request, destination):
         """Send a request out through the command line interface.
@@ -243,13 +229,13 @@ class Sender(santiago.SantiagoSender):
         Don't queue, just immediately send the reply to each location we know.
 
         """
-        # FIXME this is kinda broken now.  I'll fix it on the plane.
         protocol = destination.split(":")[0]
-        export $REQUEST, $DESTINATION
-        subprocess.Popen(
-            " ".join(self.senders[protocol]).format(
-                destination, request),
-            shell=True)
+
+        code = self.senders[protocol]
+        code = code.replace("$DESTINATION", pipes.quote(str(destination)))
+        code = code.replace("$REQUEST", pipes.quote(str(request)))
+
+        subprocess.call(code)
 
 
 class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
@@ -264,6 +250,7 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
     def _setup(self):
         self.listener = load_connector("listeners")
         self.sender = load_connector("senders")
+        self.querier = santiago.Query(SANTIAGO_INSTANCE)
 
     def incoming_request(self, *args, **kwargs):
         return self.listener.incoming_request(*args, **kwargs)
@@ -271,62 +258,67 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
     def outgoing_request(self, *args, **kwargs):
         return self.sender.outgoing_request(*args, **kwargs)
 
-    def get_clients(self):
-        return self.hosting.GET()
+    def query(self, *args, **kwargs):
+        return self.querier.POST(*args, **kwargs)
 
     def stop(self):
-        global BJSONRPC_SERVER
+        """Quit the server and stop Santiago."""
+
         BJSONRPC_SERVER.stop()
-        self.stop.POST()
+        santiago.Stop(SANTIAGO_INSTANCE).POST()
 
     def consuming(self, operation, host, service=None, location=None):
-        """Update a service I consume from others."""
+        """Update a service I consume from other hosts."""
 
-        return self._change(operation, True, host, service, location)
+        return self._change(operation, False, host, service, location)
 
     def hosting(self, operation, client, service=None, location=None):
-        """Update a service I am hosting for others."""
+        """Update a service I am hosting for other clients."""
 
-        return self._change(operation, False, client, service, location)
+        return self._change(operation, True, client, service, location)
 
     def _change(self, operation, i_host, key, service=None, location=None):
-        if location != None:
-            actor = santiago.HostedService if i_host else santiago.ConsumedService
-        elif service != None:
-            actor = santiago.HostedClient if i_host else santiago.ConsumedClient
-        elif key != None:
-            actor = santiago.Hosting if i_host else santiago.Consuming
+        """Change Santiago's known clients, servers, services, and locations."""
 
         if operation == "add":
             action = "PUT"
-        elif operation == "list":
-            action = "GET"
         elif operation == "remove":
             action = "DELETE"
+        elif operation == "list":
+            action = "GET"
+        else:
+            action = "GET"
+
+        # if we're modifying data
+        if action != "GET":
+            if location != None:
+                actor = santiago.HostedService if i_host else santiago.ConsumedService
+            elif service != None:
+                actor = santiago.HostedClient if i_host else santiago.ConsumedHost
+            elif key != None:
+                actor = santiago.Hosting if i_host else santiago.Consuming
+            else:
+                actor = None
+        # just listing data, don't need to handle listing indvidiual locations.
+        elif action == "GET":
+            if service != None:
+                actor = santiago.HostedService if i_host else santiago.ConsumedService
+            elif key != None:
+                actor = santiago.HostedClient if i_host else santiago.ConsumedHost
+            else:
+                actor = santiago.Hosting if i_host else santiago.Consuming
+
+        # for the day that I change things up and completely forget to update
+        # this line.
+        else:
+            raise RuntimeError("Invalid Action.")
 
         # think:
         #     x = santiago.ConsumedService(SANTIAGO_INSTANCE)
         #     x.GET(key, service, location)
-        return getattr(actor(SANTIAGO_INSTANCE), action)(key,
+        return json.dumps(getattr(actor(SANTIAGO_INSTANCE), action)(key,
                                                   service=service,
-                                                  location=location)
-
-def add_callable(thing, template):
-        for name in ("Hosting", "HostedClient", "HostedService",
-                     "Consuming", "ConsumedHost", "ConsumedService"):
-
-            # i.e.: self.hostedclient = santiago.HostedClient(SANTIAGO_INSTANCE)
-            setattr(self, name.lower(),
-                    getattr(santiago, name)(SANTIAGO_INSTANCE))
-
-            # i.e.: self.hostedclient_GET = self.hostedclient.GET
-            for verb in [x for x in dir(parent)
-                         if callable(getattr(parent, x)) and not
-                         x.startswith("_") and x == x.upper()]:
-
-                setattr(self, "{0}_{1}".format(name.lower(), verb),
-                        getattr(getattr(self, name.lower()), verb))
-
+                                                  location=location))
 
 def load_connector(attr):
     """Load the cli-specific connector from the Santiago Instance.
@@ -339,14 +331,13 @@ def load_connector(attr):
         return getattr(SANTIAGO_INSTANCE, attr)["cli"]
     except KeyError:
         pass
-
 
 
 def main():
 
     parser = OptionParser()
     (options, args) = interpret_args(sys.argv[1:], parser)
-    #validate_args(options, parser)
+    validate_args(options, parser)
 
     c = bjsonrpc.connect()
 
@@ -354,33 +345,18 @@ def main():
         print(c.call.incoming_request([options.request]))
     elif options.stop:
         print(c.call.stop())
-    elif options.host:
-        print(c.call.consuming(options.action, options.host,
+    elif options.consuming:
+        print(c.call.consuming(options.action, options.key,
                          options.service, options.location))
-    elif options.client:
-        print(c.call.hosting(options.action, options.client,
+    elif options.hosting:
+        print(c.call.hosting(options.action, options.key,
                        options.service, options.location))
+    elif options.query:
+        print(c.call.query(host=options.key, service=options.service))
+    else:
+        help_me()
 
 
 if __name__ == "__main__":
 
     main()
-    # type = "consuming" if options.host else "hosting"
-    # # FIXME replace with socket communications.
-    # conn = httplib.HTTPSConnection(options.address, options.port)
-    # params={"encoding": "json"}
-
-    # if not options.action:
-    #     options.action = "GET"
-
-    # if options.host == False or options.query == False:
-    #     response = query(conn, type, options.key,
-    #                      options.service, options.action, params=params)
-    # else:
-    #     response = query_remotely(options.address, options.port, options.key,
-    #                               options.service, params=params)
-
-    # conn.close()
-
-    # if response:
-    #     print(response)
