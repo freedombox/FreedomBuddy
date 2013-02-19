@@ -614,7 +614,7 @@ class ArgumentTests(SantiagoTest):
         options = OptionParser()
         options.config = "../data/test.cfg"
 
-        (keyid, lang, protocols, connectors) = santiago_test.load_config(
+        (keyid, protocols, connectors, force_sender) = santiago_test.load_config(
             options)
 
         listeners, senders, monitors = santiago_test.configure_connectors(
@@ -651,7 +651,7 @@ class ArgumentTests(SantiagoTest):
         options = OptionParser()
         options.config = "../data/test.cfg"
 
-        (keyid, lang, protocols, connectors) = santiago_test.load_config(
+        (keyid, protocols, connectors,force_sender) = santiago_test.load_config(
             options)
 
         listeners, senders, monitors = santiago_test.configure_connectors(
