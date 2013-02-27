@@ -50,7 +50,7 @@
   First, you want to teach it that you're hosting (serving, providing) the
   =freedombuddy= service at =https://127.0.0.1:8080=, so navigate to:
 
-  https://127.0.0.1:8081/freedombuddy/hosting/
+  https://127.0.0.1:8081/hosting/
 
   Once there, tell your computer that you want to =Host= a service for a key ID.
   Add your long-form PGP key ID (it'll be 40 characters long) as a new client.
@@ -80,7 +80,7 @@
 
   So, navigate to:
 
-  https://127.0.0.1:8081/freedombuddy/consuming/
+  https://127.0.0.1:8081/consuming/
 
   Add your key to the list of folks who provide you a service and then add the
   FreedomBuddy service to the list of services you provide yourself.
