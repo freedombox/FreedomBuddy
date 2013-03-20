@@ -43,13 +43,13 @@ class MonitorTest(unittest.TestCase):
         class ContainsError(AssertionError):
             pass
 
-        def assertIn(self, a, b):
-            if not a in b:
-                raise self.ContainsError("%s not in %s" % (a, b))
+    def assertIn(self, a, b):
+        if not a in b:
+            raise self.ContainsError("%s not in %s" % (a, b))
 
-        def assertInTuple(self, a_b):
-            a, b = a_b
-            return self.assertIn(a, b)
+    def assertInTuple(self, a_b):
+        a, b = a_b
+        return self.assertIn(a, b)
 
 class Stopper(MonitorTest):
     """Test the "HttpStop" controller."""
