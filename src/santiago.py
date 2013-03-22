@@ -5,17 +5,17 @@
 
 Santiago is designed to let users negotiate services without third party
 interference.  By sending OpenPGP signed and encrypted messages over HTTPS (or
-other connectors) between parties, I hope to reduce or even prevent MITM attacks.
-Santiago can also use the Tor network as a proxy (with Python 2.7 or later),
-allowing this negotiation to happen very quietly.
+other connectors) between parties, I hope to reduce or even prevent MITM 
+attacks. Santiago can also use the Tor network as a proxy (with Python 2.7 or 
+later),allowing this negotiation to happen very quietly.
 
 Start me with:
 
     $ python santiago.py
 
-The first Santiago service queries another's index with a request.  That request
-is handled and a request is returned.  Then, the reply is handled.  The upshot
-is that we learn a new set of locations for the service.
+The first Santiago service queries another's index with a request.  That 
+request is handled and a request is returned.  Then, the reply is handled.  
+The upshot is that we learn a new set of locations for the service.
 
 :TODO: add doctests
 :FIXME: allow multiple listeners and senders per connector (with different
@@ -31,13 +31,11 @@ or later.  A copy of GPLv3 is available [from the Free Software Foundation]
 
 import ast
 from collections import defaultdict as DefaultDict
-import ConfigParser as configparser
 import gnupg
 import inspect
 import json
 import logging
 import os
-import re
 import shelve
 import sys
 import time
@@ -144,10 +142,10 @@ class Santiago(object):
         self.hosting = hosting if hosting else self.load_data("hosting")
         self.consuming = consuming if consuming else self.load_data("consuming")
 
-    def create_connectors(self, data, type):
+    def create_connectors(self, data, connector_type):
         if data == None:
             return
-        connectors = self._create_connectors(data, type)
+        connectors = self._create_connectors(data, connector_type)
         self.connectors |= set(connectors.keys())
 
         return connectors
@@ -212,7 +210,6 @@ class Santiago(object):
     def __exit__(self, exc_type, exc_value, traceback):
         """Clean up and save all data to shut down the service."""
 
-        count = 0
         try:
             while self.live:
                 time.sleep(1)
@@ -247,7 +244,8 @@ class Santiago(object):
             getattr(connector, state)()
 
         for connector in self.connectors:
-            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], state)(santiago=self)
+            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], 
+			state)(santiago=self)
 
         debug_log("Santiago: {0}".format(state))
 
@@ -276,8 +274,8 @@ class Santiago(object):
 
         try:
             data = self.shelf[key]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
             data = dict()
         else:
             for message in pgpprocessor.Unwrapper(data, gpg=self.gpg):
@@ -288,8 +286,8 @@ class Santiago(object):
                 # Per Python's documentation, this is safe enough:
                 # http://docs.python.org/2/library/ast.html#ast.literal_eval
                 data = ast.literal_eval(str(message))
-            except (ValueError, SyntaxError) as e:
-                logging.exception(e)
+            except (ValueError, SyntaxError) as error:
+                logging.exception(error)
                 data = dict()
 
         debug_log("found {0}: {1}".format(key, data))
@@ -408,8 +406,8 @@ class Santiago(object):
         """
         try:
             return self.hosting[client][service]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
 
     def get_host_services(self, client):
         """Return what I'm hosting for the client.
@@ -419,24 +417,24 @@ class Santiago(object):
         """
         try:
             return self.hosting[client]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
 
     def get_client_locations(self, host, service):
         """Return where the host serves the service for me, the client."""
 
         try:
             return self.consuming[host][service]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
 
     def get_client_services(self, host):
         """Return what services the host serves for me, the client."""
 
         try:
             return self.consuming[host]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
 
     def get_served_clients(self, service):
         """Return what clients I'm hosting the service for."""
@@ -461,7 +459,7 @@ class Santiago(object):
             self.outgoing_request(
                 host, self.me, host, self.me,
                 service, None, self.consuming[host][self.reply_service])
-        except Exception as e:
+        except Exception:
             logging.exception("Couldn't handle %s.%s", host, service)
 
     def outgoing_request(self, from_, to, host, client,
@@ -770,16 +768,16 @@ class SantiagoSender(SantiagoConnector):
 class RestController(object):
     """A generic controller that reacts to the basic verbs."""
 
-    def PUT(self, *args, **kwargs):
+    def put(self, *args, **kwargs):
         pass
 
-    def GET(self, *args, **kwargs):
+    def get(self, *args, **kwargs):
         pass
 
-    def POST(self, *args, **kwargs):
+    def post(self, *args, **kwargs):
         pass
 
-    def DELETE(self, *args, **kwargs):
+    def delete(self, *args, **kwargs):
         pass
 
 class SantiagoMonitor(RestController, SantiagoConnector):
@@ -791,7 +789,7 @@ class SantiagoMonitor(RestController, SantiagoConnector):
 class Stop(SantiagoMonitor):
     """Stop the service."""
 
-    def POST(self, *args, **kwargs):
+    def post(self, *args, **kwargs):
         self.santiago.live = 0
 
 class Query(SantiagoMonitor):
@@ -800,7 +798,7 @@ class Query(SantiagoMonitor):
     This service request is eventually sent out to the host.
 
     """
-    def POST(self, host, service, *args, **kwargs):
+    def post(self, host, service, *args, **kwargs):
         super(Query, self).POST(host, service, *args, **kwargs)
 
         self.santiago.query(host, service)
@@ -808,18 +806,18 @@ class Query(SantiagoMonitor):
 class Hosting(SantiagoMonitor):
     """List clients I'm hosting services for."""
 
-    def GET(self, *args, **kwargs):
-        super(Hosting, self).GET(*args, **kwargs)
+    def get(self, *args, **kwargs):
+        super(Hosting, self).get(*args, **kwargs)
 
         return { "clients": self.santiago.hosting.keys() }
 
-    def PUT(self, client, *args, **kwargs):
-        super(Hosting, self).PUT(client, *args, **kwargs)
+    def put(self, client, *args, **kwargs):
+        super(Hosting, self).put(client, *args, **kwargs)
 
         self.santiago.create_hosting_client(client)
 
-    def DELETE(self, client, *args, **kwargs):
-        super(Hosting, self).DELETE(client, *args, **kwargs)
+    def delete(self, client, *args, **kwargs):
+        super(Hosting, self).delete(client, *args, **kwargs)
 
         if client in self.santiago.hosting:
             del self.santiago.hosting[client]
@@ -827,21 +825,21 @@ class Hosting(SantiagoMonitor):
 class HostedClient(SantiagoMonitor):
     """List the services I'm hosting for the client."""
 
-    def GET(self, client, *args, **kwargs):
-        super(HostedClient, self).GET(*args, **kwargs)
+    def get(self, client, *args, **kwargs):
+        super(HostedClient, self).get(*args, **kwargs)
 
         return { "client": client,
                  "services": self.santiago.hosting[client] if client in
                      self.santiago.hosting else [] }
 
-    def PUT(self, client, service, *args, **kwargs):
-        super(HostedClient, self).PUT(client, service, *args, **kwargs)
+    def put(self, client, service, *args, **kwargs):
+        super(HostedClient, self).put(client, service, *args, **kwargs)
 
         self.santiago.create_hosting_service(client, service)
 
 
-    def DELETE(self, client, service, *args, **kwargs):
-        super(HostedClient, self).DELETE(client, service, *args, **kwargs)
+    def delete(self, client, service, *args, **kwargs):
+        super(HostedClient, self).delete(client, service, *args, **kwargs)
 
         if service in self.santiago.hosting[client]:
             del self.santiago.hosting[client][service]
@@ -849,23 +847,23 @@ class HostedClient(SantiagoMonitor):
 class HostedService(SantiagoMonitor):
     """List locations I'm hosting the service for the client."""
 
-    def GET(self, client, service, *args, **kwargs):
-        super(HostedService, self).GET(client, service, *args, **kwargs)
+    def get(self, client, service, *args, **kwargs):
+        super(HostedService, self).get(client, service, *args, **kwargs)
 
         return {
             "service": service,
             "client": client,
             "locations": self.santiago.get_host_locations(client, service)}
 
-    def PUT(self, client, service, location, *args, **kwargs):
-        super(HostedService, self).PUT(client, service, location,
+    def put(self, client, service, location, *args, **kwargs):
+        super(HostedService, self).put(client, service, location,
                                        *args, **kwargs)
 
         self.santiago.create_hosting_location(client, service, [location])
 
     # Have to remove instead of delete for locations as ``service`` is a list
-    def DELETE(self, client, service, location, *args, **kwargs):
-        super(HostedService, self).DELETE(client, service, location,
+    def delete(self, client, service, location, *args, **kwargs):
+        super(HostedService, self).delete(client, service, location,
                                           *args, **kwargs)
 
         if client in self.santiago.hosting:
@@ -875,18 +873,18 @@ class HostedService(SantiagoMonitor):
 class Consuming(SantiagoMonitor):
     """Get the hosts I'm consuming services from."""
 
-    def GET(self, *args, **kwargs):
-        super(Consuming, self).GET(*args, **kwargs)
+    def get(self, *args, **kwargs):
+        super(Consuming, self).get(*args, **kwargs)
 
         return { "hosts": self.santiago.consuming.keys() }
 
-    def PUT(self, host, *args, **kwargs):
-        super(Consuming, self).PUT(host, *args, **kwargs)
+    def put(self, host, *args, **kwargs):
+        super(Consuming, self).put(host, *args, **kwargs)
 
         self.santiago.create_consuming_host(host)
 
-    def DELETE(self, host, *args, **kwargs):
-        super(Consuming, self).DELETE(host, *args, **kwargs)
+    def delete(self, host, *args, **kwargs):
+        super(Consuming, self).delete(host, *args, **kwargs)
 
         if host in self.santiago.consuming:
             del self.santiago.consuming[host]
@@ -894,21 +892,21 @@ class Consuming(SantiagoMonitor):
 class ConsumedHost(SantiagoMonitor):
     """Get the services I'm consuming from the host."""
 
-    def GET(self, host, *args, **kwargs):
-        super(ConsumedHost, self).GET(host, *args, **kwargs)
+    def get(self, host, *args, **kwargs):
+        super(ConsumedHost, self).get(host, *args, **kwargs)
 
         return {
             "services": self.santiago.consuming[host] if host in
                         self.santiago.consuming else [],
             "host": host }
 
-    def PUT(self, host, service, *args, **kwargs):
-        super(ConsumedHost, self).PUT(host, service, *args, **kwargs)
+    def put(self, host, service, *args, **kwargs):
+        super(ConsumedHost, self).put(host, service, *args, **kwargs)
 
         self.santiago.create_consuming_service(host, service)
 
-    def DELETE(self, host, service, *args, **kwargs):
-        super(ConsumedHost, self).DELETE(host, service, *args, **kwargs)
+    def delete(self, host, service, *args, **kwargs):
+        super(ConsumedHost, self).delete(host, service, *args, **kwargs)
 
         if service in self.santiago.consuming[host]:
             del self.santiago.consuming[host][service]
@@ -916,23 +914,23 @@ class ConsumedHost(SantiagoMonitor):
 class ConsumedService(SantiagoMonitor):
     """Get the locations of the service I'm consuming from the host."""
 
-    def GET(self, host, service, *args, **kwargs):
-        super(ConsumedService, self).GET(host, service, *args, **kwargs)
+    def get(self, host, service, *args, **kwargs):
+        super(ConsumedService, self).get(host, service, *args, **kwargs)
 
         return { "service": service,
                  "host": host,
                  "locations":
                      self.santiago.get_client_locations(host, service) }
 
-    def PUT(self, host, service, location, *args, **kwargs):
-        super(ConsumedService, self).PUT(host, service, location,
+    def put(self, host, service, location, *args, **kwargs):
+        super(ConsumedService, self).put(host, service, location,
                                          *args, **kwargs)
 
         self.santiago.create_consuming_location(host, service, [location])
 
     # Have to remove instead of delete for locations as $service is a list
-    def DELETE(self, host, service, location, *args, **kwargs):
-        super(ConsumedService, self).DELETE(host, service, location,
+    def delete(self, host, service, location, *args, **kwargs):
+        super(ConsumedService, self).delete(host, service, location,
                                             *args, **kwargs)
 
         if location in self.santiago.consuming[host][service]:

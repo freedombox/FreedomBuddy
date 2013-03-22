@@ -12,6 +12,7 @@ import gnupg
 import pgpprocessor
 import unittest
 import utilities
+from utilities import InvalidSignatureError
 
 def remove_line(string, line, preserve_newlines = True):
     """Remove a line from a multi-line string."""
@@ -21,6 +22,56 @@ def remove_line(string, line, preserve_newlines = True):
 
     return str(string.splitlines(preserve_newlines).remove(line))
 
+class ExpiredKey(unittest.TestCase):
+    """self.gpg_expired_then_valid should have valid key {455D3FB8823783253D804B218E42A4A8F15A9174} and valid key {E68BE6A2E5B52E7DD0BED889CE1405033F743EB9} - YES
+       self.gpg_expired should have valid key {E68BE6A2E5B52E7DD0BED889CE1405033F743EB9} and expired public key for {455D3FB8823783253D804B218E42A4A8F15A9174} - YES
+    """
+
+    def setUp(self):
+        self.iterations = 3
+        self.gpg_expired_then_valid = gnupg.GPG(gnupghome='../data/test_expired_keys/test_expired_then_valid_keys/')
+        self.gpg_expired = gnupg.GPG(gnupghome='../data/test_expired_keys/test_still_expired_keys/')
+        self.config = utilities.load_config('../data/test_expired_keys/test_expired_then_valid.cfg')
+
+class ValidSubKeyButExpiredSuperKeyTest(ExpiredKey):
+    """Confirm that data signed with expired keys is not decrypted"""
+
+    def setUp(self):
+        super(ValidSubKeyButExpiredSuperKeyTest, self).setUp()
+
+        self.key_id = utilities.safe_load(self.config, "pgpprocessor", "sub_keyid", 0)
+        self.messages = utilities.multi_sign(
+            gpg = self.gpg_expired_then_valid,
+            iterations = self.iterations,
+            keyid = self.key_id)
+
+        self.unwrapper = pgpprocessor.Unwrapper(self.messages[-1],
+                                                self.gpg_expired)
+
+    def test_unwrap_fails_when_message_signed_by_valid_sub_key_but_expired_super_key(self):
+        """Should fail as invalid signature as the super key the data was signed with is expired in gpg"""
+
+        self.assertRaises(InvalidSignatureError, self.unwrapper.next)
+
+class ExpiredKeyTest(ExpiredKey):
+    """Confirm that data signed with expired keys is not decrypted"""
+
+    def setUp(self):
+        super(ExpiredKeyTest, self).setUp()
+
+        self.key_id = utilities.safe_load(self.config, "pgpprocessor", "keyid", 0)
+        self.messages = utilities.multi_sign(
+            gpg = self.gpg_expired_then_valid,
+            iterations = self.iterations,
+            keyid = self.key_id)
+
+        self.unwrapper = pgpprocessor.Unwrapper(self.messages[-1],
+                                                self.gpg_expired)
+
+    def test_unwrap_fails_when_message_signed_by_expired_key(self):
+        """Should fail as invalid signature as the key the data was signed with is expired in gpg"""
+
+        self.assertRaises(InvalidSignatureError, self.unwrapper.next)
 
 class MessageWrapper(unittest.TestCase):
     """Basic setup for message-signing tests.

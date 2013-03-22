@@ -5,6 +5,7 @@ Currently contains a bunch of errors and config-file shortcuts.
 """
 
 import ConfigParser as configparser
+import gnupg
 
 
 def load_config(configfile="../data/test.cfg"):
