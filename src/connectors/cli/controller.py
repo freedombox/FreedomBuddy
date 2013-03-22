@@ -79,16 +79,12 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import bjsonrpc
-import httplib
 import json
 from optparse import OptionParser
 import pipes
 import sys
-import time
-import urllib
 
 import santiago
-import sys
 import subprocess
 
 SANTIAGO_INSTANCE = BJSONRPC_SERVER = None
@@ -102,8 +98,8 @@ def interpret_args(args, parser=None):
     parser.add_option("-k", "--key", dest="key",
                       help="Find services for or by this buddy.")
 
-    parser.add_option("-c", "--consuming", dest="consuming", action="store_true",
-                      help="""\
+    parser.add_option("-c", "--consuming", dest="consuming", 
+                      action="store_true",help="""\
 Query the named key's FreedomBuddy service for the named service's location.
 
 I'm consuming that service from the host.
@@ -339,20 +335,20 @@ def main():
     (options, args) = interpret_args(sys.argv[1:], parser)
     validate_args(options, parser)
 
-    c = bjsonrpc.connect()
+    connect = bjsonrpc.connect()
 
     if options.request:
-        print(c.call.incoming_request([options.request]))
+        print(connect.call.incoming_request([options.request]))
     elif options.stop:
-        print(c.call.stop())
+        print(connect.call.stop())
     elif options.consuming:
-        print(c.call.consuming(options.action, options.key,
+        print(connect.call.consuming(options.action, options.key,
                          options.service, options.location))
     elif options.hosting:
-        print(c.call.hosting(options.action, options.key,
+        print(connect.call.hosting(options.action, options.key,
                        options.service, options.location))
     elif options.query:
-        print(c.call.query(host=options.key, service=options.service))
+        print(connect.call.query(host=options.key, service=options.service))
     else:
         help_me()
 

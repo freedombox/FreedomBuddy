@@ -8,12 +8,7 @@ CFG_TEMPLATE = $(DATA_DIR)/template.cfg
 CFG_PRODUCTION = $(DATA_DIR)/production.cfg
 CFG_TEST = $(DATA_DIR)/test.cfg
 KEYS_TEST = $(DATA_DIR)/test_gpg_home/
-KEYS_EXPIRED_TEST = $(DATA_DIR)/test_expired_gpg_home/
 TEST_CRYPT_FILE = test_crypt_file
-TEST_EXPIRED_KEY_DATA_ORIGINAL = $(DATA_DIR)/F57526CDF701605B1DAB2A64F111ED7A4F7B0542_original.dat
-TEST_EXPIRED_KEY_DATA_TO_USE = $(DATA_DIR)/F57526CDF701605B1DAB2A64F111ED7A4F7B0542.dat
-TEST_EXPIRED_SUB_KEY_DATA_ORIGINAL = $(DATA_DIR)/6772C6B2742E65C074D574D96F9E1C1A2524ED04_original.dat
-TEST_EXPIRED_SUB_KEY_DATA_TO_USE = $(DATA_DIR)/6772C6B2742E65C074D574D96F9E1C1A2524ED04.dat
 
 freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(SCRIPTS_DIR)/tinc_rollout $(BUILD_DIR)/python-gnupg $(CFG_PRODUCTION) $(CFG_TEST) create-test-key predepend 
 
@@ -61,7 +56,7 @@ ifeq ($(wildcard $(KEYS_TEST)/secring.gpg),)
 	gpg --homedir $(KEYS_TEST) --gen-key --always-trust --batch data/test_GPG_Key_Values.cfg
 	chmod 600 $(KEYS_TEST)*
 	touch $(TEST_CRYPT_FILE)
-	python update_test_key.py $(CFG_TEST) $(KEYS_TEST) $(TEST_CRYPT_FILE)
+	python update_encryption_key.py $(CFG_TEST) $(KEYS_TEST) $(TEST_CRYPT_FILE)
 	rm -f $(TEST_CRYPT_FILE)*
 else
 	echo $(KEYS_TEST)/secring.gpg already exists
