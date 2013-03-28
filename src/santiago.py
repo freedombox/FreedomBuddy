@@ -42,13 +42,13 @@ import time
 import urlparse
 
 import pgpprocessor
-import utilities
 
 global DEBUG
 DEBUG = 0
 
 
 def debug_log(message):
+    """Helper function for logging messages"""
     frame = inspect.stack()
     trace = inspect.getframeinfo(frame[1][0])
     location = "{0}.{1}.{2}".format(trace.filename, trace.function,
