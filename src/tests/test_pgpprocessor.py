@@ -158,6 +158,28 @@ class UnwrapperTest(MessageWrapper):
 
         self.assertEqual(self.iterations + 1, len(self.messages))
 
+    def test_reset_fields(self):
+        """Confirm all variables are cleared by reset function"""
+        self.unwrapper.body = "test_body"
+        self.unwrapper.start = "test_start"
+        self.unwrapper.header = "test_header"
+        self.unwrapper.footer = "test_footer"
+        self.unwrapper.end = "test_end"
+        self.unwrapper.gpg_data = "test_gpg_data"
+        self.assertEqual(self.unwrapper.body,"test_body")
+        self.assertEqual(self.unwrapper.start,"test_start")
+        self.assertEqual(self.unwrapper.header,"test_header")
+        self.assertEqual(self.unwrapper.footer,"test_footer")
+        self.assertEqual(self.unwrapper.end,"test_end")
+        self.assertEqual(self.unwrapper.gpg_data,"test_gpg_data")
+        self.unwrapper.reset_fields()
+        self.assertEqual(self.unwrapper.body,[])
+        self.assertEqual(self.unwrapper.start,[])
+        self.assertEqual(self.unwrapper.header,[])
+        self.assertEqual(self.unwrapper.footer,[])
+        self.assertEqual(self.unwrapper.end,[])
+        self.assertEqual(self.unwrapper.gpg_data,None)
+
     def test_unwrap_all_messages(self):
         """Do we unwrap the right number of messages?"""
 

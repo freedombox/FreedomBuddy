@@ -95,7 +95,7 @@ class UnpackRequest(SantiagoTest):
         self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
 
         self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
-        self.santiago = santiago.Santiago(me = self.keyid, gpg = self.gpg)
+        self.santiago = santiago.Santiago(my_key_id = self.keyid, gpg = self.gpg)
 
         self.request = { "host": self.keyid, "client": self.keyid,
                          "service": santiago.Santiago.SERVICE_NAME, "reply_to": [1],
@@ -261,7 +261,7 @@ class HandleRequest(SantiagoTest):
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
             consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
-            me = self.keyid,
+            my_key_id = self.keyid,
 	    gpg = self.gpg)
 
         self.santiago.requested = False
@@ -325,6 +325,22 @@ class HandleRequest(SantiagoTest):
             self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
             [1, 2])
 
+    def test_replace_consuming_location(self):
+        """Confirm location is replaced"""
+        self.reply_to.append(2)
+
+        self.test_call()
+
+        self.assertEqual(
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
+            [1, 2])
+
+        self.santiago.replace_consuming_location(self.keyid,[1, 3])
+
+        self.assertEqual(
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
+            [1, 3])
+
 class OutgoingRequest(SantiagoTest):
     """Are outgoing requests properly formed?
 
@@ -351,7 +367,7 @@ class OutgoingRequest(SantiagoTest):
         self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            me = self.keyid,
+            my_key_id = self.keyid,
             consuming = { self.keyid: { santiago.Santiago.SERVICE_NAME: ( "https://1", )}},
 	    gpg = self.gpg)
 
@@ -377,7 +393,7 @@ class OutgoingRequest(SantiagoTest):
         """A short-hand for calling outgoing_request with all 8 arguments."""
 
         self.santiago.outgoing_request(
-            None, None, self.host, self.client,
+            self.host, self.client,
             self.service, self.locations, self.reply_to)
 
     def test_valid_message(self):
@@ -419,7 +435,7 @@ class CreateHosting(SantiagoTest):
 	self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
         self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
 
-        self.santiago = santiago.Santiago(me = self.keyid, gpg = self.gpg)
+        self.santiago = santiago.Santiago(my_key_id = self.keyid, gpg = self.gpg)
 
         self.client = 1
         self.service = 2
@@ -449,7 +465,7 @@ class CreateConsuming(SantiagoTest):
 	self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
         self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
 
-        self.santiago = santiago.Santiago(me = self.keyid, gpg=self.gpg)
+        self.santiago = santiago.Santiago(my_key_id = self.keyid, gpg=self.gpg)
 
         self.host = 1
         self.service = 2
@@ -503,10 +519,10 @@ class ArgumentTests(SantiagoTest):
 
         freedombuddy = santiago.Santiago(hosting=hosting, consuming=consuming,
                                          save_dir='../data/test_gpg_home',
-                                         me=keyid, gpg=gpg_to_use)
+                                         my_key_id=keyid, gpg=gpg_to_use)
 
         self.cycle(freedombuddy)
-        freedombuddy1 = santiago.Santiago(me=keyid, gpg=gpg_to_use,
+        freedombuddy1 = santiago.Santiago(my_key_id=keyid, gpg=gpg_to_use,
                                           save_dir='../data/test_gpg_home')
 
         self.assertIn(service, freedombuddy1.hosting[keyid])
@@ -539,8 +555,8 @@ class ArgumentTests(SantiagoTest):
         consuming = { keyid: { service: [url] } }
 
         freedombuddy = santiago.Santiago(hosting=hosting, consuming=consuming,
-                                         save_services=False, me=keyid, gpg=gpg_to_use)
-        freedombuddy1 = santiago.Santiago(me=keyid, gpg=gpg_to_use)
+                                         save_services=False, my_key_id=keyid, gpg=gpg_to_use)
+        freedombuddy1 = santiago.Santiago(my_key_id=keyid, gpg=gpg_to_use)
 
         self.cycle(freedombuddy)
         self.cycle(freedombuddy1)

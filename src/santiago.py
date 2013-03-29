@@ -81,7 +81,7 @@ class Santiago(object):
 
     def __init__(self, listeners=None, senders=None,
                  hosting=None, consuming=None, monitors=None,
-                 me=0, reply_service=None,
+                 my_key_id=0, reply_service=None,
                  save_dir=".", save_services=True,
                  gpg=None, force_sender=None, *args, **kwargs):
 
@@ -107,7 +107,7 @@ class Santiago(object):
         consuming allows users to safely proxy requests for one another, if some
         hosts are unreachable from some points.
 
-        :me: my PGP key ID.
+        :my_key_id: my PGP key ID.
 
         :reply_service: Messages between clients contain lists of keys, one of
           which is the "reply to" location.  This parameter names the key to
@@ -126,7 +126,7 @@ class Santiago(object):
 
         self.live = 1
         self.requests = DefaultDict(set)
-        self.me = me
+        self.my_key_id = my_key_id
         self.gpg = gpg or gnupg.GPG(use_agent = True)
         self.connectors = set()
         self.reply_service = reply_service or Santiago.SERVICE_NAME
@@ -138,7 +138,7 @@ class Santiago(object):
         self.monitors = self.create_connectors(monitors, "Monitor")
 
         self.shelf = shelve.open(save_dir.rstrip(os.sep) + os.sep +
-                                 str(self.me) + ".dat")
+                                 str(self.my_key_id) + ".dat")
         self.hosting = hosting if hosting else self.load_data("hosting")
         self.consuming = consuming if consuming else self.load_data("consuming")
 
@@ -313,8 +313,8 @@ class Santiago(object):
 
         data = getattr(self, key)
 
-        data = str(self.gpg.encrypt(str(data), recipients=[self.me],
-                                    sign=self.me))
+        data = str(self.gpg.encrypt(str(data), recipients=[self.my_key_id],
+                                    sign=self.my_key_id))
 
         self.shelf[key] = data
 
@@ -324,7 +324,7 @@ class Santiago(object):
     def i_am(self, server):
         """Verify whether this server is the specified server."""
 
-        return self.me == server
+        return self.my_key_id == server
 
     # FIXME: unify create_hosting and create_consuming, to reduce redundancy.
 
@@ -388,7 +388,7 @@ class Santiago(object):
             if location not in self.consuming[host][service]:
                 self.consuming[host][service].append(location)
 
-    def replace_consuming_location(self, host, service, locations):
+    def replace_consuming_location(self, host, locations):
         """Replace existing consuming locations with the new ones."""
 
         try:
@@ -457,12 +457,12 @@ class Santiago(object):
         """
         try:
             self.outgoing_request(
-                host, self.me, host, self.me,
+                host, self.my_key_id, host, self.my_key_id,
                 service, None, self.consuming[host][self.reply_service])
         except Exception:
             logging.exception("Couldn't handle %s.%s", host, service)
 
-    def outgoing_request(self, from_, to, host, client,
+    def outgoing_request(self, host, client,
                          service, locations="", reply_to=""):
         """Send a request to another Santiago service.
 
@@ -486,8 +486,8 @@ class Santiago(object):
                 self.senders[self.force_sender].outgoing_request(request,
                                                                  destination)
             else:
-                o = urlparse.urlparse(destination)
-                self.senders[o.scheme].outgoing_request(request, destination)
+                out = urlparse.urlparse(destination)
+                self.senders[out.scheme].outgoing_request(request, destination)
 
     def pack_request(self, host, client, service, locations, reply_to):
         """Pack up a request for transport.
@@ -510,7 +510,7 @@ class Santiago(object):
                   "reply_to": list(reply_to),
                   "request_version": 1,
                   "reply_versions": list(Santiago.SUPPORTED_CONNECTORS),}),
-            host, sign=self.me)
+            host, sign=self.my_key_id)
 
     def incoming_request(self, request_list):
         """Provide a service to a client.
@@ -562,8 +562,8 @@ class Santiago(object):
                             unpacked["request_version"],
                             unpacked["reply_versions"])
 
-        except Exception as e:
-            logging.exception(e)
+        except Exception as error:
+            logging.exception(error)
 
     def unpack_request(self, request):
         """Decrypt and verify the request.
@@ -590,6 +590,7 @@ class Santiago(object):
         request_body = dict()
         source = json.loads(str(request))
         try:
+            key = None
             for key in Santiago.ALL_KEYS:
                 request_body[key] = source[key]
         except KeyError:
@@ -615,11 +616,11 @@ class Santiago(object):
 
         # set implied keys
         request_body["from"] = request.fingerprint
-        request_body["to"] = self.me
+        request_body["to"] = self.my_key_id
 
         return request_body
 
-    def handle_request(self, from_, to, host, client,
+    def handle_request(self, from_, to_, host, client,
                        service, reply_to, request_version, reply_versions):
         """Actually do the request processing.
 
@@ -647,14 +648,13 @@ class Santiago(object):
 
         # if we don't proxy, learn new reply locations and send the request.
         if not self.i_am(host):
-            self.proxy(to, host, client, service, reply_to)
+            self.proxy(to_, host, client, service, reply_to)
         else:
             if reply_to:
                 self.replace_consuming_location(client,
-                                                self.reply_service,
                                                 reply_to)
             self.outgoing_request(
-                self.me, client, self.me, client,
+                self.my_key_id, client, self.my_key_id, client,
                 service, self.hosting[client][service],
                 self.hosting[client][self.reply_service])
 
@@ -667,7 +667,7 @@ class Santiago(object):
         """
         pass
 
-    def handle_reply(self, from_, to, host, client,
+    def handle_reply(self, from_, to_, host, client,
                      service, locations, reply_to,
                      request_version, reply_versions):
         """Process a reply from a Santiago service.
@@ -690,8 +690,8 @@ class Santiago(object):
             return
 
         # give up or proxy if the message isn't for me.
-        if not self.i_am(to):
-            debug_log("not to {0}".format(to))
+        if not self.i_am(to_):
+            debug_log("not to {0}".format(to_))
             return
         if not self.i_am(client):
             debug_log("not client {0}".format(client))
