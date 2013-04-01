@@ -189,20 +189,20 @@ Usage Instructions:
 """)
 
 
-def start(santiago, *args, **kwargs):
+def start(santiago_to_use, *args, **kwargs):
     """The final startup step in the system.
 
     Create the server.
 
     """
     global SANTIAGO_INSTANCE, BJSONRPC_SERVER
-    SANTIAGO_INSTANCE = santiago
+    SANTIAGO_INSTANCE = santiago_to_use
     BJSONRPC_SERVER = bjsonrpc.createserver(host="127.0.0.1",
                                             handler_factory=BjsonRpcHost)
     BJSONRPC_SERVER.serve()
     print("served!")
 
-def stop(santiago, *args, **kwargs):
+def stop(santiago_to_use, *args, **kwargs):
     """Shut down the server."""
 
     pass
@@ -214,6 +214,7 @@ class CliListener(santiago.SantiagoListener):
     pass
 
 class CliSender(santiago.SantiagoSender):
+    """The command line sender for FBuddy"""
     def __init__(self, https_sender = None, cli_sender = None, *args, **kwargs):
         super(CliSender, self).__init__(*args, **kwargs)
 

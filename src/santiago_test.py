@@ -129,9 +129,9 @@ if __name__ == "__main__":
                              service + "-monitor" : [url + "/freedombuddy"] } }
     else:
         hosting = consuming = None
-
+    santiago.debug_log("Santiago!")
     freedombuddy = santiago.Santiago(listeners, senders, hosting, consuming,
-                                     me=mykey, monitors=monitors,
+                                     my_key_id=mykey, monitors=monitors,
                                      save_dir="../data",
                                      force_sender=force_sender)
 

@@ -28,10 +28,13 @@ class RevokedKey(unittest.TestCase):
     """
 
     def setUp(self):
+        valid = '../data/test_revoked_keys/test_revoked_then_valid_keys/'
+        revoked = '../data/test_revoked_keys/test_still_revoked_keys/'
+        revoked_config = '../data/test_revoked_keys/test_revoked_then_valid.cfg'
         self.iterations = 3
-        self.gpg_expired_then_valid = gnupg.GPG(gnupghome='../data/test_revoked_keys/test_revoked_then_valid_keys/')
-        self.gpg_expired = gnupg.GPG(gnupghome='../data/test_revoked_keys/test_still_revoked_keys/')
-        self.config = utilities.load_config('../data/test_revoked_keys/test_revoked_then_valid.cfg')
+        self.gpg_expired_then_valid = gnupg.GPG(gnupghome=valid)
+        self.gpg_expired = gnupg.GPG(gnupghome=revoked)
+        self.config = utilities.load_config(revoked_config)
 
 class RevokedKeyTest(RevokedKey):
     """Confirm that data signed with expired keys is not decrypted"""
@@ -39,7 +42,8 @@ class RevokedKeyTest(RevokedKey):
     def setUp(self):
         super(RevokedKeyTest, self).setUp()
 
-        self.key_id = utilities.safe_load(self.config, "pgpprocessor", "keyid", 0)
+        self.key_id = utilities.safe_load(self.config, "pgpprocessor", 
+                                          "keyid", 0)
         self.messages = utilities.multi_sign(
             gpg = self.gpg_expired_then_valid,
             iterations = self.iterations,
@@ -49,7 +53,8 @@ class RevokedKeyTest(RevokedKey):
                                                 self.gpg_expired)
 
     def test_unwrap_fails_when_message_signed_by_revoked_key(self):
-        """Should fail as invalid signature as the key the data was signed with is revoked in gpg"""
+        """Should fail as invalid signature as the key the data was signed 
+        with is revoked in gpg"""
 
         self.assertRaises(InvalidSignatureError, self.unwrapper.next)
 
@@ -59,7 +64,8 @@ class ValidSubKeyButRevokedSuperKeyTest(RevokedKey):
     def setUp(self):
         super(ValidSubKeyButRevokedSuperKeyTest, self).setUp()
 
-        self.key_id = utilities.safe_load(self.config, "pgpprocessor", "sub_keyid", 0)
+        self.key_id = utilities.safe_load(self.config, "pgpprocessor", 
+                                          "sub_keyid", 0)
         self.messages = utilities.multi_sign(
             gpg = self.gpg_expired_then_valid,
             iterations = self.iterations,
@@ -68,21 +74,29 @@ class ValidSubKeyButRevokedSuperKeyTest(RevokedKey):
         self.unwrapper = pgpprocessor.Unwrapper(self.messages[-1],
                                                 self.gpg_expired)
 
-    def test_unwrap_fails_when_message_signed_by_valid_sub_key_but_revoked_super_key(self):
-        """Should fail as invalid signature as the super key the data was signed with is revoked in gpg"""
+    def test_message_failure_signed_by_valid_sub_key_but_revoked_key(self):
+        """Should fail as invalid signature as the super key the data was 
+        signed with is revoked in gpg"""
 
         self.assertRaises(InvalidSignatureError, self.unwrapper.next)
 
 class ExpiredKey(unittest.TestCase):
-    """self.gpg_expired_then_valid should have valid key {455D3FB8823783253D804B218E42A4A8F15A9174} and valid key {E68BE6A2E5B52E7DD0BED889CE1405033F743EB9} - YES
-       self.gpg_expired should have valid key {E68BE6A2E5B52E7DD0BED889CE1405033F743EB9} and expired public key for {455D3FB8823783253D804B218E42A4A8F15A9174} - YES
+    """self.gpg_expired_then_valid should have 
+    valid key {455D3FB8823783253D804B218E42A4A8F15A9174} and 
+    valid key {E68BE6A2E5B52E7DD0BED889CE1405033F743EB9}
+    self.gpg_expired should have 
+    valid key {E68BE6A2E5B52E7DD0BED889CE1405033F743EB9} and 
+    expired public key for {455D3FB8823783253D804B218E42A4A8F15A9174}
     """
 
     def setUp(self):
+        valid = '../data/test_expired_keys/test_expired_then_valid_keys/'
+        expired = '../data/test_expired_keys/test_still_expired_keys/'
+        expired_config = '../data/test_expired_keys/test_expired_then_valid.cfg'
         self.iterations = 3
-        self.gpg_expired_then_valid = gnupg.GPG(gnupghome='../data/test_expired_keys/test_expired_then_valid_keys/')
-        self.gpg_expired = gnupg.GPG(gnupghome='../data/test_expired_keys/test_still_expired_keys/')
-        self.config = utilities.load_config('../data/test_expired_keys/test_expired_then_valid.cfg')
+        self.gpg_expired_then_valid = gnupg.GPG(gnupghome=valid)
+        self.gpg_expired = gnupg.GPG(gnupghome=expired)
+        self.config = utilities.load_config(expired_config)
 
 class ValidSubKeyButExpiredSuperKeyTest(ExpiredKey):
     """Confirm that data signed with expired keys is not decrypted"""
@@ -90,7 +104,8 @@ class ValidSubKeyButExpiredSuperKeyTest(ExpiredKey):
     def setUp(self):
         super(ValidSubKeyButExpiredSuperKeyTest, self).setUp()
 
-        self.key_id = utilities.safe_load(self.config, "pgpprocessor", "sub_keyid", 0)
+        self.key_id = utilities.safe_load(self.config, "pgpprocessor", 
+                                          "sub_keyid", 0)
         self.messages = utilities.multi_sign(
             gpg = self.gpg_expired_then_valid,
             iterations = self.iterations,
@@ -99,8 +114,9 @@ class ValidSubKeyButExpiredSuperKeyTest(ExpiredKey):
         self.unwrapper = pgpprocessor.Unwrapper(self.messages[-1],
                                                 self.gpg_expired)
 
-    def test_unwrap_fails_when_message_signed_by_valid_sub_key_but_expired_super_key(self):
-        """Should fail as invalid signature as the super key the data was signed with is expired in gpg"""
+    def test_message_failure_signed_by_valid_sub_key_but_expired_key(self):
+        """Should fail as invalid signature as the super key the data was 
+        signed with is expired in gpg"""
 
         self.assertRaises(InvalidSignatureError, self.unwrapper.next)
 
@@ -110,7 +126,8 @@ class ExpiredKeyTest(ExpiredKey):
     def setUp(self):
         super(ExpiredKeyTest, self).setUp()
 
-        self.key_id = utilities.safe_load(self.config, "pgpprocessor", "keyid", 0)
+        self.key_id = utilities.safe_load(self.config, "pgpprocessor", 
+                                          "keyid", 0)
         self.messages = utilities.multi_sign(
             gpg = self.gpg_expired_then_valid,
             iterations = self.iterations,
@@ -120,7 +137,8 @@ class ExpiredKeyTest(ExpiredKey):
                                                 self.gpg_expired)
 
     def test_unwrap_fails_when_message_signed_by_expired_key(self):
-        """Should fail as invalid signature as the key the data was signed with is expired in gpg"""
+        """Should fail as invalid signature as the key the data was signed 
+        with is expired in gpg"""
 
         self.assertRaises(InvalidSignatureError, self.unwrapper.next)
 
@@ -137,8 +155,8 @@ class MessageWrapper(unittest.TestCase):
 
         self.iterations = 3
         self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
-	config = utilities.load_config()
-    	self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
+        config = utilities.load_config()
+        self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
         self.messages = utilities.multi_sign(
             gpg = self.gpg,
             iterations = self.iterations,
@@ -166,19 +184,19 @@ class UnwrapperTest(MessageWrapper):
         self.unwrapper.footer = "test_footer"
         self.unwrapper.end = "test_end"
         self.unwrapper.gpg_data = "test_gpg_data"
-        self.assertEqual(self.unwrapper.body,"test_body")
-        self.assertEqual(self.unwrapper.start,"test_start")
-        self.assertEqual(self.unwrapper.header,"test_header")
-        self.assertEqual(self.unwrapper.footer,"test_footer")
-        self.assertEqual(self.unwrapper.end,"test_end")
-        self.assertEqual(self.unwrapper.gpg_data,"test_gpg_data")
+        self.assertEqual(self.unwrapper.body, "test_body")
+        self.assertEqual(self.unwrapper.start, "test_start")
+        self.assertEqual(self.unwrapper.header, "test_header")
+        self.assertEqual(self.unwrapper.footer, "test_footer")
+        self.assertEqual(self.unwrapper.end, "test_end")
+        self.assertEqual(self.unwrapper.gpg_data, "test_gpg_data")
         self.unwrapper.reset_fields()
-        self.assertEqual(self.unwrapper.body,[])
-        self.assertEqual(self.unwrapper.start,[])
-        self.assertEqual(self.unwrapper.header,[])
-        self.assertEqual(self.unwrapper.footer,[])
-        self.assertEqual(self.unwrapper.end,[])
-        self.assertEqual(self.unwrapper.gpg_data,None)
+        self.assertEqual(self.unwrapper.body, [])
+        self.assertEqual(self.unwrapper.start, [])
+        self.assertEqual(self.unwrapper.header, [])
+        self.assertEqual(self.unwrapper.footer, [])
+        self.assertEqual(self.unwrapper.end, [])
+        self.assertEqual(self.unwrapper.gpg_data, None)
 
     def test_unwrap_all_messages(self):
         """Do we unwrap the right number of messages?"""

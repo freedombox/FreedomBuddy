@@ -21,8 +21,8 @@ class OutgoingRequest(unittest.TestCase):
         self.gpg = gnupg.GPG(use_agent = True)
         self.request = gpg.encrypt(json.dumps(
                 { "host": 1, "client": 2,
-                  "service": 3, "locations": [4]
-                  "reply_to": [5]
+                  "service": 3, "locations": [4],
+                  "reply_to": [5],
                   "request_version": 1,
                   "reply_versions": [1],}),
                                    host, sign=self.me)
