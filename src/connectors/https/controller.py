@@ -26,12 +26,12 @@ import santiago
 
 
 COMMAND_LINE = "python connectors/cli/controller.py"
-def command(aCommand):
+def command(a_command):
     """Pass the request to the command line client and unwrap the reply."""
 
-    myCommand = shlex.split(COMMAND_LINE + " " + aCommand)
-    x = subprocess.Popen(myCommand, stdout=subprocess.PIPE)
-    stdout = x.communicate()[0]
+    my_command = shlex.split(COMMAND_LINE + " " + a_command)
+    x_process = subprocess.Popen(my_command, stdout=subprocess.PIPE)
+    stdout = x_process.communicate()[0]
 
     try:
         jsonstr = str(json.loads(stdout))
@@ -93,7 +93,7 @@ def stop(*args, **kwargs):
 
 
 class HttpsListener(santiago.SantiagoListener):
-
+    """The HTTPS interface FBuddy Listener."""
     def __init__(self, socket_port=0,
                  ssl_certificate="", ssl_private_key="",
                  *args, **kwargs):
@@ -106,11 +106,11 @@ class HttpsListener(santiago.SantiagoListener):
         cherrypy.server.ssl_certificate = ssl_certificate
         cherrypy.server.ssl_private_key = ssl_private_key
 
-        d = cherrypy.dispatch.RoutesDispatcher()
-        d.connect("index", "/", self.index)
+        dispatch = cherrypy.dispatch.RoutesDispatcher()
+        dispatch.connect("index", "/", self.index)
 
         cherrypy.tree.mount(cherrypy.Application(self), "",
-                            {"/": {"request.dispatch": d}})
+                            {"/": {"request.dispatch": dispatch}})
 
         santiago.debug_log("Listener Created.")
 
@@ -126,11 +126,11 @@ class HttpsListener(santiago.SantiagoListener):
             kwargs = urlparse.parse_qs(body)
 
             command("--request {0}".format(pipes.quote(kwargs["request"][0])))
-        except Exception as e:
-            logging.exception(e)
+        except Exception as error:
+            logging.exception(error)
 
 class HttpsSender(santiago.SantiagoSender):
-
+    """The HTTPS sender for FBuddy."""
     def __init__(self,
                  proxy_type = socks.PROXY_TYPE_SOCKS5,
                  proxy_host = "",
@@ -179,7 +179,7 @@ class HttpsSender(santiago.SantiagoSender):
             connection.close()
 
 class HttpsMonitor(santiago.SantiagoMonitor):
-
+    """The HTTPS FBuddy Monitor."""
     def __init__(self, socket_port=0,
                  ssl_certificate="", ssl_private_key="",
                  *args, **kwargs):
@@ -193,9 +193,9 @@ class HttpsMonitor(santiago.SantiagoMonitor):
         cherrypy.server.ssl_private_key = ssl_private_key
 
         try:
-            d = cherrypy.tree.apps[""].config["/"]["request.dispatch"]
+            dispatch = cherrypy.tree.apps[""].config["/"]["request.dispatch"]
         except KeyError:
-            d = cherrypy.dispatch.RoutesDispatcher()
+            dispatch = cherrypy.dispatch.RoutesDispatcher()
 
         root = HttpRoot(self.santiago)
 
@@ -212,9 +212,9 @@ class HttpsMonitor(santiago.SantiagoMonitor):
             )
 
         for location, handler in routing_pairs:
-            HttpsMonitor.rest_connect(d, location, handler)
+            HttpsMonitor.rest_connect(dispatch, location, handler)
 
-        cherrypy.tree.mount(root, "", {"/": {"request.dispatch": d}})
+        cherrypy.tree.mount(root, "", {"/": {"request.dispatch": dispatch}})
 
         santiago.debug_log("Monitor Created.")
 
@@ -231,7 +231,8 @@ class HttpsMonitor(santiago.SantiagoMonitor):
         for place in location:
             for a_method in ("PUT", "GET", "POST", "DELETE"):
                 dispatcher.connect(controller.__class__.__name__ + a_method,
-                                   place, controller=controller, action=a_method,
+                                   place, controller=controller, 
+                                   action=a_method,
                                    conditions={ "method": [a_method] })
 
         return dispatcher
@@ -240,7 +241,8 @@ class MonitorUtilities(object):
     """Utilities for the HTTP monitors."""
 
     # FIXME filter input and escape output properly.
-    # FIXME This input shows evidence of vulnerability: <SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>
+    # FIXME This input shows evidence of vulnerability: 
+    # <SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>
     # FIXME build tests for this.
     # FIXME change page headers based on encoding.
 
@@ -265,6 +267,7 @@ class MonitorUtilities(object):
         return query
 
     def respond(self, template, values, encoding="html"):
+        """Retrieve template based on values"""
         try:
             query = self._parse_query(cherrypy.request.query_string)
         except (ValueError, TypeError, NameError):
@@ -277,7 +280,7 @@ class MonitorUtilities(object):
                 pass
 
         try:
-            mySearchList = [dict(values)]
+            my_search_list = [dict(values)]
         except TypeError:
             raise cherrypy.HTTPError(500, "No values.")
         # return page content only if no errors.
@@ -285,7 +288,7 @@ class MonitorUtilities(object):
                     file="/".join((self.relative_path, encoding,
                                    os.environ["LANG"].split("_")[0],
                                    template)),
-                    searchList=mySearchList))]
+                    searchList=my_search_list))]
 
 class HttpRoot(santiago.SantiagoMonitor, MonitorUtilities):
     """Present the user with the basic actions:
@@ -297,6 +300,7 @@ class HttpRoot(santiago.SantiagoMonitor, MonitorUtilities):
     """
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
+        """Return root template"""
         return self.respond("root.tmpl", {})
 
 class HttpStop(santiago.Stop, MonitorUtilities):
@@ -304,6 +308,7 @@ class HttpStop(santiago.Stop, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def POST(self, **kwargs):
+        """Stop the service."""
         command("--stop")
         raise cherrypy.HTTPRedirect("/freedombuddy")
 
@@ -315,6 +320,7 @@ class HttpQuery(santiago.Query, MonitorUtilities):
     """
     @cherrypy.tools.ip_filter()
     def POST(self, host, service):
+        """Query the FBuddy"""
         command("--query --key {0} --service {1}".format(host, service))
         raise cherrypy.HTTPRedirect("/consuming/%s/%s" % (host, service))
 
@@ -323,7 +329,7 @@ class HttpHosting(santiago.Hosting, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
-
+        """Return hosting template"""
         return self.respond(
             "hosting.tmpl",
             command("--action list --hosting"),
@@ -331,6 +337,7 @@ class HttpHosting(santiago.Hosting, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def POST(self, put="", delete="", **kwargs):
+        """Add/Delete a hosting client"""
         if put:
             self.PUT(put)
         elif delete:
@@ -338,10 +345,12 @@ class HttpHosting(santiago.Hosting, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, client, **kwargs):
+        """Add a hosting client"""
         command("--action add --hosting --key {0}".format(client))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, client):
+        """Delete a hosting client"""
         command("--action remove --hosting --key {0}".format(client))
 
 class HttpHostedClient(santiago.HostedClient, MonitorUtilities):
@@ -349,6 +358,7 @@ class HttpHostedClient(santiago.HostedClient, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def GET(self, client, **kwargs):
+        """Return hosted client template"""
         return self.respond(
             "hostedClient.tmpl",
             command("--action list --hosting --key {0}".format(client)),
@@ -356,6 +366,7 @@ class HttpHostedClient(santiago.HostedClient, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def POST(self, client="", put="", delete="", **kwargs):
+        """Add/Delete a hosted client service"""
         if put:
             self.PUT(client, put)
         elif delete:
@@ -365,11 +376,13 @@ class HttpHostedClient(santiago.HostedClient, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, client, service):
+        """Add a hosted client service"""
         command("--action add --hosting --key {0} --service {1}".format(
                 client, service))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, client, service):
+        """Delete a hosted client service"""
         command("--action remove --hosting --key {0} --service {1}".format(
                 client, service))
 
@@ -378,6 +391,7 @@ class HttpHostedService(santiago.HostedService, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def GET(self, client, service, **kwargs):
+        """Return hosted client locations template"""
         return self.respond(
             "hostedService.tmpl",
             command("--action list --hosting --key {0} --service {1}".format(
@@ -386,6 +400,7 @@ class HttpHostedService(santiago.HostedService, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def POST(self, client="", service="", put="", delete="", **kwargs):
+        """Add/Delete a hosted client location"""
         if put:
             self.PUT(client, service, put)
         elif delete:
@@ -395,11 +410,13 @@ class HttpHostedService(santiago.HostedService, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, client, service, location, **kwargs):
+        """Add a hosted client service"""
         command(("--action add --hosting --key {0} --service {1}" +
                  " --location {2}").format(client, service, location)),
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, client, service, location, **kwargs):
+        """Delete a hosted client service"""
         command(("--action remove --hosting --key {0} --service {1}" +
                  " --location {2}").format(client, service, location)),
 
@@ -408,6 +425,7 @@ class HttpConsuming(santiago.Consuming, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def GET(self, **kwargs):
+        """Return consuming template"""
         return self.respond(
             "consuming.tmpl",
             command("--action list --consuming"),
@@ -415,6 +433,7 @@ class HttpConsuming(santiago.Consuming, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def POST(self, put="", delete="", **kwargs):
+        """Add/Delete a consuming client"""
         if put:
             self.PUT(put)
         elif delete:
@@ -424,10 +443,12 @@ class HttpConsuming(santiago.Consuming, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, host, **kwargs):
+        """Add a consuming client"""
         command("--action add --consuming --key {0}".format(host))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, host, **kwargs):
+        """Delete a consuming client"""
         command("--action remove --consuming --key {0}".format(host))
 
 class HttpConsumedHost(santiago.ConsumedHost, MonitorUtilities):
@@ -435,6 +456,7 @@ class HttpConsumedHost(santiago.ConsumedHost, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def GET(self, host, **kwargs):
+        """Return Consumed host template"""
         return self.respond(
             "consumedHost.tmpl",
             command("--action list --consuming --key {0}".format(host)),
@@ -442,6 +464,7 @@ class HttpConsumedHost(santiago.ConsumedHost, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def POST(self, host="", put="", delete="", **kwargs):
+        """Add/Delete a consuming host"""
         if put:
             self.PUT(host, put)
         elif delete:
@@ -451,11 +474,13 @@ class HttpConsumedHost(santiago.ConsumedHost, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, host, service, **kwargs):
+        """Add a consuming host"""
         command("--action add --consuming --key {0} --service {1}".format(
                 host, service))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, host, service, **kwargs):
+        """Delete a consuming host"""
         command("--action remove --consuming --key {0} --service {1}".format(
                 host, service))
 
@@ -464,6 +489,7 @@ class HttpConsumedService(santiago.ConsumedService, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def GET(self, host, service, **kwargs):
+        """Return consumed host locations template"""
         return self.respond(
             "consumedService.tmpl",
             command("--action list --consuming --key {0} --service {1}".format(
@@ -472,6 +498,7 @@ class HttpConsumedService(santiago.ConsumedService, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def POST(self, host="", service="", put="", delete="", **kwargs):
+        """Add/Delete a location for a consuming host service"""
         if put:
             self.PUT(host, service, put)
         elif delete:
@@ -481,11 +508,13 @@ class HttpConsumedService(santiago.ConsumedService, MonitorUtilities):
 
     @cherrypy.tools.ip_filter()
     def PUT(self, host, service, location, **kwargs):
+        """Add a location for a consuming host service"""
         command(("--action add --consuming --key {0} --service {1}" +
                  " --location {2}").format(host, service, location))
 
     @cherrypy.tools.ip_filter()
     def DELETE(self, host, service, location, **kwargs):
+        """Delete a location for a consuming host service"""
         command(("--action remove --consuming --key {0} --service {1}" +
                  " --location {2}").format(host, service, location))
 
@@ -506,7 +535,7 @@ def interpret_args(args, parser):
 
 if __name__ == "__main__":
     parser = OptionParser()
-    (options, args) = interpret_args(sys.argv[1:], parser)
+    (options, args_local) = interpret_args(sys.argv[1:], parser)
     port = 8080
     cert = "../data/freedombuddy.crt"
     key = "../data/freedombuddy.crt"

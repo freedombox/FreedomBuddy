@@ -1,7 +1,6 @@
 #! /usr/bin/env python # -*- mode: auto-fill; fill-column: 80 -*-
-from pprint import pprint
+"""Collection of tests for GPG functions"""
 import gnupg
-import santiago
 import utilities
 import unittest
 
@@ -16,8 +15,8 @@ class GnuPGWrapper(unittest.TestCase):
     """
     def setUp(self):
 
-        self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
-        config = utilities.load_config()
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        config = utilities.load_config("data/test.cfg")
         self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
         self.recipient = "joe@foo.bar"
         self.message = {'lol': 'cats'}
@@ -29,19 +28,20 @@ class CryptionTest(GnuPGWrapper):
         super(CryptionTest, self).setUp()
 
     def test_encrypt_then_decrypt(self):
-
+        """Confirm data is equal after encrypt/decrypt"""
     	#Encrypt data
-    	encrypted_data = self.gpg.encrypt(str(self.message), self.recipient)
-    	#Decrypt data
-    	decrypted_data = self.gpg.decrypt(str(encrypted_data))
-    	#Test decrypted is same as original
-    	self.assertEqual(str(self.message), str(decrypted_data))
+        encrypted_data = self.gpg.encrypt(str(self.message), self.recipient)
+        #Decrypt data
+        decrypted_data = self.gpg.decrypt(str(encrypted_data))
+        #Test decrypted is same as original
+        self.assertEqual(str(self.message), str(decrypted_data))
 
     def test_sign_then_verify(self):
-    	signed = self.gpg.sign(str(self.message),keyid=self.key_id)
-	verified = self.gpg.verify(str(signed.data))
-	self.assertEqual(verified.fingerprint,self.key_id)
-	self.assertEqual(True,verified.valid)
+        """Confirm data is signed & verified correctly"""
+        signed = self.gpg.sign(str(self.message), keyid=self.key_id)
+        verified = self.gpg.verify(str(signed.data))
+        self.assertEqual(verified.fingerprint, self.key_id)
+        self.assertEqual(True, verified.valid)
 
 if __name__ == "__main__":
     unittest.main()

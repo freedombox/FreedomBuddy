@@ -11,7 +11,7 @@
   is already and implicitly handled by errors raised in python-gnupg.  However,
   there should be tests that verify how FBuddy handles those cases.
 
-* Fixes [0/4]
+* Fixes [4/4]
 
   Bail out in error conditions.  Make sure super-keys and sub-keys are handled
   appropriately: if the super-key is expired or revoked, the sub-key should also
@@ -36,9 +36,9 @@
 
 * Metadata
   :PROPERTIES:
-  :Status:   Incomplete
+  :Status:   Complete
   :Priority: 0
-  :Owner:    Nick Daly
+  :Owner:    Tom Galloway
   :Description: Handling Bad Keys
   :Tags: security
   :END:
