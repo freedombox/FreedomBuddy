@@ -432,7 +432,7 @@ class OutgoingRequest(SantiagoTest):
 class CreateHosting(SantiagoTest):
     """Are clients, services, and locations learned correctly?
 
-    Each should be available in ``self.hosting`` after it's learned.
+    Each should be available in ``self.hosting`` after it has been learned.
 
     """
     def setUp(self):
@@ -449,19 +449,19 @@ class CreateHosting(SantiagoTest):
     def test_add_hosting_client(self):
         """Confirm client is added to hosting list"""
         self.assertNotIn(self.client, self.santiago.hosting)
-        self.santiago.create_client_or_host("Hosting",self.client)
+        self.santiago.create_client_or_host("Hosting", self.client)
         self.assertIn(self.client, self.santiago.hosting)
 
     def test_add_hosting_service(self):
         """Confirm service is added to hosting list"""
         self.assertNotIn(self.client, self.santiago.hosting)
-        self.santiago.create_hosting_service(self.client, self.service)
+        self.santiago.create_service("Hosting", self.client, self.service)
         self.assertIn(self.service, self.santiago.hosting[self.client])
 
     def test_add_hosting_location(self):
         """Confirm location is added to hosting list"""
         self.assertNotIn(self.client, self.santiago.hosting)
-        self.santiago.create_hosting_location(self.client, self.service,
+        self.santiago.create_location("Hosting", self.client, self.service,
                                               [self.location])
         self.assertIn(self.location,
                         self.santiago.hosting[self.client][self.service])
@@ -492,14 +492,15 @@ class CreateConsuming(SantiagoTest):
     def test_add_consuming_service(self):
         """Confirm service is added to consuming list"""
         self.assertNotIn(self.host, self.santiago.consuming)
-        self.santiago.create_consuming_service(self.host, self.service)
+        self.santiago.create_service("Consuming", self.host, self.service)
 
         self.assertIn(self.service, self.santiago.consuming[self.host])
 
     def test_add_consuming_location(self):
         """Confirm location is added to consuming list"""
         self.assertNotIn(self.host, self.santiago.consuming)
-        self.santiago.create_consuming_location(self.host, self.service,
+        self.santiago.create_location("Consuming", self.host, 
+                                                 self.service,
                                                 [self.location])
 
         self.assertIn(self.location,
