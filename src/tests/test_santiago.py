@@ -11,7 +11,7 @@ import gnupg
 import json
 import logging
 from optparse import OptionParser
-import santiago, santiago_test
+import santiago
 import utilities
 
 
@@ -91,9 +91,9 @@ class UnpackRequest(SantiagoTest):
     def setUp(self):
         """Create a request."""
 
-        self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
 
-        self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
                                           gpg = self.gpg)
 
@@ -256,8 +256,8 @@ class HandleRequest(SantiagoTest):
         overridden to record that the method is called.
 
         """
-        self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
-        self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
@@ -354,7 +354,7 @@ class OutgoingRequest(SantiagoTest):
 
         def __init__(self):
             self.destination = self.crypt = self.request = None
-            self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
+            self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
 
         def outgoing_request(self, request, destination):
             """Decrypt and record the pertinent details about the request."""
@@ -365,8 +365,8 @@ class OutgoingRequest(SantiagoTest):
 
     def setUp(self):
         """Create an encryptable request."""
-        self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
-        self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             my_key_id = self.keyid,
@@ -436,8 +436,8 @@ class CreateHosting(SantiagoTest):
 
     """
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
-        self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
                                           gpg = self.gpg)
@@ -448,16 +448,19 @@ class CreateHosting(SantiagoTest):
 
     def test_add_hosting_client(self):
         """Confirm client is added to hosting list"""
-        self.santiago.create_hosting_client(self.client)
+        self.assertNotIn(self.client, self.santiago.hosting)
+        self.santiago.create_client_or_host("Hosting",self.client)
         self.assertIn(self.client, self.santiago.hosting)
 
     def test_add_hosting_service(self):
         """Confirm service is added to hosting list"""
+        self.assertNotIn(self.client, self.santiago.hosting)
         self.santiago.create_hosting_service(self.client, self.service)
         self.assertIn(self.service, self.santiago.hosting[self.client])
 
     def test_add_hosting_location(self):
         """Confirm location is added to hosting list"""
+        self.assertNotIn(self.client, self.santiago.hosting)
         self.santiago.create_hosting_location(self.client, self.service,
                                               [self.location])
         self.assertIn(self.location,
@@ -470,8 +473,8 @@ class CreateConsuming(SantiagoTest):
 
     """
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='../data/test_gpg_home')
-        self.keyid = utilities.load_config().get("pgpprocessor", "keyid")
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(my_key_id = self.keyid, gpg=self.gpg)
 
@@ -481,18 +484,21 @@ class CreateConsuming(SantiagoTest):
 
     def test_add_consuming_host(self):
         """Confirm host is added to consuming list"""
-        self.santiago.create_consuming_host(self.host)
+        self.assertNotIn(self.host, self.santiago.consuming)
+        self.santiago.create_client_or_host("Consuming",self.host)
 
         self.assertIn(self.host, self.santiago.consuming)
 
     def test_add_consuming_service(self):
         """Confirm service is added to consuming list"""
+        self.assertNotIn(self.host, self.santiago.consuming)
         self.santiago.create_consuming_service(self.host, self.service)
 
         self.assertIn(self.service, self.santiago.consuming[self.host])
 
     def test_add_consuming_location(self):
         """Confirm location is added to consuming list"""
+        self.assertNotIn(self.host, self.santiago.consuming)
         self.santiago.create_consuming_location(self.host, self.service,
                                                 [self.location])
 
@@ -514,27 +520,28 @@ class ArgumentTests(SantiagoTest):
 
         url = "sharky_with_angry_hats"
         service = "omg its a fake service name, haha."
-        gpg_to_use = gnupg.GPG(gnupghome='../data/test_gpg_home')
+        gpg_to_use = gnupg.GPG(gnupghome='data/test_gpg_home')
 
-        options = OptionParser()
-        options.config = "../data/test.cfg"
+        configfile = "data/test.cfg"
 
-        (keyid, protocols, connectors, force_sender) = santiago_test.load_config(
-            options)
+        config = utilities.load_config(configfile)
 
-        listeners, senders, monitors = santiago_test.configure_connectors(
+        (keyid, protocols, connectors, force_sender) = utilities.get_config_values(
+            config)
+
+        listeners, senders, monitors = utilities.configure_connectors(
             protocols, connectors)
 
         hosting = { keyid: { service: [url] } }
         consuming = { keyid: { service: [url] } }
 
         freedombuddy = santiago.Santiago(hosting=hosting, consuming=consuming,
-                                         save_dir='../data/test_gpg_home',
+                                         save_dir='data/test_gpg_home',
                                          my_key_id=keyid, gpg=gpg_to_use)
 
         self.cycle(freedombuddy)
         freedombuddy1 = santiago.Santiago(my_key_id=keyid, gpg=gpg_to_use,
-                                          save_dir='../data/test_gpg_home')
+                                          save_dir='data/test_gpg_home')
 
         self.assertIn(service, freedombuddy1.hosting[keyid])
         self.assertIn(service, freedombuddy1.consuming[keyid])
@@ -551,15 +558,16 @@ class ArgumentTests(SantiagoTest):
         """
         url = "sharky_with_angry_hats"
         service = "omg its a fake service name, haha."
-        gpg_to_use = gnupg.GPG(gnupghome='../data/test_gpg_home')
+        gpg_to_use = gnupg.GPG(gnupghome='data/test_gpg_home')
 
-        options = OptionParser()
-        options.config = "../data/test.cfg"
+        configfile = "data/test.cfg"
 
-        (keyid, protocols, connectors, force_sender) = santiago_test.load_config(
-            options)
+        config = utilities.load_config(configfile)
 
-        listeners, senders, monitors = santiago_test.configure_connectors(
+        (keyid, protocols, connectors, force_sender) = utilities.get_config_values(
+            config)
+
+        listeners, senders, monitors = utilities.configure_connectors(
             protocols, connectors)
 
         hosting = { keyid: { service: [url] } }

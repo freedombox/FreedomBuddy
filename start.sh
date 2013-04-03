@@ -12,7 +12,7 @@ export PYTHONPATH
 if [ "$1" -eq "1" ]
 then
     # start santiago
-    python santiago_test.py "$@"
+    python santiago_run.py "$@"
 
 elif [ "$1" -eq "2" ]
 then
@@ -34,7 +34,7 @@ then
     # do EVERYTHING in multiple terminals.
 
     # start fbuddy + cli client
-    lxterm -e "python santiago_test.py" &
+    lxterm -e "python santiago_run.py" &
 
     # start https client
     lxterm -e "python connectors/https/controller.py --listen" &

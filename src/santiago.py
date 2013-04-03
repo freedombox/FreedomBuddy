@@ -328,11 +328,17 @@ class Santiago(object):
 
     # FIXME: unify create_hosting and create_consuming, to reduce redundancy.
 
-    def create_hosting_client(self, client):
-        """Create a hosting client if one doesn't currently exist."""
+    def create_client_or_host(self, list_type, client):
+        """Create a hosting client or consuming host if one doesn't currently exist."""
 
-        if client not in self.hosting:
-            self.hosting[client] = dict()
+        list = None
+        if list_type == "Hosting":
+            list = self.hosting
+        elif list_type == "Consuming":
+            list = self.consuming
+        if list != None:
+            if client not in list:
+                list[client] = dict()
 
     def create_hosting_service(self, client, service):
         """Create a hosting service if one doesn't currently exist.
@@ -340,7 +346,7 @@ class Santiago(object):
         Check that hosting client exists before trying to add service.
 
         """
-        self.create_hosting_client(client)
+        self.create_client_or_host("Hosting",client)
 
         if service not in self.hosting[client]:
             self.hosting[client][service] = list()
@@ -358,19 +364,13 @@ class Santiago(object):
             if location not in self.hosting[client][service]:
                 self.hosting[client][service].append(location)
 
-    def create_consuming_host(self, host):
-        """Create a consuming host if one doesn't currently exist."""
-
-        if host not in self.consuming:
-            self.consuming[host] = dict()
-
     def create_consuming_service(self, host, service):
         """Create a consuming service if one doesn't currently exist.
 
         Check that consuming host exists before trying to add service.
 
         """
-        self.create_consuming_host(host)
+        self.create_client_or_host("Consuming",host)
 
         if service not in self.consuming[host]:
             self.consuming[host][service] = list()
