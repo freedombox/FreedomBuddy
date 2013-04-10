@@ -34,10 +34,10 @@ if __name__ == "__main__":
         logging.getLogger("cherrypy.error").setLevel(logging.DEBUG)
 
     # load configuration settings
-    (mykey, protocols, connectors, force_sender) = load_config(options)
+    (mykey, protocols, connectors, force_sender) = utilities.load_config(options)
 
     # create listeners and senders
-    listeners, senders, monitors = configure_connectors(protocols, connectors)
+    listeners, senders, monitors = utilities.configure_connectors(protocols, connectors)
 
     # services to host and consume
     url = "https://localhost:8080"

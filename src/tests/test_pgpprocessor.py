@@ -142,6 +142,14 @@ class ExpiredKeyTest(ExpiredKey):
 
         self.assertRaises(InvalidSignatureError, self.unwrapper.next)
 
+class PGPProcessorSetupTests(unittest.TestCase):
+    """Does Santiago get created correctly?"""
+
+    def test_create_with_gpg_as_None(self):
+        """Ensure gpg is created when passed as None"""
+        test_processor = pgpprocessor.Unwrapper("hi", gpg=None)
+        self.assertIsInstance(test_processor.gpg, gnupg.GPG)
+
 class MessageWrapper(unittest.TestCase):
     """Basic setup for message-signing tests.
 
@@ -252,6 +260,11 @@ class UnwrapperTest(MessageWrapper):
             self.unwrapper.message, "-----END PGP SIGNATURE-----\n")
 
         self.assertRaises(StopIteration, self.unwrapper.next)
+
+    def test_invalid_message_type(self):
+        """Incorrect message type causes ValueError."""
+
+        self.assertRaises(ValueError, self.unwrapper.unwrap, "hi", "test_to_error")
 
 
 if __name__ == "__main__":

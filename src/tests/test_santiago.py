@@ -13,6 +13,7 @@ import logging
 from optparse import OptionParser
 import santiago
 import utilities
+import connectors.https.controller
 
 
 cherrypy.log.access_file = None
@@ -34,6 +35,77 @@ class SantiagoTest(unittest.TestCase):
             if item in container:
                 raise self.ContainsError("%s in %s" % (item, container))
 
+class SantiagoSetupTests(SantiagoTest):
+    """Does Santiago get created correctly?"""
+    """hosting=None, consuming=None, 
+                 my_key_id=0, reply_service=None,
+                 save_dir=".", save_services=True,
+                 gpg=None, force_sender=None, *args, **kwargs"""
+    def test_create_santiago_with_https_listener(self):
+        """Ensure listeners are set from variable in Santiago creator"""
+        self.santiago = santiago.Santiago(listeners={ "https": { "socket_port": 80 } })
+        self.assertIsInstance(self.santiago.listeners["https"],connectors.https.controller.HttpsListener)
+
+    def test_create_santiago_with_listeners_not_set(self):
+        """Ensure listeners are set if variable in Santiago creator is None"""
+        self.santiago = santiago.Santiago()
+        self.assertEqual(None, self.santiago.listeners)
+
+    def test_create_santiago_with_https_sender(self):
+        """Ensure listeners are set from variable in Santiago creator"""
+        self.santiago = santiago.Santiago(senders={ "https": { "proxy_host": 80 } })
+        self.assertIsInstance(self.santiago.senders["https"],connectors.https.controller.HttpsSender)
+
+    def test_create_santiago_with_senders_not_set(self):
+        """Ensure listeners are set if variable in Santiago creator is None"""
+        self.santiago = santiago.Santiago()
+        self.assertEqual(None, self.santiago.senders)
+
+    def test_create_santiago_with_https_monitor(self):
+        """Ensure listeners are set from variable in Santiago creator"""
+        self.santiago = santiago.Santiago(monitors={ "https": { "socket_port": 80 } })
+        self.assertIsInstance(self.santiago.monitors["https"],connectors.https.controller.HttpsMonitor)
+
+    def test_create_santiago_with_monitors_not_set(self):
+        """Ensure listeners are set if variable in Santiago creator is None"""
+        self.santiago = santiago.Santiago()
+        self.assertEqual(None, self.santiago.monitors)
+
+class IncomingRequest(SantiagoTest):
+    """Ensure Exceptions are hidden and that messages are passed to unpack_request correctly"""
+
+    def setUp(self):
+        """Create a request."""
+
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.santiago = santiago.Santiago(my_key_id = self.keyid, 
+                                          gpg = self.gpg)
+
+        self.request = { "host": self.keyid, "client": self.keyid,
+                         "service": santiago.Santiago.SERVICE_NAME, 
+                         "reply_to": [1], "locations": [1],
+                         "request_version": 1, "reply_versions": [1], }
+
+    def wrap_message(self, message):
+        """The standard wrapping method for these tests."""
+	
+        return str(self.gpg.encrypt(json.dumps(message),
+                                    recipients=[self.keyid],
+                                    sign=self.keyid))
+
+    def test_valid_request_list(self):
+        """A message that should pass does pass normally."""
+
+        self.request = self.wrap_message(self.request)
+
+        self.assertEqual(None, self.santiago.incoming_request(self.request))
+
+    def test_empty_request_list(self):
+        """A message that should pass does pass normally."""
+
+        self.assertEqual(None, self.santiago.incoming_request("test"))
 
 class UnpackRequest(SantiagoTest):
 
@@ -341,6 +413,57 @@ class HandleRequest(SantiagoTest):
         self.assertEqual(
             self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
             [1, 3])
+
+    def test_replace_consuming_location_when_no_location(self):
+        """Confirm location is added when location not there"""
+        self.santiago.consuming = {}
+
+        self.santiago.replace_consuming_location(self.keyid, [1, 3])
+
+        self.assertEqual(
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
+            [1, 3])
+
+    def test_get_host_locations_correctly(self):
+        """Return host locations when there are locations set"""
+        self.assertEqual([1], self.santiago.get_host_locations(self.keyid, santiago.Santiago.SERVICE_NAME))
+
+    def test_get_host_locations_with_incorrect_key(self):
+        """Error raised when passed an incorrect key."""
+        self.assertRaises(KeyError, self.santiago.get_host_locations("test", santiago.Santiago.SERVICE_NAME))
+
+    def test_get_host_services_correctly(self):
+        """Return host services when there are clients set"""
+        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1] }, self.santiago.get_host_services(self.keyid))
+
+    def test_get_host_services_with_incorrect_key(self):
+        """Error raised when passed an incorrect key."""
+        self.assertRaises(KeyError, self.santiago.get_host_services("test"))
+
+    def test_get_client_locations_correctly(self):
+        """Return client locations when there are locations set"""
+        self.assertEqual([1], self.santiago.get_client_locations(self.keyid, santiago.Santiago.SERVICE_NAME))
+
+    def test_get_client_locations_with_incorrect_key(self):
+        """Error raised when passed an incorrect key."""
+        self.assertRaises(KeyError, self.santiago.get_client_locations("test", santiago.Santiago.SERVICE_NAME))
+
+    def test_get_client_locations_correctly(self):
+        """Return client services when there are services set"""
+        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1] }, self.santiago.get_client_services(self.keyid))
+
+    def test_get_client_locations_with_incorrect_key(self):
+        """Error raised when passed an incorrect key."""
+        self.assertRaises(KeyError, self.santiago.get_client_services("test"))
+
+    def test_get_served_clients_correctly(self):
+        """Return client services when there are services set"""
+        self.assertEqual([self.keyid], self.santiago.get_served_clients(santiago.Santiago.SERVICE_NAME))
+
+    def test_get_served_clients_with_incorrect_service(self):
+        """Nothing returned when client not served."""
+        self.assertEqual([], self.santiago.get_served_clients("test"))
+
 
 class OutgoingRequest(SantiagoTest):
     """Are outgoing requests properly formed?

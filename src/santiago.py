@@ -141,7 +141,7 @@ class Santiago(object):
                                  str(self.my_key_id) + ".dat")
         self.hosting = hosting if hosting else self.load_data("hosting")
         self.consuming = consuming if consuming else self.load_data("consuming")
-
+    #FIXME: This should be in Utilities
     def create_connectors(self, data, connector_type):
         if data == None:
             return
@@ -149,7 +149,7 @@ class Santiago(object):
         self.connectors |= set(connectors.keys())
 
         return connectors
-
+    #FIXME: This should be in Utilities
     def _create_connectors(self, settings, connector):
         """Iterates through each connector given, creating connectors for all.
 
