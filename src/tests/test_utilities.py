@@ -21,7 +21,7 @@ class LoadConfig(unittest.TestCase):
     """
 
     def setUp(self):
-        self.config_to_use = 'data/test.cfg'
+        self.config_to_use = 'data/test_gpg.cfg'
 
     def test_confirm_config_loaded_from_correct_file(self):
         self.config = utilities.load_config(self.config_to_use)
@@ -36,7 +36,7 @@ class SafeLoad(unittest.TestCase):
     """
 
     def setUp(self):
-        self.config_to_use = 'data/test.cfg'
+        self.config_to_use = 'data/test_gpg.cfg'
 
     def test_correct_value_returned_from_config_file(self):
         self.config = utilities.load_config(self.config_to_use)

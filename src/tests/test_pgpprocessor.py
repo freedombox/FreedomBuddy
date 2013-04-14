@@ -167,7 +167,7 @@ class MessageWrapper(unittest.TestCase):
 
         self.iterations = 3
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        config = utilities.load_config("data/test.cfg")
+        config = utilities.load_config("data/test_gpg.cfg")
         self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
         self.messages = utilities.multi_sign(
             message = "hi",

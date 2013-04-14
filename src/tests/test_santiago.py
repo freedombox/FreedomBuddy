@@ -80,7 +80,7 @@ class IncomingRequest(SantiagoTest):
 
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
 
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
                                           gpg = self.gpg)
 
@@ -166,7 +166,7 @@ class UnpackRequest(SantiagoTest):
 
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
 
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
                                           gpg = self.gpg)
 
@@ -330,7 +330,7 @@ class HandleRequest(SantiagoTest):
 
         """
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
@@ -422,7 +422,7 @@ class HostingAndConsuming(SantiagoTest):
         """Do a good bit of setup to make this a nicer test-class.
         """
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
@@ -507,7 +507,7 @@ class OutgoingRequest(SantiagoTest):
     def setUp(self):
         """Create an encryptable request."""
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             my_key_id = self.keyid,
@@ -578,7 +578,7 @@ class CreateHosting(SantiagoTest):
     """
     def setUp(self):
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
                                           gpg = self.gpg)
@@ -615,7 +615,7 @@ class CreateConsuming(SantiagoTest):
     """
     def setUp(self):
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(my_key_id = self.keyid, gpg=self.gpg)
 
@@ -664,7 +664,7 @@ class ArgumentTests(SantiagoTest):
         service = "omg its a fake service name, haha."
         gpg_to_use = gnupg.GPG(gnupghome='data/test_gpg_home')
 
-        configfile = "data/test.cfg"
+        configfile = "data/test_gpg.cfg"
 
         config = utilities.load_config(configfile)
 
@@ -702,7 +702,7 @@ class ArgumentTests(SantiagoTest):
         service = "omg its a fake service name, haha."
         gpg_to_use = gnupg.GPG(gnupghome='data/test_gpg_home')
 
-        configfile = "data/test.cfg"
+        configfile = "data/test_gpg.cfg"
 
         config = utilities.load_config(configfile)
 
@@ -731,7 +731,7 @@ class Hosting(SantiagoTest):
 
     def setUp(self):
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
@@ -770,7 +770,7 @@ class HostedClient(SantiagoTest):
 
     def setUp(self):
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
@@ -825,7 +825,7 @@ class HostedService(SantiagoTest):
 
     def setUp(self):
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
@@ -884,7 +884,7 @@ class Consuming(SantiagoTest):
 
     def setUp(self):
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
@@ -923,7 +923,7 @@ class ConsumedHost(SantiagoTest):
 
     def setUp(self):
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
@@ -978,7 +978,7 @@ class ConsumedService(SantiagoTest):
 
     def setUp(self):
         self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
-        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        self.keyid = utilities.load_config("data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
