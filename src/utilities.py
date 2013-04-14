@@ -5,10 +5,9 @@ Currently contains a bunch of errors and config-file shortcuts.
 """
 
 import ConfigParser as configparser
-import gnupg
 from optparse import OptionParser
 
-def load_config(configfile="../data/test.cfg"):
+def load_config(configfile):
     """Returns data from the named config file."""
 
     config = configparser.ConfigParser()
@@ -59,15 +58,15 @@ def configure_connectors(protocols, connectors):
 
     return listeners, senders, monitors
 
-def multi_sign(message="hi", iterations=3, keyid=None, gpg=None):
+def multi_sign(message, gpg, keyid, iterations=3):
     """Sign a message several times with a specified key."""
 
     messages = [message]
 
     if not gpg:
-        gpg = gnupg.GPG(use_agent = True)
+        raise GPGNotSpecifiedError
     if not keyid:
-        keyid = load_config("data/test.cfg").get("pgpprocessor", "keyid")
+        raise GPGKeyNotSpecifiedError
 
     for i in range(iterations):
         messages.append(str(gpg.sign(messages[i], keyid=keyid)))
@@ -97,7 +96,7 @@ FreedomBuddy logging messages.  Twice means show connector logging messages as
 well.""")
 
     parser.add_option("-c", "--config", dest="config",
-                      default="../data/production.cfg",
+                      default="data/production.cfg",
                       help="""The configuration file to use.""")
 
     parser.add_option("-d", "--default-services", dest="default_services",
@@ -130,3 +129,14 @@ class UnwillingHostError(SignatureError):
     """The current process isn't willing to host a service for the client."""
 
     pass
+
+class GPGNotSpecifiedError(Exception):
+    """The gpg object should be explicitly created when FB is encrypting data"""
+
+    pass
+
+class GPGKeyNotSpecifiedError(Exception):
+    """The gpg object should be explicitly created when FB is encrypting data"""
+
+    pass
+

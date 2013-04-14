@@ -14,6 +14,7 @@ from optparse import OptionParser
 import santiago
 import utilities
 import connectors.https.controller
+from pprint import pprint
 
 
 cherrypy.log.access_file = None
@@ -414,6 +415,23 @@ class HandleRequest(SantiagoTest):
             self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
             [1, 3])
 
+class HostingAndConsuming(SantiagoTest):
+    """Process an incoming request, from a client, for to host services.
+    """
+    def setUp(self):
+        """Do a good bit of setup to make this a nicer test-class.
+        """
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+
+        self.santiago = santiago.Santiago(
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            my_key_id = self.keyid,
+	    gpg = self.gpg)
+
+
+
     def test_replace_consuming_location_when_no_location(self):
         """Confirm location is added when location not there"""
         self.santiago.consuming = {}
@@ -426,35 +444,35 @@ class HandleRequest(SantiagoTest):
 
     def test_get_host_locations_correctly(self):
         """Return host locations when there are locations set"""
-        self.assertEqual([1], self.santiago.get_host_locations(self.keyid, santiago.Santiago.SERVICE_NAME))
+        self.assertEqual([1], self.santiago.get_locations("Hosting", self.keyid, santiago.Santiago.SERVICE_NAME))
 
     def test_get_host_locations_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
-        self.assertRaises(KeyError, self.santiago.get_host_locations("test", santiago.Santiago.SERVICE_NAME))
+        self.assertRaises("r", self.santiago.get_locations("Hosting", "test", santiago.Santiago.SERVICE_NAME))
 
     def test_get_host_services_correctly(self):
         """Return host services when there are clients set"""
-        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1] }, self.santiago.get_host_services(self.keyid))
+        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1] }, self.santiago.get_services("Hosting", self.keyid))
 
     def test_get_host_services_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
-        self.assertRaises(KeyError, self.santiago.get_host_services("test"))
+        self.assertRaises(KeyError, self.santiago.get_services("Hosting", "test"))
 
     def test_get_client_locations_correctly(self):
         """Return client locations when there are locations set"""
-        self.assertEqual([1], self.santiago.get_client_locations(self.keyid, santiago.Santiago.SERVICE_NAME))
+        self.assertEqual([1], self.santiago.get_locations("Consuming", self.keyid, santiago.Santiago.SERVICE_NAME))
 
     def test_get_client_locations_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
-        self.assertRaises(KeyError, self.santiago.get_client_locations("test", santiago.Santiago.SERVICE_NAME))
+        self.assertRaises(KeyError, self.santiago.get_locations("Consuming", "test", santiago.Santiago.SERVICE_NAME))
 
-    def test_get_client_locations_correctly(self):
+    def test_get_client_services_correctly(self):
         """Return client services when there are services set"""
-        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1] }, self.santiago.get_client_services(self.keyid))
+        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1] }, self.santiago.get_services("Consuming", self.keyid))
 
-    def test_get_client_locations_with_incorrect_key(self):
+    def test_get_client_services_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
-        self.assertRaises(KeyError, self.santiago.get_client_services("test"))
+        self.assertRaises(KeyError, self.santiago.get_services("Consuming", "test"))
 
     def test_get_served_clients_correctly(self):
         """Return client services when there are services set"""
@@ -708,6 +726,311 @@ class ArgumentTests(SantiagoTest):
         self.assertNotIn(service, freedombuddy1.hosting)
         self.assertNotIn(service, freedombuddy1.consuming)
 
+class Hosting(SantiagoTest):
+    """Tests Hosting Rest interface."""
+
+    def setUp(self):
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+
+        self.santiago = santiago.Santiago(
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            my_key_id = self.keyid,
+            gpg = self.gpg)
+
+    def test_santiago_hosting_get(self):
+        hosting = santiago.Hosting(self.santiago)
+        self.assertEqual({'clients': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, hosting.get())
+
+    def test_santiago_hosting_put(self):
+        hosting = santiago.Hosting(self.santiago)
+        hosting.put("1")
+        self.assertEqual({'clients': ['1', '95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, hosting.get())
+
+    def test_santiago_hosting_delete_valid_client(self):
+        hosting = santiago.Hosting(self.santiago)
+        self.assertEqual({'clients': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, hosting.get())
+        hosting.delete("95801F1ABE01C28B05ADBE5FA7C860604DAE2628")
+        self.assertEqual({'clients': []}, hosting.get())
+
+    def test_santiago_hosting_delete_invalid_client(self):
+        hosting = santiago.Hosting(self.santiago)
+        self.assertEqual({'clients': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, hosting.get())
+        hosting.delete("1")
+        self.assertEqual({'clients': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, hosting.get())
+
+    def test_santiago_hosting_put_existing_client(self):
+        hosting = santiago.Hosting(self.santiago)
+        hosting.put("95801F1ABE01C28B05ADBE5FA7C860604DAE2628")
+        self.assertEqual({'clients': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, hosting.get())
+
+class HostedClient(SantiagoTest):
+    """Tests HostedClient Rest interface."""
+
+    def setUp(self):
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+
+        self.santiago = santiago.Santiago(
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            my_key_id = self.keyid,
+            gpg = self.gpg)
+
+    def test_santiago_hosted_client_get(self):
+        hostedClient = santiago.HostedClient(self.santiago)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+                         hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_hosted_client_get_with_invalid_client(self):
+        hostedClient = santiago.HostedClient(self.santiago)
+        self.assertEqual({'client': '1','services': None},
+                         hostedClient.get('1'))
+
+    def test_santiago_hosted_client_put(self):
+        hostedClient = santiago.HostedClient(self.santiago)
+        hostedClient.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2")
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2': [], santiago.Santiago.SERVICE_NAME: [1]}}, 
+                         hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_hosted_client_ensure_put_existing_service_does_not_overwrite_service(self):
+        hostedClient = santiago.HostedClient(self.santiago)
+        hostedClient.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+                         hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_hosted_client_delete(self):
+        hostedClient = santiago.HostedClient(self.santiago)
+        hostedClient.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {}}, 
+                         hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_hosted_client_delete_invalid_service(self):
+        hostedClient = santiago.HostedClient(self.santiago)
+        hostedClient.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628','2')
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+                         hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_hosted_client_delete_invalid_client_and_invalid_service(self):
+        hostedClient = santiago.HostedClient(self.santiago)
+        self.assertRaises(KeyError, hostedClient.delete,'2','2')
+
+    def test_santiago_hosted_client_delete_invalid_client_and_valid_service(self):
+        hostedClient = santiago.HostedClient(self.santiago)
+        self.assertRaises(KeyError, hostedClient.delete,'2',santiago.Santiago.SERVICE_NAME)
+
+class HostedService(SantiagoTest):
+    """Tests HostedClient Rest interface."""
+
+    def setUp(self):
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+
+        self.santiago = santiago.Santiago(
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            my_key_id = self.keyid,
+            gpg = self.gpg)
+
+    def test_santiago_hosted_service_get(self):
+        hostedService = santiago.HostedService(self.santiago)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1]}, 
+                         hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_hosted_service_get_with_incorrect_service(self):
+        hostedService = santiago.HostedService(self.santiago)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': '1', 'locations': None}, 
+                         hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '1'))
+
+    def test_santiago_hosted_service_put(self):
+        hostedService = santiago.HostedService(self.santiago)
+        hostedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2","3")
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': '2', 'locations': ['3']}, 
+                         hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2'))
+
+    def test_santiago_hosted_service_put_add_to_existing_service(self):
+        hostedService = santiago.HostedService(self.santiago)
+        hostedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME,3)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1,3]}, 
+                         hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_hosted_service_delete(self):
+        hostedService = santiago.HostedService(self.santiago)
+        hostedService.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME,1)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': []}, 
+                         hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_hosted_service_delete_invalid_location(self):
+        hostedService = santiago.HostedService(self.santiago)
+        hostedService.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME,2)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1]}, 
+                         hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_hosted_service_delete_invalid_service_and_invalid_location(self):
+        hostedService = santiago.HostedService(self.santiago)
+        hostedService.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2', 2)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1]}, 
+                         hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_hosted_service_delete_invalid_service_and_valid_location(self):
+        hostedService = santiago.HostedService(self.santiago)
+        hostedService.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2', 1)
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1]}, 
+                         hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+class Consuming(SantiagoTest):
+    """Tests Consuming Rest interface."""
+
+    def setUp(self):
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+
+        self.santiago = santiago.Santiago(
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            my_key_id = self.keyid,
+            gpg = self.gpg)
+
+    def test_santiago_consuming_get(self):
+        consuming = santiago.Consuming(self.santiago)
+        self.assertEqual({'hosts': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, consuming.get())
+
+    def test_santiago_consuming_put(self):
+        consuming = santiago.Consuming(self.santiago)
+        consuming.put("1")
+        self.assertEqual({'hosts': ['1', '95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, consuming.get())
+
+    def test_santiago_consuming_delete_valid_host(self):
+        consuming = santiago.Consuming(self.santiago)
+        self.assertEqual({'hosts': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, consuming.get())
+        consuming.delete("95801F1ABE01C28B05ADBE5FA7C860604DAE2628")
+        self.assertEqual({'hosts': []}, consuming.get())
+
+    def test_santiago_consuming_delete_invalid_host(self):
+        consuming = santiago.Consuming(self.santiago)
+        self.assertEqual({'hosts': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, consuming.get())
+        consuming.delete("1")
+        self.assertEqual({'hosts': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, consuming.get())
+
+    def test_santiago_consuming_put_existing_host(self):
+        consuming = santiago.Consuming(self.santiago)
+        consuming.put("95801F1ABE01C28B05ADBE5FA7C860604DAE2628")
+        self.assertEqual({'hosts': ['95801F1ABE01C28B05ADBE5FA7C860604DAE2628']}, consuming.get())
+
+class ConsumedHost(SantiagoTest):
+    """Tests ConsumedHost Rest interface."""
+
+    def setUp(self):
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+
+        self.santiago = santiago.Santiago(
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            my_key_id = self.keyid,
+            gpg = self.gpg)
+
+    def test_santiago_consumed_host_get(self):
+        consumedHost = santiago.ConsumedHost(self.santiago)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+                         consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_consumed_host_get_with_invalid_host(self):
+        consumedHost = santiago.ConsumedHost(self.santiago)
+        self.assertEqual({'host': '1','services': None},
+                         consumedHost.get('1'))
+
+    def test_santiago_consumed_host_put(self):
+        consumedHost = santiago.ConsumedHost(self.santiago)
+        consumedHost.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2")
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2': [], santiago.Santiago.SERVICE_NAME: [1]}}, 
+                         consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_consumed_host_ensure_put_existing_service_does_not_overwrite_service(self):
+        consumedHost = santiago.ConsumedHost(self.santiago)
+        consumedHost.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+                         consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_consumed_host_delete(self):
+        consumedHost = santiago.ConsumedHost(self.santiago)
+        consumedHost.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628', 'services': {}}, 
+                         consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_consumed_host_delete_invalid_service(self):
+        consumedHost = santiago.ConsumedHost(self.santiago)
+        consumedHost.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2')
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628', 'services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+                         consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
+
+    def test_santiago_consumed_host_delete_invalid_host_and_invalid_service(self):
+        consumedHost = santiago.ConsumedHost(self.santiago)
+        self.assertRaises(KeyError, consumedHost.delete,'2', '2')
+
+    def test_santiago_consumed_host_delete_invalid_host_and_valid_service(self):
+        consumedHost = santiago.ConsumedHost(self.santiago)
+        self.assertRaises(KeyError, consumedHost.delete,'2', santiago.Santiago.SERVICE_NAME)
+
+class ConsumedService(SantiagoTest):
+    """Tests consumedService Rest interface."""
+
+    def setUp(self):
+        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.keyid = utilities.load_config("data/test.cfg").get("pgpprocessor", "keyid")
+
+        self.santiago = santiago.Santiago(
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            my_key_id = self.keyid,
+            gpg = self.gpg)
+
+    def test_santiago_consumed_service_get(self):
+        consumedService = santiago.ConsumedService(self.santiago)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1]}, 
+                         consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_consumed_service_get_with_incorrect_service(self):
+        consumedService = santiago.ConsumedService(self.santiago)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': '1', 'locations': None}, 
+                         consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '1'))
+
+    def test_santiago_consumed_service_put(self):
+        consumedService = santiago.ConsumedService(self.santiago)
+        consumedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2","3")
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': '2', 'locations': ['3']}, 
+                         consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2'))
+
+    def test_santiago_consumed_service_put_add_to_existing_service(self):
+        consumedService = santiago.ConsumedService(self.santiago)
+        consumedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME,3)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1,3]}, 
+                         consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_consumed_service_delete(self):
+        consumedService = santiago.ConsumedService(self.santiago)
+        consumedService.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME,1)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': []}, 
+                         consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_consumed_service_delete_invalid_location(self):
+        consumedService = santiago.ConsumedService(self.santiago)
+        consumedService.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME,2)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1]}, 
+                         consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_consumed_service_delete_invalid_service_and_invalid_location(self):
+        consumedService = santiago.ConsumedService(self.santiago)
+        consumedService.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2', 2)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1]}, 
+                         consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
+
+    def test_santiago_consumed_service_delete_invalid_service_and_valid_location(self):
+        consumedService = santiago.ConsumedService(self.santiago)
+        consumedService.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2', 1)
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1]}, 
+                         consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
 
 if __name__ == "__main__":
     logging.disable(logging.CRITICAL)

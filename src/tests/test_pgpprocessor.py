@@ -45,6 +45,7 @@ class RevokedKeyTest(RevokedKey):
         self.key_id = utilities.safe_load(self.config, "pgpprocessor", 
                                           "keyid", 0)
         self.messages = utilities.multi_sign(
+            message = "hi",
             gpg = self.gpg_expired_then_valid,
             iterations = self.iterations,
             keyid = self.key_id)
@@ -67,6 +68,7 @@ class ValidSubKeyButRevokedSuperKeyTest(RevokedKey):
         self.key_id = utilities.safe_load(self.config, "pgpprocessor", 
                                           "sub_keyid", 0)
         self.messages = utilities.multi_sign(
+            message = "hi",
             gpg = self.gpg_expired_then_valid,
             iterations = self.iterations,
             keyid = self.key_id)
@@ -107,6 +109,7 @@ class ValidSubKeyButExpiredSuperKeyTest(ExpiredKey):
         self.key_id = utilities.safe_load(self.config, "pgpprocessor", 
                                           "sub_keyid", 0)
         self.messages = utilities.multi_sign(
+            message = "hi",
             gpg = self.gpg_expired_then_valid,
             iterations = self.iterations,
             keyid = self.key_id)
@@ -129,6 +132,7 @@ class ExpiredKeyTest(ExpiredKey):
         self.key_id = utilities.safe_load(self.config, "pgpprocessor", 
                                           "keyid", 0)
         self.messages = utilities.multi_sign(
+            message = "hi",
             gpg = self.gpg_expired_then_valid,
             iterations = self.iterations,
             keyid = self.key_id)
@@ -166,9 +170,10 @@ class MessageWrapper(unittest.TestCase):
         config = utilities.load_config("data/test.cfg")
         self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
         self.messages = utilities.multi_sign(
+            message = "hi",
             gpg = self.gpg,
             iterations = self.iterations,
-	    keyid = self.key_id)
+            keyid = self.key_id)
 
 class UnwrapperTest(MessageWrapper):
     """Verify that we can unwrap multiply-signed PGP messages correctly."""
