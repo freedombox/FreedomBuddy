@@ -1,11 +1,8 @@
 #! /bin/sh
 # -*- mode: sh; mode: auto-fill; fill-column: 80 -*-
 
-#cd src
-
-PYTHONPATH=$PYTHONPATH:../../..
-PYTHONPATH=$PYTHONPATH:../build/gnupg
-PYTHONPATH=$PYTHONPATH:../build/plinth
+PYTHONPATH=$PYTHONPATH:build/gnupg
+PYTHONPATH=$PYTHONPATH:build/plinth
 export PYTHONPATH
 
 python src/tests/test_pgpprocessor.py

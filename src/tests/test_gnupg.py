@@ -1,7 +1,7 @@
 #! /usr/bin/env python # -*- mode: auto-fill; fill-column: 80 -*-
 """Collection of tests for GPG functions"""
 import gnupg
-import utilities
+import src.utilities as utilities
 import unittest
 
 class GnuPGWrapper(unittest.TestCase):

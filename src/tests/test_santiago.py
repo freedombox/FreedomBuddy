@@ -11,9 +11,9 @@ import gnupg
 import json
 import logging
 from optparse import OptionParser
-import santiago
-import utilities
-import connectors.https.controller
+import src.santiago as santiago
+import src.utilities as utilities
+import src.connectors.https.controller as httpscontroller
 from pprint import pprint
 
 
@@ -45,7 +45,7 @@ class SantiagoSetupTests(SantiagoTest):
     def test_create_santiago_with_https_listener(self):
         """Ensure listeners are set from variable in Santiago creator"""
         self.santiago = santiago.Santiago(listeners={ "https": { "socket_port": 80 } })
-        self.assertIsInstance(self.santiago.listeners["https"],connectors.https.controller.HttpsListener)
+        self.assertIsInstance(self.santiago.listeners["https"],httpscontroller.HttpsListener)
 
     def test_create_santiago_with_listeners_not_set(self):
         """Ensure listeners are set if variable in Santiago creator is None"""
@@ -55,7 +55,7 @@ class SantiagoSetupTests(SantiagoTest):
     def test_create_santiago_with_https_sender(self):
         """Ensure listeners are set from variable in Santiago creator"""
         self.santiago = santiago.Santiago(senders={ "https": { "proxy_host": 80 } })
-        self.assertIsInstance(self.santiago.senders["https"],connectors.https.controller.HttpsSender)
+        self.assertIsInstance(self.santiago.senders["https"],httpscontroller.HttpsSender)
 
     def test_create_santiago_with_senders_not_set(self):
         """Ensure listeners are set if variable in Santiago creator is None"""
@@ -65,7 +65,7 @@ class SantiagoSetupTests(SantiagoTest):
     def test_create_santiago_with_https_monitor(self):
         """Ensure listeners are set from variable in Santiago creator"""
         self.santiago = santiago.Santiago(monitors={ "https": { "socket_port": 80 } })
-        self.assertIsInstance(self.santiago.monitors["https"],connectors.https.controller.HttpsMonitor)
+        self.assertIsInstance(self.santiago.monitors["https"],httpscontroller.HttpsMonitor)
 
     def test_create_santiago_with_monitors_not_set(self):
         """Ensure listeners are set if variable in Santiago creator is None"""

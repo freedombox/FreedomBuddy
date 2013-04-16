@@ -4,7 +4,7 @@ Right now, this includes the Unwrapper, wihch unwraps and verifies each layer of
 an onion-wrapped PGP message.
 
 """
-from utilities import InvalidSignatureError
+from src.utilities import InvalidSignatureError
 import gnupg
 import re
 

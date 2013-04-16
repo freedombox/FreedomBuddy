@@ -15,10 +15,10 @@ import ConfigParser as configparser
 import logging
 from optparse import OptionParser
 import sys
-import utilities
+import src.utilities as utilities
 import webbrowser
 
-import santiago
+import src.santiago as santiago
 
 if __name__ == "__main__":
 

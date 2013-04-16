@@ -9,10 +9,10 @@ isn't verifiable.
 """
 
 import gnupg
-import pgpprocessor
+import src.pgpprocessor as pgpprocessor
 import unittest
-import utilities
-from utilities import InvalidSignatureError
+import src.utilities as utilities
+from src.utilities import InvalidSignatureError
 
 def remove_line(string, line, preserve_newlines = True):
     """Remove a line from a multi-line string."""

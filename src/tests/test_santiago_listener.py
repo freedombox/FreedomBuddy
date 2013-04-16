@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- mode: python; mode: auto-fill; fill-column: 80 -*-
 """Tests the ``SantiagoListener`` class."""
-import santiago
+import src.santiago as santiago
 import test_santiago
 
 class ListenerTests(test_santiago.SantiagoTest):

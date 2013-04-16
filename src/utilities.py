@@ -140,3 +140,12 @@ class GPGKeyNotSpecifiedError(Exception):
 
     pass
 
+class HTTPSConnectorError(Exception):
+    """Base class for HTTPS Connector errors"""
+
+    pass
+
+class HTTPSConnectorInvalidCombinationError(HTTPSConnectorError):
+    """The HTTPS connector requests shouldn't allow both PUT & DELETE at the same time"""
+
+    pass

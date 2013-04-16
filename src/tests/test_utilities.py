@@ -7,11 +7,11 @@ These functions are mostly tested by testing completed on main Santiago function
 """
 
 import unittest
-import utilities
+import src.utilities as utilities
 import gnupg
 from ConfigParser import NoSectionError
-from utilities import GPGNotSpecifiedError
-from utilities import GPGKeyNotSpecifiedError
+from src.utilities import GPGNotSpecifiedError
+from src.utilities import GPGKeyNotSpecifiedError
 
 """Need to test get_config_values / configure_connectors / multi_sign"""
 
