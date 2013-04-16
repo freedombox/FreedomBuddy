@@ -49,7 +49,7 @@ $(SCRIPTS_DIR)/tinc_rollout: build
 	cd $(SCRIPTS_DIR)/tinc_rollout; git pull
 
 predepend:
-	sudo sh -c "apt-get install python-routes python-socksipy python-cheetah python-openssl python-bjsonrpc"
+	sudo sh -c "apt-get install python-routes python-socksipy python-cheetah python-openssl python-bjsonrpc python-cherrypy3"
 	touch predepend
 
 $(CFG_PRODUCTION):
