@@ -100,6 +100,68 @@
    I'll need to bump the protocol version to version 2.  Version 2 is not
    backwards compatible [fn:1].
 
+** Tests [0/9]
+
+*** TODO Replies are version 2.                               :communication:
+
+    - [[*Increment%20protocol%20version.][Increment protocol version.]]
+
+*** TODO Version 2 client rejects version 1 replies.          :communication:
+
+    - [[*Increment%20protocol%20version.][Increment protocol version.]]
+
+*** TODO Response send times are recorded correctly.         :infrastructure:
+
+    Once the response is complete, the incoming message's send time is recorded
+    as the service's update time.
+
+    - [[*Track%20response%20time][Track response time]]
+    - [[*Data%20Structure%20Changes][Data Structure Changes]]
+
+*** TODO Response send times from the past are ignored.                :time:
+
+    If the service has been updated more recently than the message's send time,
+    that message must be ignored, its data may not be stored.
+
+    - [[*Track%20response%20time][Track response time]]
+
+*** TODO Response send times equal to the service update time are ignored. :time:
+
+    You can wait a millisecond before sending me another message.
+
+    - [[*Track%20response%20time][Track response time]]
+
+*** TODO Response send times from the future are ignored.              :time:
+
+    If the service was updated in the future, reject the message.  That doesn't
+    make sense.  Somebody's clock is way off and we should probably signal the
+    system that the server is temporally disturbed.
+
+    - [[*Track%20response%20time][Track response time]]
+
+*** TODO Response send times are stored per service.         :infrastructure:
+
+    I don't care whether there's a "last response time" per server, exactly, I
+    care when this particular service was last updated.
+
+    This implies that the FBuddy service's last update is always that of the
+    latest update.
+
+    - [[*Data%20Structure%20Changes][Data Structure Changes]]
+
+*** TODO Response send times can't be modified by the server. :infrastructure:
+
+    They can be set, only once, when the message is sent.  The client must treat
+    the response send time as metadata and may not accept an response send time
+    update as a normal service update.
+
+    For example, if I receive an update to the "wiki" service, I'll store
+    [2013-05-06 Mon 17:49] as the update time in the "wiki-update" service.  The
+    server then is not allowed to send a time to set the "wiki-update" service,
+    specifically.
+
+    - [[*Data%20Structure%20Changes][Data Structure Changes]]
+
 * Rejected Fixes
 
 ** Apply most recent response time per ID
@@ -225,4 +287,5 @@ to replay attacks, and is thus insecure.
 Following Grigg's H3, there is only one mode, and that is secure.  Thus,
 versions 1 and 2 are incompatible and any version 2 client must reject messages
 from a version 1 server.  However, version 2 clients can still send messages to
-version 1 servers, as the additional field will simply be filtered out.
+version 1 servers, as the additional field will simply be filtered out.  Not
+sure if we can encode that nuance.
