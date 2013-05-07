@@ -1,11 +1,13 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
-#+TITLE: Rebroadcast Friend Information and Proxy Other Messages
+#+TITLE: Allow Proxying: Rebroadcast Friend Information and Proxy Other Messages
 #+OPTIONS:   d:t
 #+LINK_UP:  ./
 #+LINK_HOME: ../
 
 * Issue
+
+  Clients can't currently proxy requests for one another.  They should.
 
   Right now, FBuddy is great for one-off communications, but doesn't try to
   produce a trust-web.  If I know Alice and Bob, Alice can't ask me to introduce
@@ -32,6 +34,6 @@
   :Status:     Incomplete
   :Priority:   0
   :Owner:      Nick Daly
-  :Related:    [[file:4.org][Proxying]]; [[file:14.org][Searching]]
-  :Description:       Rebroadcast Messages
+  :Related:    [[file:14.org][Searching]]
+  :Description:       Proxying, Rebroadcasting.
   :END:

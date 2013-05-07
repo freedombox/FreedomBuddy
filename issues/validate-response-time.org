@@ -1,6 +1,6 @@
 # -*- mode: org; mode: auto-fill; fill-column: 80 -*-
 
-#+TITLE: Validate Response Time
+#+TITLE: Validate Response Times
 #+OPTIONS:   d:t
 #+LINK_UP:  ./
 #+LINK_HOME: ../
@@ -8,10 +8,14 @@
 * Issue
 
   FBuddy doesn't currently validate incoming responses as much as it could.
+  Specifically, we could defend against [[https://en.wikipedia.org/wiki/Replay_attack][replay attacks]] by rejecting old data and
+  future data.  Troublingly, since request times are completely independent of
+  one another (one communication method could take seconds while the other could
+  take weeks), the service could accidentally replay itself.  We should fix
+  that.
 
-  In both of the following examples, the logging code is elided.  Every time we
-  send an [[file:../src/santiago.py::def%20outgoing_request(self,%20from_,%20to,%20host,%20client,][outgoing request]], we store the service and the host it was requested
-  from:
+  In the current state, every time we send an [[file:../src/santiago.py::def%20outgoing_request(self,%20from_,%20to,%20host,%20client,][outgoing request]], we store the
+  service and the host it was requested from:
 
   #+begin_src python
     def outgoing_request(self, from_, to, host, client,
@@ -42,7 +46,7 @@
 
   However, I can't tell whether that's necessary or appropriate.
 
-* Fixes [0/1]
+* Fixes [0/4]
 
 ** TODO Track response time
 
@@ -54,6 +58,109 @@
    - This must be stored per service from each host.  That's the only way we'll
      know we're processing the most updated reply, even across restarts.  Stupid
      more data points.
+
+   - This system creates one particular assumption: that the response creation
+     time can be the service response time.  Each response applies to a specific
+     service and includes the response's sent-time.  The sent-time is not the
+     service's last update time.  Why use the sent-time instead of the last
+     update time?  This way, only the recipient (client) needs to keep track of
+     the data.
+     
+     I prefer storing response send-times on the client because I assume that if
+     the client falls (is compromised), that "last update" times (that could be
+     highly correlated between clients) are more damaging to the server than
+     "last message" times.
+
+** TODO Data Structure Changes
+
+   Each communication (request and response or just response?) needs to include
+   its creation/sent time.
+
+   Each service needs to store a sent-time time that can't be directly updated
+   by the server (the client must reject that key if it's submitted, it can be
+   set only as a side-effect of the reply itself).
+
+** TODO Make Reject Time Key Tests
+
+   If the server submits a response-sent-time-update message for a particular
+   service, the client must reject it and not store or update its data store.
+   Otherwise, we're right back in the replay-attack place we tried to get out
+   of:
+
+   - t+0 :: Server submits service, message is logged.
+   - t+1 :: Server updates service to a new state.
+   - t+2 :: Attacker submits message to roll back the request clock to t-1.
+   - t+3 :: Attacker resubmits t+0 request, rolling back the service.
+
+   If this attack fails (service is at state t+1, and is not at state t+0), we
+   know the service is implemented correctly.
+
+** TODO Increment protocol version.
+
+   I'll need to bump the protocol version to version 2.  Version 2 is not
+   backwards compatible [fn:1].
+
+** Tests [0/9]
+
+*** TODO Replies are version 2.                               :communication:
+
+    - [[*Increment%20protocol%20version.][Increment protocol version.]]
+
+*** TODO Version 2 client rejects version 1 replies.          :communication:
+
+    - [[*Increment%20protocol%20version.][Increment protocol version.]]
+
+*** TODO Response send times are recorded correctly.         :infrastructure:
+
+    Once the response is complete, the incoming message's send time is recorded
+    as the service's update time.
+
+    - [[*Track%20response%20time][Track response time]]
+    - [[*Data%20Structure%20Changes][Data Structure Changes]]
+
+*** TODO Response send times from the past are ignored.                :time:
+
+    If the service has been updated more recently than the message's send time,
+    that message must be ignored, its data may not be stored.
+
+    - [[*Track%20response%20time][Track response time]]
+
+*** TODO Response send times equal to the service update time are ignored. :time:
+
+    You can wait a millisecond before sending me another message.
+
+    - [[*Track%20response%20time][Track response time]]
+
+*** TODO Response send times from the future are ignored.              :time:
+
+    If the service was updated in the future, reject the message.  That doesn't
+    make sense.  Somebody's clock is way off and we should probably signal the
+    system that the server is temporally disturbed.
+
+    - [[*Track%20response%20time][Track response time]]
+
+*** TODO Response send times are stored per service.         :infrastructure:
+
+    I don't care whether there's a "last response time" per server, exactly, I
+    care when this particular service was last updated.
+
+    This implies that the FBuddy service's last update is always that of the
+    latest update.
+
+    - [[*Data%20Structure%20Changes][Data Structure Changes]]
+
+*** TODO Response send times can't be modified by the server. :infrastructure:
+
+    They can be set, only once, when the message is sent.  The client must treat
+    the response send time as metadata and may not accept an response send time
+    update as a normal service update.
+
+    For example, if I receive an update to the "wiki" service, I'll store
+    [2013-05-06 Mon 17:49] as the update time in the "wiki-update" service.  The
+    server then is not allowed to send a time to set the "wiki-update" service,
+    specifically.
+
+    - [[*Data%20Structure%20Changes][Data Structure Changes]]
 
 * Rejected Fixes
 
@@ -168,3 +275,17 @@
   :Description: Add Response-Time to Replies
   :Tags:
   :END:
+
+
+* Footnotes
+[fn:1] Yes, version 2 is technically backwards compatible, technologically, if
+we assume the response time is "now."  However, that transforms it into a
+sillier form of protocol version 1 and does nothing to improve security, since
+the latest message is always the most recent message.  That's still vulnerable
+to replay attacks, and is thus insecure.
+
+Following Grigg's H3, there is only one mode, and that is secure.  Thus,
+versions 1 and 2 are incompatible and any version 2 client must reject messages
+from a version 1 server.  However, version 2 clients can still send messages to
+version 1 servers, as the additional field will simply be filtered out.  Not
+sure if we can encode that nuance.
