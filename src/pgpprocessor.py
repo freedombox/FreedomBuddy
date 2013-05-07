@@ -81,6 +81,7 @@ class Unwrapper(object):
         self.type = ""
         self.gpg = gpg
         self.gpg_data = None
+        self.start = self.header = self.body = self.footer = self.end = list()
         self.reset_fields()
 
     def reset_fields(self):

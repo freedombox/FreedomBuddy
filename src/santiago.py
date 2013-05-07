@@ -5,17 +5,17 @@
 
 Santiago is designed to let users negotiate services without third party
 interference.  By sending OpenPGP signed and encrypted messages over HTTPS (or
-other connectors) between parties, I hope to reduce or even prevent MITM attacks.
-Santiago can also use the Tor network as a proxy (with Python 2.7 or later),
-allowing this negotiation to happen very quietly.
+other connectors) between parties, I hope to reduce or even prevent MITM 
+attacks. Santiago can also use the Tor network as a proxy (with Python 2.7 or 
+later),allowing this negotiation to happen very quietly.
 
 Start me with:
 
     $ python santiago.py
 
-The first Santiago service queries another's index with a request.  That request
-is handled and a request is returned.  Then, the reply is handled.  The upshot
-is that we learn a new set of locations for the service.
+The first Santiago service queries another's index with a request.  That 
+request is handled and a request is returned.  Then, the reply is handled.  
+The upshot is that we learn a new set of locations for the service.
 
 :TODO: add doctests
 :FIXME: allow multiple listeners and senders per connector (with different
@@ -31,26 +31,24 @@ or later.  A copy of GPLv3 is available [from the Free Software Foundation]
 
 import ast
 from collections import defaultdict as DefaultDict
-import ConfigParser as configparser
 import gnupg
 import inspect
 import json
 import logging
 import os
-import re
 import shelve
 import sys
 import time
 import urlparse
 
 import pgpprocessor
-import utilities
 
 global DEBUG
 DEBUG = 0
 
 
 def debug_log(message):
+    """Helper function for logging messages"""
     frame = inspect.stack()
     trace = inspect.getframeinfo(frame[1][0])
     location = "{0}.{1}.{2}".format(trace.filename, trace.function,
@@ -83,7 +81,7 @@ class Santiago(object):
 
     def __init__(self, listeners=None, senders=None,
                  hosting=None, consuming=None, monitors=None,
-                 me=0, reply_service=None,
+                 my_key_id=0, reply_service=None,
                  save_dir=".", save_services=True,
                  gpg=None, force_sender=None, *args, **kwargs):
 
@@ -109,7 +107,7 @@ class Santiago(object):
         consuming allows users to safely proxy requests for one another, if some
         hosts are unreachable from some points.
 
-        :me: my PGP key ID.
+        :my_key_id: my PGP key ID.
 
         :reply_service: Messages between clients contain lists of keys, one of
           which is the "reply to" location.  This parameter names the key to
@@ -128,7 +126,7 @@ class Santiago(object):
 
         self.live = 1
         self.requests = DefaultDict(set)
-        self.me = me
+        self.my_key_id = my_key_id
         self.gpg = gpg or gnupg.GPG(use_agent = True)
         self.connectors = set()
         self.reply_service = reply_service or Santiago.SERVICE_NAME
@@ -140,14 +138,14 @@ class Santiago(object):
         self.monitors = self.create_connectors(monitors, "Monitor")
 
         self.shelf = shelve.open(save_dir.rstrip(os.sep) + os.sep +
-                                 str(self.me) + ".dat")
+                                 str(self.my_key_id) + ".dat")
         self.hosting = hosting if hosting else self.load_data("hosting")
         self.consuming = consuming if consuming else self.load_data("consuming")
 
-    def create_connectors(self, data, type):
+    def create_connectors(self, data, connector_type):
         if data == None:
             return
-        connectors = self._create_connectors(data, type)
+        connectors = self._create_connectors(data, connector_type)
         self.connectors |= set(connectors.keys())
 
         return connectors
@@ -212,7 +210,6 @@ class Santiago(object):
     def __exit__(self, exc_type, exc_value, traceback):
         """Clean up and save all data to shut down the service."""
 
-        count = 0
         try:
             while self.live:
                 time.sleep(1)
@@ -247,7 +244,8 @@ class Santiago(object):
             getattr(connector, state)()
 
         for connector in self.connectors:
-            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], state)(santiago=self)
+            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], 
+			state)(santiago=self)
 
         debug_log("Santiago: {0}".format(state))
 
@@ -276,8 +274,8 @@ class Santiago(object):
 
         try:
             data = self.shelf[key]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
             data = dict()
         else:
             for message in pgpprocessor.Unwrapper(data, gpg=self.gpg):
@@ -288,8 +286,8 @@ class Santiago(object):
                 # Per Python's documentation, this is safe enough:
                 # http://docs.python.org/2/library/ast.html#ast.literal_eval
                 data = ast.literal_eval(str(message))
-            except (ValueError, SyntaxError) as e:
-                logging.exception(e)
+            except (ValueError, SyntaxError) as error:
+                logging.exception(error)
                 data = dict()
 
         debug_log("found {0}: {1}".format(key, data))
@@ -315,8 +313,8 @@ class Santiago(object):
 
         data = getattr(self, key)
 
-        data = str(self.gpg.encrypt(str(data), recipients=[self.me],
-                                    sign=self.me))
+        data = str(self.gpg.encrypt(str(data), recipients=[self.my_key_id],
+                                    sign=self.my_key_id))
 
         self.shelf[key] = data
 
@@ -326,71 +324,52 @@ class Santiago(object):
     def i_am(self, server):
         """Verify whether this server is the specified server."""
 
-        return self.me == server
+        return self.my_key_id == server
 
-    # FIXME: unify create_hosting and create_consuming, to reduce redundancy.
+    def get_consuming_or_hosting_list(self, list_type):
+        """Return either consuming or hosting lists dependant on parameter"""
+        list_to_use = None
+        if list_type == "Hosting":
+            list_to_use = self.hosting
+        elif list_type == "Consuming":
+            list_to_use = self.consuming
+        return list_to_use
 
-    def create_hosting_client(self, client):
-        """Create a hosting client if one doesn't currently exist."""
+    def create_client_or_host(self, list_type, client):
+        """Create a hosting client or consuming host if one doesn't currently exist."""
 
-        if client not in self.hosting:
-            self.hosting[client] = dict()
+        list_to_use = self.get_consuming_or_hosting_list(list_type)
+        if list_to_use != None:
+            if client not in list_to_use:
+                list_to_use[client] = dict()
 
-    def create_hosting_service(self, client, service):
-        """Create a hosting service if one doesn't currently exist.
+    def create_service(self, list_type, client, service):
+        """Create a hosting/consuming service if one doesn't currently exist.
 
-        Check that hosting client exists before trying to add service.
-
-        """
-        self.create_hosting_client(client)
-
-        if service not in self.hosting[client]:
-            self.hosting[client][service] = list()
-
-    def create_hosting_location(self, client, service, locations):
-        """Create a hosting service if one doesn't currently exist.
-
-        Check that hosting client exists before trying to add service.
-        Check that hosting service exists before trying to add location.
+        Check that hosting client/consuming host exists before trying to add service.
 
         """
-        self.create_hosting_service(client, service)
+        self.create_client_or_host(list_type, client)
+        list_to_use = self.get_consuming_or_hosting_list(list_type)
+        if list_to_use != None:
+            if service not in list_to_use[client]:
+                list_to_use[client][service] = list()
 
-        for location in locations:
-            if location not in self.hosting[client][service]:
-                self.hosting[client][service].append(location)
+    def create_location(self, list_type, client, service, locations):
+        """Create a hosting/consuming service location if one doesn't currently exist.
 
-    def create_consuming_host(self, host):
-        """Create a consuming host if one doesn't currently exist."""
-
-        if host not in self.consuming:
-            self.consuming[host] = dict()
-
-    def create_consuming_service(self, host, service):
-        """Create a consuming service if one doesn't currently exist.
-
-        Check that consuming host exists before trying to add service.
+        Check that hosting client/consuming host exists before trying to add service.
+        Check that hosting/consuming service exists before trying to add location.
 
         """
-        self.create_consuming_host(host)
+        self.create_service(list_type, client, service)
+        list_to_use = self.get_consuming_or_hosting_list(list_type)
+        if list_to_use != None:
+            for location in locations:
+                if location not in list_to_use[client][service]:
+                    list_to_use[client][service].append(location)
 
-        if service not in self.consuming[host]:
-            self.consuming[host][service] = list()
-
-    def create_consuming_location(self, host, service, locations):
-        """Create a consuming location if one doesn't currently exist.
-
-        Check that consuming host exists before trying to add service.
-        Check that consuming service exists before trying to add location.
-
-        """
-        self.create_consuming_service(host, service)
-
-        for location in locations:
-            if location not in self.consuming[host][service]:
-                self.consuming[host][service].append(location)
-
-    def replace_consuming_location(self, host, service, locations):
+    def replace_consuming_location(self, host, locations):
         """Replace existing consuming locations with the new ones."""
 
         try:
@@ -398,7 +377,7 @@ class Santiago(object):
         except:
             pass
 
-        self.create_consuming_location(host, self.reply_service, locations)
+        self.create_location("Consuming", host, self.reply_service, locations)
 
     def get_host_locations(self, client, service):
         """Return where I'm hosting the service for the client.
@@ -408,8 +387,8 @@ class Santiago(object):
         """
         try:
             return self.hosting[client][service]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
 
     def get_host_services(self, client):
         """Return what I'm hosting for the client.
@@ -419,24 +398,24 @@ class Santiago(object):
         """
         try:
             return self.hosting[client]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
 
     def get_client_locations(self, host, service):
         """Return where the host serves the service for me, the client."""
 
         try:
             return self.consuming[host][service]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
 
     def get_client_services(self, host):
         """Return what services the host serves for me, the client."""
 
         try:
             return self.consuming[host]
-        except KeyError as e:
-            logging.exception(e)
+        except KeyError as error:
+            logging.exception(error)
 
     def get_served_clients(self, service):
         """Return what clients I'm hosting the service for."""
@@ -459,12 +438,12 @@ class Santiago(object):
         """
         try:
             self.outgoing_request(
-                host, self.me, host, self.me,
+                host, self.my_key_id, host, self.my_key_id,
                 service, None, self.consuming[host][self.reply_service])
-        except Exception as e:
+        except Exception:
             logging.exception("Couldn't handle %s.%s", host, service)
 
-    def outgoing_request(self, from_, to, host, client,
+    def outgoing_request(self, host, client,
                          service, locations="", reply_to=""):
         """Send a request to another Santiago service.
 
@@ -488,8 +467,8 @@ class Santiago(object):
                 self.senders[self.force_sender].outgoing_request(request,
                                                                  destination)
             else:
-                o = urlparse.urlparse(destination)
-                self.senders[o.scheme].outgoing_request(request, destination)
+                out = urlparse.urlparse(destination)
+                self.senders[out.scheme].outgoing_request(request, destination)
 
     def pack_request(self, host, client, service, locations, reply_to):
         """Pack up a request for transport.
@@ -512,7 +491,7 @@ class Santiago(object):
                   "reply_to": list(reply_to),
                   "request_version": 1,
                   "reply_versions": list(Santiago.SUPPORTED_CONNECTORS),}),
-            host, sign=self.me)
+            host, sign=self.my_key_id)
 
     def incoming_request(self, request_list):
         """Provide a service to a client.
@@ -564,8 +543,8 @@ class Santiago(object):
                             unpacked["request_version"],
                             unpacked["reply_versions"])
 
-        except Exception as e:
-            logging.exception(e)
+        except Exception as error:
+            logging.exception(error)
 
     def unpack_request(self, request):
         """Decrypt and verify the request.
@@ -592,6 +571,7 @@ class Santiago(object):
         request_body = dict()
         source = json.loads(str(request))
         try:
+            key = None
             for key in Santiago.ALL_KEYS:
                 request_body[key] = source[key]
         except KeyError:
@@ -617,11 +597,11 @@ class Santiago(object):
 
         # set implied keys
         request_body["from"] = request.fingerprint
-        request_body["to"] = self.me
+        request_body["to"] = self.my_key_id
 
         return request_body
 
-    def handle_request(self, from_, to, host, client,
+    def handle_request(self, from_, to_, host, client,
                        service, reply_to, request_version, reply_versions):
         """Actually do the request processing.
 
@@ -649,14 +629,13 @@ class Santiago(object):
 
         # if we don't proxy, learn new reply locations and send the request.
         if not self.i_am(host):
-            self.proxy(to, host, client, service, reply_to)
+            self.proxy(to_, host, client, service, reply_to)
         else:
             if reply_to:
                 self.replace_consuming_location(client,
-                                                self.reply_service,
                                                 reply_to)
             self.outgoing_request(
-                self.me, client, self.me, client,
+                self.my_key_id, client, self.my_key_id, client,
                 service, self.hosting[client][service],
                 self.hosting[client][self.reply_service])
 
@@ -669,7 +648,7 @@ class Santiago(object):
         """
         pass
 
-    def handle_reply(self, from_, to, host, client,
+    def handle_reply(self, from_, to_, host, client,
                      service, locations, reply_to,
                      request_version, reply_versions):
         """Process a reply from a Santiago service.
@@ -692,8 +671,8 @@ class Santiago(object):
             return
 
         # give up or proxy if the message isn't for me.
-        if not self.i_am(to):
-            debug_log("not to {0}".format(to))
+        if not self.i_am(to_):
+            debug_log("not to {0}".format(to_))
             return
         if not self.i_am(client):
             debug_log("not client {0}".format(client))
@@ -702,7 +681,7 @@ class Santiago(object):
 
         if reply_to:
             self.replace_consuming_location(host, self.reply_service, reply_to)
-        self.create_consuming_location(host, service, locations)
+        self.create_location("Consuming", host, service, locations)
 
         self.requests[host].remove(service)
         # clean buffers
@@ -770,16 +749,16 @@ class SantiagoSender(SantiagoConnector):
 class RestController(object):
     """A generic controller that reacts to the basic verbs."""
 
-    def PUT(self, *args, **kwargs):
+    def put(self, *args, **kwargs):
         pass
 
-    def GET(self, *args, **kwargs):
+    def get(self, *args, **kwargs):
         pass
 
-    def POST(self, *args, **kwargs):
+    def post(self, *args, **kwargs):
         pass
 
-    def DELETE(self, *args, **kwargs):
+    def delete(self, *args, **kwargs):
         pass
 
 class SantiagoMonitor(RestController, SantiagoConnector):
@@ -791,7 +770,7 @@ class SantiagoMonitor(RestController, SantiagoConnector):
 class Stop(SantiagoMonitor):
     """Stop the service."""
 
-    def POST(self, *args, **kwargs):
+    def post(self, *args, **kwargs):
         self.santiago.live = 0
 
 class Query(SantiagoMonitor):
@@ -800,139 +779,139 @@ class Query(SantiagoMonitor):
     This service request is eventually sent out to the host.
 
     """
-    def POST(self, host, service, *args, **kwargs):
+    def post(self, host, service, *args, **kwargs):
         super(Query, self).POST(host, service, *args, **kwargs)
 
         self.santiago.query(host, service)
-
+#FIXME: Need to create tests for this functionality
 class Hosting(SantiagoMonitor):
     """List clients I'm hosting services for."""
 
-    def GET(self, *args, **kwargs):
-        super(Hosting, self).GET(*args, **kwargs)
+    def get(self, *args, **kwargs):
+        super(Hosting, self).get(*args, **kwargs)
 
         return { "clients": self.santiago.hosting.keys() }
 
-    def PUT(self, client, *args, **kwargs):
-        super(Hosting, self).PUT(client, *args, **kwargs)
+    def put(self, client, *args, **kwargs):
+        super(Hosting, self).put(client, *args, **kwargs)
 
-        self.santiago.create_hosting_client(client)
+        self.santiago.create_client_or_host("Hosting", client)
 
-    def DELETE(self, client, *args, **kwargs):
-        super(Hosting, self).DELETE(client, *args, **kwargs)
+    def delete(self, client, *args, **kwargs):
+        super(Hosting, self).delete(client, *args, **kwargs)
 
         if client in self.santiago.hosting:
             del self.santiago.hosting[client]
-
+#FIXME: Need to create tests for this functionality
 class HostedClient(SantiagoMonitor):
     """List the services I'm hosting for the client."""
 
-    def GET(self, client, *args, **kwargs):
-        super(HostedClient, self).GET(*args, **kwargs)
+    def get(self, client, *args, **kwargs):
+        super(HostedClient, self).get(*args, **kwargs)
 
         return { "client": client,
                  "services": self.santiago.hosting[client] if client in
                      self.santiago.hosting else [] }
 
-    def PUT(self, client, service, *args, **kwargs):
-        super(HostedClient, self).PUT(client, service, *args, **kwargs)
+    def put(self, client, service, *args, **kwargs):
+        super(HostedClient, self).put(client, service, *args, **kwargs)
 
-        self.santiago.create_hosting_service(client, service)
+        self.santiago.create_service("Hosting", client, service)
 
 
-    def DELETE(self, client, service, *args, **kwargs):
-        super(HostedClient, self).DELETE(client, service, *args, **kwargs)
+    def delete(self, client, service, *args, **kwargs):
+        super(HostedClient, self).delete(client, service, *args, **kwargs)
 
         if service in self.santiago.hosting[client]:
             del self.santiago.hosting[client][service]
-
+#FIXME: Need to create tests for this functionality
 class HostedService(SantiagoMonitor):
     """List locations I'm hosting the service for the client."""
 
-    def GET(self, client, service, *args, **kwargs):
-        super(HostedService, self).GET(client, service, *args, **kwargs)
+    def get(self, client, service, *args, **kwargs):
+        super(HostedService, self).get(client, service, *args, **kwargs)
 
         return {
             "service": service,
             "client": client,
             "locations": self.santiago.get_host_locations(client, service)}
 
-    def PUT(self, client, service, location, *args, **kwargs):
-        super(HostedService, self).PUT(client, service, location,
+    def put(self, client, service, location, *args, **kwargs):
+        super(HostedService, self).put(client, service, location,
                                        *args, **kwargs)
 
-        self.santiago.create_hosting_location(client, service, [location])
+        self.santiago.create_location("Hosting", client, service, [location])
 
     # Have to remove instead of delete for locations as ``service`` is a list
-    def DELETE(self, client, service, location, *args, **kwargs):
-        super(HostedService, self).DELETE(client, service, location,
+    def delete(self, client, service, location, *args, **kwargs):
+        super(HostedService, self).delete(client, service, location,
                                           *args, **kwargs)
 
         if client in self.santiago.hosting:
             if location in self.santiago.hosting[client][service]:
                 self.santiago.hosting[client][service].remove(location)
-
+#FIXME: Need to create tests for this functionality
 class Consuming(SantiagoMonitor):
     """Get the hosts I'm consuming services from."""
 
-    def GET(self, *args, **kwargs):
-        super(Consuming, self).GET(*args, **kwargs)
+    def get(self, *args, **kwargs):
+        super(Consuming, self).get(*args, **kwargs)
 
         return { "hosts": self.santiago.consuming.keys() }
 
-    def PUT(self, host, *args, **kwargs):
-        super(Consuming, self).PUT(host, *args, **kwargs)
+    def put(self, host, *args, **kwargs):
+        super(Consuming, self).put(host, *args, **kwargs)
 
-        self.santiago.create_consuming_host(host)
+        self.santiago.create_client_or_host(host)
 
-    def DELETE(self, host, *args, **kwargs):
-        super(Consuming, self).DELETE(host, *args, **kwargs)
+    def delete(self, host, *args, **kwargs):
+        super(Consuming, self).delete(host, *args, **kwargs)
 
         if host in self.santiago.consuming:
             del self.santiago.consuming[host]
-
+#FIXME: Need to create tests for this functionality
 class ConsumedHost(SantiagoMonitor):
     """Get the services I'm consuming from the host."""
 
-    def GET(self, host, *args, **kwargs):
-        super(ConsumedHost, self).GET(host, *args, **kwargs)
+    def get(self, host, *args, **kwargs):
+        super(ConsumedHost, self).get(host, *args, **kwargs)
 
         return {
             "services": self.santiago.consuming[host] if host in
                         self.santiago.consuming else [],
             "host": host }
 
-    def PUT(self, host, service, *args, **kwargs):
-        super(ConsumedHost, self).PUT(host, service, *args, **kwargs)
+    def put(self, host, service, *args, **kwargs):
+        super(ConsumedHost, self).put(host, service, *args, **kwargs)
 
-        self.santiago.create_consuming_service(host, service)
+        self.santiago.create_service("Consuming", host, service)
 
-    def DELETE(self, host, service, *args, **kwargs):
-        super(ConsumedHost, self).DELETE(host, service, *args, **kwargs)
+    def delete(self, host, service, *args, **kwargs):
+        super(ConsumedHost, self).delete(host, service, *args, **kwargs)
 
         if service in self.santiago.consuming[host]:
             del self.santiago.consuming[host][service]
-
+#FIXME: Need to create tests for this functionality
 class ConsumedService(SantiagoMonitor):
     """Get the locations of the service I'm consuming from the host."""
 
-    def GET(self, host, service, *args, **kwargs):
-        super(ConsumedService, self).GET(host, service, *args, **kwargs)
+    def get(self, host, service, *args, **kwargs):
+        super(ConsumedService, self).get(host, service, *args, **kwargs)
 
         return { "service": service,
                  "host": host,
                  "locations":
                      self.santiago.get_client_locations(host, service) }
 
-    def PUT(self, host, service, location, *args, **kwargs):
-        super(ConsumedService, self).PUT(host, service, location,
+    def put(self, host, service, location, *args, **kwargs):
+        super(ConsumedService, self).put(host, service, location,
                                          *args, **kwargs)
 
-        self.santiago.create_consuming_location(host, service, [location])
+        self.santiago.create_location("Consuming", host, service, [location])
 
     # Have to remove instead of delete for locations as $service is a list
-    def DELETE(self, host, service, location, *args, **kwargs):
-        super(ConsumedService, self).DELETE(host, service, location,
+    def delete(self, host, service, location, *args, **kwargs):
+        super(ConsumedService, self).delete(host, service, location,
                                             *args, **kwargs)
 
         if location in self.santiago.consuming[host][service]:

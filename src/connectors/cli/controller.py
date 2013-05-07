@@ -79,16 +79,12 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import bjsonrpc
-import httplib
 import json
 from optparse import OptionParser
 import pipes
 import sys
-import time
-import urllib
 
 import santiago
-import sys
 import subprocess
 
 SANTIAGO_INSTANCE = BJSONRPC_SERVER = None
@@ -102,8 +98,8 @@ def interpret_args(args, parser=None):
     parser.add_option("-k", "--key", dest="key",
                       help="Find services for or by this buddy.")
 
-    parser.add_option("-c", "--consuming", dest="consuming", action="store_true",
-                      help="""\
+    parser.add_option("-c", "--consuming", dest="consuming", 
+                      action="store_true",help="""\
 Query the named key's FreedomBuddy service for the named service's location.
 
 I'm consuming that service from the host.
@@ -193,20 +189,20 @@ Usage Instructions:
 """)
 
 
-def start(santiago, *args, **kwargs):
+def start(santiago_to_use, *args, **kwargs):
     """The final startup step in the system.
 
     Create the server.
 
     """
     global SANTIAGO_INSTANCE, BJSONRPC_SERVER
-    SANTIAGO_INSTANCE = santiago
+    SANTIAGO_INSTANCE = santiago_to_use
     BJSONRPC_SERVER = bjsonrpc.createserver(host="127.0.0.1",
                                             handler_factory=BjsonRpcHost)
     BJSONRPC_SERVER.serve()
     print("served!")
 
-def stop(santiago, *args, **kwargs):
+def stop(santiago_to_use, *args, **kwargs):
     """Shut down the server."""
 
     pass
@@ -218,6 +214,7 @@ class CliListener(santiago.SantiagoListener):
     pass
 
 class CliSender(santiago.SantiagoSender):
+    """The command line sender for FBuddy"""
     def __init__(self, https_sender = None, cli_sender = None, *args, **kwargs):
         super(CliSender, self).__init__(*args, **kwargs)
 
@@ -339,20 +336,20 @@ def main():
     (options, args) = interpret_args(sys.argv[1:], parser)
     validate_args(options, parser)
 
-    c = bjsonrpc.connect()
+    connect = bjsonrpc.connect()
 
     if options.request:
-        print(c.call.incoming_request([options.request]))
+        print(connect.call.incoming_request([options.request]))
     elif options.stop:
-        print(c.call.stop())
+        print(connect.call.stop())
     elif options.consuming:
-        print(c.call.consuming(options.action, options.key,
+        print(connect.call.consuming(options.action, options.key,
                          options.service, options.location))
     elif options.hosting:
-        print(c.call.hosting(options.action, options.key,
+        print(connect.call.hosting(options.action, options.key,
                        options.service, options.location))
     elif options.query:
-        print(c.call.query(host=options.key, service=options.service))
+        print(connect.call.query(host=options.key, service=options.service))
     else:
         help_me()
 

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- mode: python; mode: auto-fill; fill-column: 80 -*-
-
+"""Tests the ``SantiagoListener`` class."""
 import santiago
 import test_santiago
 
@@ -25,7 +25,7 @@ class ListenerTests(test_santiago.SantiagoTest):
         self.listener.santiago.query = self.acall
         self.listener.santiago.create_hosting_location = self.acall
 
-        self.x, self.y, self.z = (1, 2, 3)
+        self.item_one, self.item_two, self.item_three = (1, 2, 3)
 
     def acall(self, *args, **kwargs):
         """Just record the passed through arguments."""
@@ -34,6 +34,6 @@ class ListenerTests(test_santiago.SantiagoTest):
         self.kwargs = kwargs
 
     def test_pass_incoming_request(self):
-        self.listener.incoming_request(self.x)
+        self.listener.incoming_request(self.item_one)
 
-        self.assertEqual(self.args, (self.x,))
+        self.assertEqual(self.args, (self.item_one,))

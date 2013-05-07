@@ -13,3 +13,4 @@ publish
 current.tar.gz
 predepend
 data/test_gpg_home/
+src/scripts/
