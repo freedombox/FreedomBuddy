@@ -142,17 +142,9 @@ class HttpsSender(santiago.SantiagoSender):
 
         self.proxy = None
 
-        # FIXME Fix proxying.  There's bitrot or version skew here.
         if proxy_type and proxy_host and proxy_port:
-
-            proxytest = 1
-
-            if proxytest == 1:
-                self.proxy = socks.socksocket()
-                self.proxy.setproxy(proxy_type, proxy_host, int(proxy_port))
-            else:
-                self.proxy = httplib2.ProxyInfo(proxy_type, proxy_host,
-                                                int(proxy_port))
+            self.proxy = socks.socksocket()
+            self.proxy.setproxy(proxy_type, proxy_host, int(proxy_port))
 
     @cherrypy.tools.ip_filter()
     def outgoing_request(self, request, destination):
@@ -172,8 +164,9 @@ class HttpsSender(santiago.SantiagoSender):
 
         if self.proxy:
             destination = str(destination)
-            connection = httplib2.Http(proxy_info = self.proxy)
-            connection.request(destination, "POST", body)
+            self.proxy.connect((destination.rsplit(":", 1)[0], int(destination.rsplit(":", 1)[1])))
+            self.proxy.send('POST ' + body)
+            self.proxy.close()
         else:
             connection = httplib.HTTPSConnection(destination.split("//")[1])
             connection.request("POST", "/", body)
