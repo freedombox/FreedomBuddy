@@ -21,7 +21,7 @@ class LoadConfig(unittest.TestCase):
     """
 
     def setUp(self):
-        self.config_to_use = 'data/test_gpg.cfg'
+        self.config_to_use = 'src/tests/data/test_gpg.cfg'
 
     def test_confirm_config_loaded_from_correct_file(self):
         self.config = utilities.load_config(self.config_to_use)
@@ -36,7 +36,7 @@ class SafeLoad(unittest.TestCase):
     """
 
     def setUp(self):
-        self.config_to_use = 'data/test_gpg.cfg'
+        self.config_to_use = 'src/tests/data/test_gpg.cfg'
 
     def test_correct_value_returned_from_config_file(self):
         self.config = utilities.load_config(self.config_to_use)
@@ -86,7 +86,7 @@ class MultiSign(unittest.TestCase):
     """Helper function to sign a message a number of times with a certain key"""
 
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='data/test_gpg_home')
+        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
 
     def test_incorrect_gpg_raises_error(self):
         self.assertRaises(GPGNotSpecifiedError, utilities.multi_sign, message="Test Message", gpg=None, keyid="1")
