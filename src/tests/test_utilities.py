@@ -12,6 +12,7 @@ import gnupg
 from ConfigParser import NoSectionError
 from src.utilities import GPGNotSpecifiedError
 from src.utilities import GPGKeyNotSpecifiedError
+from datetime import datetime, timedelta
 
 """Need to test get_config_values / configure_connectors / multi_sign"""
 
@@ -93,6 +94,45 @@ class MultiSign(unittest.TestCase):
 
     def test_incorrect_gpg_key_raises_error(self):
         self.assertRaises(GPGKeyNotSpecifiedError, utilities.multi_sign, message="Test Message", gpg=self.gpg, keyid=None)
+
+class EnsureUpdateTimestampIsValid(unittest.TestCase):
+    """Helper function to confirm whether update timestamp is valid."""
+
+    def setUp(self):
+        self.valid_original_date = datetime(2013, 5, 14, 6, 6, 10, 43)
+        self.valid_update_date = datetime(2013, 5, 14, 6, 6, 10, 44)
+        self.past_date = datetime(2013, 5, 14, 6, 6, 10, 42)
+        self.invalid_future_date = datetime.utcnow() + timedelta(minutes = 5)
+
+    def test_identical_times_fail(self):
+        self.assertFalse(utilities.isTimestampValid(self.valid_original_date, self.valid_original_date))
+
+    def test_times_greater_than_now_fail(self):
+        self.assertFalse(utilities.isTimestampValid(self.valid_original_date, self.invalid_future_date))
+
+    def test_times_less_than_last_update_fail(self):
+        self.assertFalse(utilities.isTimestampValid(self.valid_original_date, self.past_date))
+
+    def test_valid_time_true(self):
+        self.assertTrue(utilities.isTimestampValid(self.valid_original_date, self.valid_update_date))
+
+    def test_original_date_as_str(self):
+        self.assertTrue(utilities.isTimestampValid(str(self.valid_original_date), self.valid_update_date))
+
+    def test_update_date_as_str(self):
+        self.assertTrue(utilities.isTimestampValid(self.valid_original_date, str(self.valid_update_date)))
+
+    def test_both_dates_as_str(self):
+        self.assertTrue(utilities.isTimestampValid(str(self.valid_original_date), str(self.valid_update_date)))
+
+    def test_original_date_as_none(self):
+        self.assertTrue(utilities.isTimestampValid(None, str(self.valid_update_date)))
+
+    def test_update_date_as_none(self):
+        self.assertFalse(utilities.isTimestampValid(self.valid_original_date, None))
+
+    def test_both_dates_as_none(self):
+        self.assertFalse(utilities.isTimestampValid(None, None))
 
 if __name__ == "__main__":
     unittest.main()

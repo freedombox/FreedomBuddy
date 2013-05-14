@@ -15,7 +15,7 @@ import src.santiago as santiago
 import src.utilities as utilities
 import src.connectors.https.controller as httpscontroller
 from pprint import pprint
-
+from datetime import datetime
 
 cherrypy.log.access_file = None
 
@@ -84,10 +84,15 @@ class IncomingRequest(SantiagoTest):
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
                                           gpg = self.gpg)
 
+        self.valid_request_version = self.santiago.SUPPORTED_REQUEST_VERSION
+        self.valid_reply_versions = self.santiago.SUPPORTED_REPLY_VERSIONS
+
         self.request = { "host": self.keyid, "client": self.keyid,
                          "service": santiago.Santiago.SERVICE_NAME, 
-                         "reply_to": [1], "locations": [1],
-                         "request_version": 1, "reply_versions": [1], }
+                         "reply_to": None, "locations": [1],
+                         "request_version": self.valid_request_version, 
+                         "reply_versions": self.valid_reply_versions,
+                         "update": str(datetime.utcnow())}
 
     def wrap_message(self, message):
         """The standard wrapping method for these tests."""
@@ -96,17 +101,87 @@ class IncomingRequest(SantiagoTest):
                                     recipients=[self.keyid],
                                     sign=self.keyid))
 
-    def test_valid_request_list(self):
-        """A message that should pass does pass normally."""
-
+    def test_ensure_string_handled(self):
+        """If a string is passed to incoming_request, convert it to a single value in a list."""
+        self.assertEqual({}, self.santiago.consuming)
         self.request = self.wrap_message(self.request)
+        self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
 
         self.assertEqual(None, self.santiago.incoming_request(self.request))
+        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
+
+    def test_valid_request_list(self):
+        """A message that should pass does pass normally."""
+        self.assertEqual({}, self.santiago.consuming)
+        self.request = self.wrap_message(self.request)
+        self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
+
+        self.assertEqual(None, self.santiago.incoming_request([self.request]))
+        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
 
     def test_empty_request_list(self):
         """A message that should pass does pass normally."""
+        self.assertEqual({}, self.santiago.consuming)
+        self.assertEqual(None, self.santiago.incoming_request(["test"]))
+        self.assertEqual({}, self.santiago.consuming)
 
-        self.assertEqual(None, self.santiago.incoming_request("test"))
+    def test_invalid_requests_queue(self):
+        """If a service isnt in incoming_request requests queue then don't process request."""
+        self.assertEqual({}, self.santiago.consuming)
+        self.request = self.wrap_message(self.request)
+        
+        self.assertEqual(None, self.santiago.incoming_request([self.request]))
+        self.assertEqual({}, self.santiago.consuming)
+
+    def test_service_update_recorded(self):
+        """If a service is updated, we need to send a valid update datetime 
+        as well to keep track of latest values.
+        """
+        with self.assertRaises(KeyError) as context:
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['update']
+        date_to_use = str(datetime.utcnow())
+        self.request = self.wrap_message({ "host": self.keyid, "client": self.keyid,
+                         "service": santiago.Santiago.SERVICE_NAME, 
+                         "reply_to": None, "locations": [2],
+                         "request_version": self.valid_request_version, 
+                         "reply_versions": self.valid_reply_versions,
+                         "update": date_to_use})
+        self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
+        self.assertEqual(None, self.santiago.incoming_request([self.request]))
+        self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['update'])
+
+    def test_reject_time_key(self):
+        """Confirm that an attacker is unable to replay-attack a service update."""
+        self.assertEqual({}, self.santiago.consuming)
+        self.request = self.wrap_message(self.request)
+        self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
+        #Sent t+0 - Server submits service, message is logged.
+        self.assertEqual(None, self.santiago.incoming_request([self.request]))
+        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
+        original_request = self.request
+        date_to_use = str(datetime.utcnow())
+        self.request = self.wrap_message({ "host": self.keyid, "client": self.keyid,
+                         "service": santiago.Santiago.SERVICE_NAME, 
+                         "reply_to": None, "locations": [2],
+                         "request_version": self.valid_request_version, 
+                         "reply_versions": self.valid_reply_versions,
+                         "update": date_to_use})
+        #Sent t+1 - Server updates service to a new state.
+        self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
+        self.assertEqual(None, self.santiago.incoming_request([self.request]))
+        self.assertEqual([2], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
+        self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['update'])
+        #t+2 Attacker submits message to roll back the request clock to t-1.
+        #Don't know how to make a variable not updatable?
+        #self.santiago.consuming[self.keyid][self.service_name]['update'] = str(datetime.utcnow())
+        #self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['update'])
+        #t+3 Attacker resubmits t+0 request, rolling back the service.
+        #Ensure location isn't rolled back to [1].
+        self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
+        self.assertEqual(None, self.santiago.incoming_request([original_request]))
+        self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['update'])
+        self.assertEqual([2], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
+
 
 class UnpackRequest(SantiagoTest):
 
@@ -169,27 +244,23 @@ class UnpackRequest(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
                                           gpg = self.gpg)
+        self.valid_request_version = self.santiago.SUPPORTED_REQUEST_VERSION
+        self.valid_reply_versions = self.santiago.SUPPORTED_REPLY_VERSIONS
 
         self.request = { "host": self.keyid, "client": self.keyid,
                          "service": santiago.Santiago.SERVICE_NAME, 
                          "reply_to": [1], "locations": [1],
-                         "request_version": 1, "reply_versions": [1], }
+                         "request_version": self.valid_request_version, 
+                         "reply_versions": self.valid_reply_versions,
+                         "update": str(datetime.utcnow()) }
 
         self.ALL_KEYS = set(("host", "client", "service",
                              "locations", "reply_to",
-                             "request_version", "reply_versions"))
+                             "request_version", "reply_versions", "update"))
         self.REQUIRED_KEYS = set(("client", "host", "service",
-                                  "request_version", "reply_versions"))
+                                  "request_version", "reply_versions", "update"))
         self.OPTIONAL_KEYS = set(("locations", "reply_to"))
         self.LIST_KEYS = set(("reply_to", "locations", "reply_versions"))
-
-    def test_valid_message(self):
-        """A message that should pass does pass normally."""
-
-        adict = self.validate_request(dict(self.request))
-        self.request = self.wrap_message(self.request)
-
-        self.assertEqual(self.santiago.unpack_request(self.request), adict)
 
     def validate_request(self, adict):
         """Update From & To in adict"""
@@ -198,18 +269,24 @@ class UnpackRequest(SantiagoTest):
 
         return adict
 
-    def test_request_contains_all_keys(self):
-        """The test request needs all supported keys."""
-
-        for key in self.ALL_KEYS:
-            self.assertIn(key, self.request)
-
     def wrap_message(self, message):
         """The standard wrapping method for these tests."""
 	
         return str(self.gpg.encrypt(json.dumps(message),
                                     recipients=[self.keyid],
                                     sign=self.keyid))
+
+    def test_valid_message(self):
+        """A message that should pass does pass normally."""
+        adict = self.validate_request(dict(self.request))
+        self.request = self.wrap_message(self.request)
+        self.assertEqual(self.santiago.unpack_request(self.request), adict)
+
+    def test_request_contains_all_keys(self):
+        """The test request needs all supported keys."""
+
+        for key in self.ALL_KEYS:
+            self.assertIn(key, self.request)
 
     def test_key_lists_updated(self):
         """Are the lists of keys up-to-date?"""
@@ -291,17 +368,17 @@ class UnpackRequest(SantiagoTest):
     def test_require_protocol_version_overlap(self):
         """Clients that can't accept protocols I can send are ignored."""
 
-        santiago.Santiago.SUPPORTED_CONNECTORS, unsupported = \
-            set(["e"]), santiago.Santiago.SUPPORTED_CONNECTORS
+        santiago.Santiago.SUPPORTED_REPLY_VERSIONS, unsupported = \
+            set(["e"]), santiago.Santiago.SUPPORTED_REPLY_VERSIONS
 
         self.request = self.wrap_message(self.request)
 
         self.assertFalse(self.santiago.unpack_request(self.request))
 
-        santiago.Santiago.SUPPORTED_CONNECTORS, unsupported = \
-            unsupported, santiago.Santiago.SUPPORTED_CONNECTORS
+        santiago.Santiago.SUPPORTED_REPLY_VERSIONS, unsupported = \
+            unsupported, santiago.Santiago.SUPPORTED_REPLY_VERSIONS
 
-        self.assertTrue(santiago.Santiago.SUPPORTED_CONNECTORS, set([1]))
+        self.assertTrue(santiago.Santiago.SUPPORTED_REPLY_VERSIONS, set([1]))
 
     def test_require_protocol_version_understanding(self):
         """The service must ignore any protocol versions it can't understand."""
@@ -350,25 +427,27 @@ class HandleRequest(SantiagoTest):
         self.reply_to = [1]
         self.request_version = 1
         self.reply_versions = [1]
+        self.update = str(datetime.utcnow())
 
     def record_success(self):
         """Record that we tried to reply to the request."""
 
         self.santiago.requested = True
 
-    def test_call(self):
+    def call_handle_request(self):
         """A short-hand for calling handle_request with all 8 arguments.  Oy."""
 
         self.santiago.handle_request(
                 self.from_, self.to_,
                 self.host, self.client,
                 self.service, self.reply_to,
-                self.request_version, self.reply_versions)
+                self.request_version, self.reply_versions,
+                self.update)
 
     def test_valid_message(self):
         """Reply to valid messages."""
 
-        self.test_call()
+        self.call_handle_request()
 
         self.assertTrue(self.santiago.requested)
 
@@ -383,7 +462,7 @@ class HandleRequest(SantiagoTest):
         for key in ("client", ):
             setattr(self, key, 0)
 
-            self.test_call()
+            self.call_handle_request()
 
             self.assertFalse(self.santiago.requested)
 
@@ -392,27 +471,27 @@ class HandleRequest(SantiagoTest):
 
         self.reply_to.append(2)
 
-        self.test_call()
+        self.call_handle_request()
 
         self.assertTrue(self.santiago.requested)
         self.assertEqual(
-            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'],
             [1, 2])
 
     def test_replace_consuming_location(self):
         """Confirm location is replaced"""
         self.reply_to.append(2)
 
-        self.test_call()
+        self.call_handle_request()
 
         self.assertEqual(
-            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'],
             [1, 2])
 
         self.santiago.replace_consuming_location(self.keyid, [1, 3])
 
         self.assertEqual(
-            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'],
             [1, 3])
 
 class HostingAndConsuming(SantiagoTest):
@@ -425,8 +504,8 @@ class HostingAndConsuming(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME:{"update":None, "locations": [1]} }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME:{"update":None, "locations": [1]} }},
             my_key_id = self.keyid,
 	    gpg = self.gpg)
 
@@ -439,7 +518,7 @@ class HostingAndConsuming(SantiagoTest):
         self.santiago.replace_consuming_location(self.keyid, [1, 3])
 
         self.assertEqual(
-            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'],
             [1, 3])
 
     def test_get_host_locations_correctly(self):
@@ -448,15 +527,15 @@ class HostingAndConsuming(SantiagoTest):
 
     def test_get_host_locations_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
-        self.assertRaises("r", self.santiago.get_locations("Hosting", "test", santiago.Santiago.SERVICE_NAME))
+        self.assertEqual(None, self.santiago.get_locations("Hosting", "test", santiago.Santiago.SERVICE_NAME))
 
     def test_get_host_services_correctly(self):
         """Return host services when there are clients set"""
-        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1] }, self.santiago.get_services("Hosting", self.keyid))
+        self.assertEqual({santiago.Santiago.SERVICE_NAME: {'update': None, 'locations': [1]} }, self.santiago.get_services("Hosting", self.keyid))
 
     def test_get_host_services_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
-        self.assertRaises(KeyError, self.santiago.get_services("Hosting", "test"))
+        self.assertEqual(None, self.santiago.get_services("Hosting", "test"))
 
     def test_get_client_locations_correctly(self):
         """Return client locations when there are locations set"""
@@ -464,15 +543,15 @@ class HostingAndConsuming(SantiagoTest):
 
     def test_get_client_locations_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
-        self.assertRaises(KeyError, self.santiago.get_locations("Consuming", "test", santiago.Santiago.SERVICE_NAME))
+        self.assertEqual(None, self.santiago.get_locations("Consuming", "test", santiago.Santiago.SERVICE_NAME))
 
     def test_get_client_services_correctly(self):
         """Return client services when there are services set"""
-        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1] }, self.santiago.get_services("Consuming", self.keyid))
+        self.assertEqual({santiago.Santiago.SERVICE_NAME: {'update': None, 'locations': [1]} }, self.santiago.get_services("Consuming", self.keyid))
 
     def test_get_client_services_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
-        self.assertRaises(KeyError, self.santiago.get_services("Consuming", "test"))
+        self.assertEqual(None, self.santiago.get_services("Consuming", "test"))
 
     def test_get_served_clients_correctly(self):
         """Return client services when there are services set"""
@@ -515,6 +594,9 @@ class OutgoingRequest(SantiagoTest):
                                         ( "https://1", )}},
 	    gpg = self.gpg)
 
+        self.valid_request_version = self.santiago.SUPPORTED_REQUEST_VERSION
+        self.valid_reply_versions = self.santiago.SUPPORTED_REPLY_VERSIONS
+
         self.request_sender = OutgoingRequest.TestRequestSender()
         self.santiago.senders = { "https": self.request_sender }
 
@@ -523,8 +605,8 @@ class OutgoingRequest(SantiagoTest):
         self.service = santiago.Santiago.SERVICE_NAME
         self.reply_to = [ "https://1" ]
         self.locations = [1]
-        self.request_version = 1
-        self.reply_versions = [1]
+        self.request_version = self.valid_request_version
+        self.reply_versions = self.valid_reply_versions
         self.destination = self.crypt = self.request = None
 
         self.request = {
@@ -532,7 +614,7 @@ class OutgoingRequest(SantiagoTest):
             "service": self.service,
             "reply_to": self.reply_to, "locations": self.locations,
             "request_version": self.request_version,
-            "reply_versions": self.reply_versions }
+            "reply_versions": self.reply_versions}
 
     def outgoing_call(self):
         """A short-hand for calling outgoing_request with all 8 arguments."""
@@ -603,9 +685,9 @@ class CreateHosting(SantiagoTest):
         """Confirm location is added to hosting list"""
         self.assertNotIn(self.client, self.santiago.hosting)
         self.santiago.create_location("Hosting", self.client, self.service,
-                                              [self.location])
+                                              [self.location], str(datetime.utcnow()))
         self.assertIn(self.location,
-                        self.santiago.hosting[self.client][self.service])
+                        self.santiago.hosting[self.client][self.service]['locations'])
 
 class CreateConsuming(SantiagoTest):
     """Are hosts, services, and locations learned correctly?
@@ -642,10 +724,11 @@ class CreateConsuming(SantiagoTest):
         self.assertNotIn(self.host, self.santiago.consuming)
         self.santiago.create_location("Consuming", self.host, 
                                                  self.service,
-                                                [self.location])
+                                                [self.location], 
+                                                str(datetime.utcnow()))
 
         self.assertIn(self.location,
-                       self.santiago.consuming[self.host][self.service])
+                       self.santiago.consuming[self.host][self.service]['locations'])
 
 class ArgumentTests(SantiagoTest):
     """Tests arguments to the FreedomBuddy service."""
@@ -734,8 +817,8 @@ class Hosting(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
@@ -791,7 +874,7 @@ class HostedClient(SantiagoTest):
     def test_santiago_hosted_client_put(self):
         hostedClient = santiago.HostedClient(self.santiago)
         hostedClient.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2")
-        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2': [], santiago.Santiago.SERVICE_NAME: [1]}}, 
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2': {'locations': [], 'update': None}, santiago.Santiago.SERVICE_NAME: [1]}}, 
                          hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_hosted_client_ensure_put_existing_service_does_not_overwrite_service(self):
@@ -828,8 +911,8 @@ class HostedService(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
@@ -845,13 +928,13 @@ class HostedService(SantiagoTest):
 
     def test_santiago_hosted_service_put(self):
         hostedService = santiago.HostedService(self.santiago)
-        hostedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2","3")
+        hostedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2","3", str(datetime.utcnow()))
         self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': '2', 'locations': ['3']}, 
                          hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2'))
 
     def test_santiago_hosted_service_put_add_to_existing_service(self):
         hostedService = santiago.HostedService(self.santiago)
-        hostedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME,3)
+        hostedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME,[1,3], str(datetime.utcnow()))
         self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1,3]}, 
                          hostedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
 
@@ -887,8 +970,8 @@ class Consuming(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
@@ -926,14 +1009,14 @@ class ConsumedHost(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
     def test_santiago_consumed_host_get(self):
         consumedHost = santiago.ConsumedHost(self.santiago)
-        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: {'locations': [1], 'update': None}}}, 
                          consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_consumed_host_get_with_invalid_host(self):
@@ -944,13 +1027,13 @@ class ConsumedHost(SantiagoTest):
     def test_santiago_consumed_host_put(self):
         consumedHost = santiago.ConsumedHost(self.santiago)
         consumedHost.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2")
-        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2': [], santiago.Santiago.SERVICE_NAME: [1]}}, 
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2': {'locations': [], 'update': None}, santiago.Santiago.SERVICE_NAME: {'locations': [1], 'update': None}}}, 
                          consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_consumed_host_ensure_put_existing_service_does_not_overwrite_service(self):
         consumedHost = santiago.ConsumedHost(self.santiago)
         consumedHost.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME)
-        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: {'locations': [1], 'update': None}}}, 
                          consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_consumed_host_delete(self):
@@ -962,7 +1045,7 @@ class ConsumedHost(SantiagoTest):
     def test_santiago_consumed_host_delete_invalid_service(self):
         consumedHost = santiago.ConsumedHost(self.santiago)
         consumedHost.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2')
-        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628', 'services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628', 'services': {santiago.Santiago.SERVICE_NAME: {'locations': [1], 'update': None}}}, 
                          consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_consumed_host_delete_invalid_host_and_invalid_service(self):
@@ -981,8 +1064,8 @@ class ConsumedService(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
@@ -998,13 +1081,13 @@ class ConsumedService(SantiagoTest):
 
     def test_santiago_consumed_service_put(self):
         consumedService = santiago.ConsumedService(self.santiago)
-        consumedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2","3")
+        consumedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2","3", str(datetime.utcnow()))
         self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': '2', 'locations': ['3']}, 
                          consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2'))
 
     def test_santiago_consumed_service_put_add_to_existing_service(self):
         consumedService = santiago.ConsumedService(self.santiago)
-        consumedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME,3)
+        consumedService.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME, [1,3], str(datetime.utcnow()))
         self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','service': santiago.Santiago.SERVICE_NAME, 'locations': [1,3]}, 
                          consumedService.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', santiago.Santiago.SERVICE_NAME))
 
@@ -1035,3 +1118,7 @@ class ConsumedService(SantiagoTest):
 if __name__ == "__main__":
     logging.disable(logging.CRITICAL)
     unittest.main()
+
+#if __name__ == "__main__":
+#    logging.basicConfig(level=logging.DEBUG)
+#    unittest.main()

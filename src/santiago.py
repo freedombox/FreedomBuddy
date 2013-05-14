@@ -43,6 +43,8 @@ import urlparse
 
 import src.pgpprocessor as pgpprocessor
 from pprint import pprint
+from datetime import datetime
+import src.utilities as utilities
 
 global DEBUG
 DEBUG = 0
@@ -65,13 +67,14 @@ class Santiago(object):
     The client and server are unified.
 
     """
-    SUPPORTED_CONNECTORS = set([1])
+    SUPPORTED_REQUEST_VERSION = 1
+    SUPPORTED_REPLY_VERSIONS = [1]
     # all keys must be present in the message.
     ALL_KEYS = set(("host", "client", "service", "locations", "reply_to",
-                    "request_version", "reply_versions"))
+                    "request_version", "reply_versions", "update"))
     # required keys may not be null
     REQUIRED_KEYS = set(("client", "host", "service",
-                         "request_version", "reply_versions"))
+                         "request_version", "reply_versions", "update"))
     # optional keys may be null.
     OPTIONAL_KEYS = ALL_KEYS ^ REQUIRED_KEYS
     LIST_KEYS = set(("reply_to", "locations", "reply_versions"))
@@ -354,9 +357,9 @@ class Santiago(object):
         list_to_use = self.get_consuming_or_hosting_list(list_type)
         if list_to_use != None:
             if service not in list_to_use[client]:
-                list_to_use[client][service] = list()
+                list_to_use[client][service] = {"update": None, "locations": list()}
 
-    def create_location(self, list_type, client, service, locations):
+    def create_location(self, list_type, client, service, locations, update):
         """Create a hosting/consuming service location if one doesn't currently exist.
 
         Check that hosting client/consuming host exists before trying to add service.
@@ -366,9 +369,11 @@ class Santiago(object):
         self.create_service(list_type, client, service)
         list_to_use = self.get_consuming_or_hosting_list(list_type)
         if list_to_use != None:
-            for location in locations:
-                if location not in list_to_use[client][service]:
-                    list_to_use[client][service].append(location)
+            if utilities.isTimestampValid(list_to_use[client][service]['update'],update):
+                list_to_use[client][service] = {"update": update, "locations": list()}
+                for location in locations:
+                    if location not in list_to_use[client][service]:
+                        list_to_use[client][service]['locations'].append(location)
 
     def replace_consuming_location(self, host, locations):
         """Replace existing consuming locations with the new ones."""
@@ -378,7 +383,7 @@ class Santiago(object):
         except:
             pass
 
-        self.create_location("Consuming", host, self.reply_service, locations)
+        self.create_location("Consuming", host, self.reply_service, locations, str(datetime.utcnow()))
 
     def get_locations(self, list_type, client, service):
         """Return where I'm hosting / consuming the service for the client.
@@ -389,7 +394,7 @@ class Santiago(object):
         try:
             list_to_use = self.get_consuming_or_hosting_list(list_type)
             if list_to_use != None:
-                return list_to_use[client][service]
+                return list_to_use[client][service]['locations']
             else:
                 return None
         except KeyError as error:
@@ -430,7 +435,7 @@ class Santiago(object):
         try:
             list_to_use = self.get_consuming_or_hosting_list(list_type)
             if list_to_use != None:
-                list_to_use[client][service].remove(location)
+                list_to_use[client][service]['locations'].remove(location)
         except KeyError as error:
             logging.exception(error)
         except ValueError as error:
@@ -508,8 +513,8 @@ class Santiago(object):
                 { "host": host, "client": client,
                   "service": service, "locations": list(locations or ""),
                   "reply_to": list(reply_to),
-                  "request_version": 1,
-                  "reply_versions": list(Santiago.SUPPORTED_CONNECTORS),}),
+                  "request_version": Santiago.SUPPORTED_REQUEST_VERSION,
+                  "reply_versions": list(Santiago.SUPPORTED_REPLY_VERSIONS)}),
             host, sign=self.my_key_id)
 
     def incoming_request(self, request_list):
@@ -531,6 +536,8 @@ class Santiago(object):
 
         """
         # no matter what happens, the sender will never hear about it.
+        if(isinstance(request_list, str)):
+            request_list = [request_list]
         try:
             for request in request_list:
                 debug_log("request: {0}".format(str(request)))
@@ -551,7 +558,8 @@ class Santiago(object):
                             unpacked["service"], unpacked["locations"],
                             unpacked["reply_to"],
                             unpacked["request_version"],
-                            unpacked["reply_versions"])
+                            unpacked["reply_versions"],
+                            unpacked["update"])
                     else:
                         debug_log("handling request")
 
@@ -560,7 +568,8 @@ class Santiago(object):
                             unpacked["host"], unpacked["client"],
                             unpacked["service"], unpacked["reply_to"],
                             unpacked["request_version"],
-                            unpacked["reply_versions"])
+                            unpacked["reply_versions"],
+                            unpacked["update"])
 
         except Exception as error:
             logging.exception(error)
@@ -607,10 +616,10 @@ class Santiago(object):
             return
 
         # versions must overlap.
-        if not (Santiago.SUPPORTED_CONNECTORS &
+        if not (set(Santiago.SUPPORTED_REPLY_VERSIONS) &
                 set(request_body["reply_versions"])):
             return
-        if not (Santiago.SUPPORTED_CONNECTORS &
+        if not (set([Santiago.SUPPORTED_REQUEST_VERSION]) &
               set([request_body["request_version"]])):
             return
 
@@ -621,7 +630,7 @@ class Santiago(object):
         return request_body
 
     def handle_request(self, from_, to_, host, client,
-                       service, reply_to, request_version, reply_versions):
+                       service, reply_to, request_version, reply_versions, update):
         """Actually do the request processing.
 
         - Verify we're willing to host for both the client and proxy.  If we
@@ -653,6 +662,7 @@ class Santiago(object):
             if reply_to:
                 self.replace_consuming_location(client,
                                                 reply_to)
+
             self.outgoing_request(
                 self.my_key_id, client, self.my_key_id, client,
                 service, self.hosting[client][service],
@@ -669,7 +679,7 @@ class Santiago(object):
 #FIXME:Need to create tests for this
     def handle_reply(self, from_, to_, host, client,
                      service, locations, reply_to,
-                     request_version, reply_versions):
+                     request_version, reply_versions, update):
         """Process a reply from a Santiago service.
 
         The last call in the chain that makes up the Santiago system, we now
@@ -678,6 +688,8 @@ class Santiago(object):
 
         """
         debug_log("local {0}".format(str(locals())))
+        #Ensure update timestamp is a string value
+        update = str(update)
 
         # give up if we won't consume the service from the proxy or the client.
         try:
@@ -699,8 +711,8 @@ class Santiago(object):
             return
 
         if reply_to:
-            self.replace_consuming_location(host, self.reply_service, reply_to)
-        self.create_location("Consuming", host, service, locations)
+            self.replace_consuming_location(host, reply_to)
+        self.create_location("Consuming", host, service, locations, update)
 
         self.requests[host].remove(service)
         # clean buffers
@@ -851,11 +863,12 @@ class HostedService(SantiagoMonitor):
             "client": client,
             "locations": self.santiago.get_locations("Hosting", client, service)}
 
-    def put(self, client, service, location, *args, **kwargs):
-        super(HostedService, self).put(client, service, location,
+    def put(self, client, service, location, update, *args, **kwargs):
+        super(HostedService, self).put(client, service, location, update,
                                        *args, **kwargs)
-
-        self.santiago.create_location("Hosting", client, service, [location])
+        if(isinstance(location, str)):
+            location = [location]
+        self.santiago.create_location("Hosting", client, service, location, update)
 
     # Have to remove instead of delete for locations as ``service`` is a list
     def delete(self, client, service, location, *args, **kwargs):
@@ -913,11 +926,12 @@ class ConsumedService(SantiagoMonitor):
                  "locations":
                      self.santiago.get_locations("Consuming", host, service) }
 
-    def put(self, host, service, location, *args, **kwargs):
-        super(ConsumedService, self).put(host, service, location,
+    def put(self, host, service, location, update, *args, **kwargs):
+        super(ConsumedService, self).put(host, service, location, update,
                                          *args, **kwargs)
-
-        self.santiago.create_location("Consuming", host, service, [location])
+        if(isinstance(location, str)):
+            location = [location]
+        self.santiago.create_location("Consuming", host, service, location, update)
 
     # Have to remove instead of delete for locations as $service is a list
     def delete(self, host, service, location, *args, **kwargs):
