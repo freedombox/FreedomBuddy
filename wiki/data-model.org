@@ -11,7 +11,9 @@ This document reviews the behavior and interactions of different versions of the
 Freedombuddy communication data model.  I'd call it a protocol, but it seems
 rather unfair to do so.
 
-Currently, there are two versions of the data model, each of which has two use cases: a outgoing, from client to server, and an incoming, from server to client.
+Currently, there are two versions of the data model, each of which has two use
+cases: a outgoing, from client to server, and an incoming, from server to
+client.
 
 * Data Model Version 1
 
@@ -39,7 +41,15 @@ Currently, there are two versions of the data model, each of which has two use c
 
 * Compatibility Matrices
 
-These tables record the effective compatibility of clients and servers between protocol versions.  Somewhat surprisingly, compatibility is not symmetric between servers and clients.  This is primarily because the outgoing message has fewer constraints than the incomning message.
+These tables record the effective compatibility of clients and servers between
+protocol versions.  Somewhat surprisingly, compatibility is not symmetric
+between servers and clients.  This is primarily because the outgoing message has
+fewer constraints than the incomning message.
+
+The above may be incorrect.  On further reflection, I think these requirements
+are symmetric, thus it's doubtful that version 1 and 2 servers and clients will
+be able to round-trip a message.  If the requirements aren't symmetric, how does
+a server handle out-of-order client requests?
 
 ** Outgoing: Client to Server
 
