@@ -14,3 +14,4 @@ current.tar.gz
 predepend
 src/scripts/
 .coverage
+random_seed

@@ -357,7 +357,9 @@ class Santiago(object):
         list_to_use = self.get_consuming_or_hosting_list(list_type)
         if list_to_use != None:
             if service not in list_to_use[client]:
-                list_to_use[client][service] = {"update": None, "locations": list()}
+                list_to_use[client][service] = list()
+            if str(service)+'-update-timestamp' not in list_to_use[client]:
+                list_to_use[client][str(service)+'-update-timestamp'] = None
 
     def create_location(self, list_type, client, service, locations, update):
         """Create a hosting/consuming service location if one doesn't currently exist.
@@ -369,11 +371,12 @@ class Santiago(object):
         self.create_service(list_type, client, service)
         list_to_use = self.get_consuming_or_hosting_list(list_type)
         if list_to_use != None:
-            if utilities.isTimestampValid(list_to_use[client][service]['update'],update):
-                list_to_use[client][service] = {"update": update, "locations": list()}
+            if utilities.isTimestampValid(list_to_use[client][str(service)+'-update-timestamp'],update):
+                list_to_use[client][service] = list()
+                list_to_use[client][str(service)+'-update-timestamp'] = update
                 for location in locations:
                     if location not in list_to_use[client][service]:
-                        list_to_use[client][service]['locations'].append(location)
+                        list_to_use[client][service].append(location)
 
     def replace_consuming_location(self, host, locations):
         """Replace existing consuming locations with the new ones."""
@@ -394,7 +397,7 @@ class Santiago(object):
         try:
             list_to_use = self.get_consuming_or_hosting_list(list_type)
             if list_to_use != None:
-                return list_to_use[client][service]['locations']
+                return list_to_use[client][service]
             else:
                 return None
         except KeyError as error:
@@ -429,13 +432,15 @@ class Santiago(object):
         if list_to_use != None:
             if service in list_to_use[client]:
                 del list_to_use[client][service]
+            if str(service)+'-update-timestamp' in list_to_use[client]:
+                del list_to_use[client][str(service)+'-update-timestamp']
 
     def remove_location(self, list_type, client, service, location):
         """Delete location from client/service"""
         try:
             list_to_use = self.get_consuming_or_hosting_list(list_type)
             if list_to_use != None:
-                list_to_use[client][service]['locations'].remove(location)
+                list_to_use[client][service].remove(location)
         except KeyError as error:
             logging.exception(error)
         except ValueError as error:

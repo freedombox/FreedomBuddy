@@ -108,7 +108,7 @@ class IncomingRequest(SantiagoTest):
         self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
 
         self.assertEqual(None, self.santiago.incoming_request(self.request))
-        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
+        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME])
 
     def test_valid_request_list(self):
         """A message that should pass does pass normally."""
@@ -117,7 +117,7 @@ class IncomingRequest(SantiagoTest):
         self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
 
         self.assertEqual(None, self.santiago.incoming_request([self.request]))
-        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
+        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME])
 
     def test_empty_request_list(self):
         """A message that should pass does pass normally."""
@@ -148,7 +148,7 @@ class IncomingRequest(SantiagoTest):
                          "update": date_to_use})
         self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
         self.assertEqual(None, self.santiago.incoming_request([self.request]))
-        self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['update'])
+        self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME+'-update-timestamp'])
 
     def test_reject_time_key(self):
         """Confirm that an attacker is unable to replay-attack a service update."""
@@ -157,7 +157,7 @@ class IncomingRequest(SantiagoTest):
         self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
         #Sent t+0 - Server submits service, message is logged.
         self.assertEqual(None, self.santiago.incoming_request([self.request]))
-        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
+        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME])
         original_request = self.request
         date_to_use = str(datetime.utcnow())
         self.request = self.wrap_message({ "host": self.keyid, "client": self.keyid,
@@ -169,8 +169,8 @@ class IncomingRequest(SantiagoTest):
         #Sent t+1 - Server updates service to a new state.
         self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
         self.assertEqual(None, self.santiago.incoming_request([self.request]))
-        self.assertEqual([2], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
-        self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['update'])
+        self.assertEqual([2], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME])
+        self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME+'-update-timestamp'])
         #t+2 Attacker submits message to roll back the request clock to t-1.
         #Don't know how to make a variable not updatable?
         #self.santiago.consuming[self.keyid][self.service_name]['update'] = str(datetime.utcnow())
@@ -179,8 +179,8 @@ class IncomingRequest(SantiagoTest):
         #Ensure location isn't rolled back to [1].
         self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
         self.assertEqual(None, self.santiago.incoming_request([original_request]))
-        self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['update'])
-        self.assertEqual([2], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'])
+        self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME+'-update-timestamp'])
+        self.assertEqual([2], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME])
 
 
 class UnpackRequest(SantiagoTest):
@@ -410,8 +410,8 @@ class HandleRequest(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
 	    gpg = self.gpg)
 
@@ -475,7 +475,7 @@ class HandleRequest(SantiagoTest):
 
         self.assertTrue(self.santiago.requested)
         self.assertEqual(
-            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'],
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
             [1, 2])
 
     def test_replace_consuming_location(self):
@@ -485,13 +485,13 @@ class HandleRequest(SantiagoTest):
         self.call_handle_request()
 
         self.assertEqual(
-            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'],
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
             [1, 2])
 
         self.santiago.replace_consuming_location(self.keyid, [1, 3])
 
         self.assertEqual(
-            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'],
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
             [1, 3])
 
 class HostingAndConsuming(SantiagoTest):
@@ -504,8 +504,8 @@ class HostingAndConsuming(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME:{"update":None, "locations": [1]} }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME:{"update":None, "locations": [1]} }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
 	    gpg = self.gpg)
 
@@ -518,7 +518,7 @@ class HostingAndConsuming(SantiagoTest):
         self.santiago.replace_consuming_location(self.keyid, [1, 3])
 
         self.assertEqual(
-            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME]['locations'],
+            self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME],
             [1, 3])
 
     def test_get_host_locations_correctly(self):
@@ -531,7 +531,7 @@ class HostingAndConsuming(SantiagoTest):
 
     def test_get_host_services_correctly(self):
         """Return host services when there are clients set"""
-        self.assertEqual({santiago.Santiago.SERVICE_NAME: {'update': None, 'locations': [1]} }, self.santiago.get_services("Hosting", self.keyid))
+        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }, self.santiago.get_services("Hosting", self.keyid))
 
     def test_get_host_services_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
@@ -547,7 +547,7 @@ class HostingAndConsuming(SantiagoTest):
 
     def test_get_client_services_correctly(self):
         """Return client services when there are services set"""
-        self.assertEqual({santiago.Santiago.SERVICE_NAME: {'update': None, 'locations': [1]} }, self.santiago.get_services("Consuming", self.keyid))
+        self.assertEqual({santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }, self.santiago.get_services("Consuming", self.keyid))
 
     def test_get_client_services_with_incorrect_key(self):
         """Error raised when passed an incorrect key."""
@@ -687,7 +687,7 @@ class CreateHosting(SantiagoTest):
         self.santiago.create_location("Hosting", self.client, self.service,
                                               [self.location], str(datetime.utcnow()))
         self.assertIn(self.location,
-                        self.santiago.hosting[self.client][self.service]['locations'])
+                        self.santiago.hosting[self.client][self.service])
 
 class CreateConsuming(SantiagoTest):
     """Are hosts, services, and locations learned correctly?
@@ -728,7 +728,7 @@ class CreateConsuming(SantiagoTest):
                                                 str(datetime.utcnow()))
 
         self.assertIn(self.location,
-                       self.santiago.consuming[self.host][self.service]['locations'])
+                       self.santiago.consuming[self.host][self.service])
 
 class ArgumentTests(SantiagoTest):
     """Tests arguments to the FreedomBuddy service."""
@@ -757,8 +757,8 @@ class ArgumentTests(SantiagoTest):
         listeners, senders, monitors = utilities.configure_connectors(
             protocols, connectors)
 
-        hosting = { keyid: { service: [url] } }
-        consuming = { keyid: { service: [url] } }
+        hosting = { keyid: { service: [url], service+'-update-timestamp': None } }
+        consuming = { keyid: { service: [url], service+'-update-timestamp': None } }
 
         freedombuddy = santiago.Santiago(hosting=hosting, consuming=consuming,
                                          save_dir='src/tests/data/test_gpg_home',
@@ -795,8 +795,8 @@ class ArgumentTests(SantiagoTest):
         listeners, senders, monitors = utilities.configure_connectors(
             protocols, connectors)
 
-        hosting = { keyid: { service: [url] } }
-        consuming = { keyid: { service: [url] } }
+        hosting = { keyid: { service: [url], service+'-update-timestamp': None } }
+        consuming = { keyid: { service: [url], service+'-update-timestamp': None } }
 
         freedombuddy = santiago.Santiago(hosting=hosting, consuming=consuming,
                                          save_services=False, my_key_id=keyid, 
@@ -817,8 +817,8 @@ class Hosting(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
@@ -856,14 +856,15 @@ class HostedClient(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1] }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
     def test_santiago_hosted_client_get(self):
         hostedClient = santiago.HostedClient(self.santiago)
-        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1], 
+                         santiago.Santiago.SERVICE_NAME+'-update-timestamp': None}}, 
                          hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_hosted_client_get_with_invalid_client(self):
@@ -874,13 +875,15 @@ class HostedClient(SantiagoTest):
     def test_santiago_hosted_client_put(self):
         hostedClient = santiago.HostedClient(self.santiago)
         hostedClient.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2")
-        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2': {'locations': [], 'update': None}, santiago.Santiago.SERVICE_NAME: [1]}}, 
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2':[], '2-update-timestamp': None, 
+                         santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None}}, 
                          hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_hosted_client_ensure_put_existing_service_does_not_overwrite_service(self):
         hostedClient = santiago.HostedClient(self.santiago)
         hostedClient.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME)
-        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1], 
+                         santiago.Santiago.SERVICE_NAME+'-update-timestamp': None}}, 
                          hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_hosted_client_delete(self):
@@ -892,7 +895,8 @@ class HostedClient(SantiagoTest):
     def test_santiago_hosted_client_delete_invalid_service(self):
         hostedClient = santiago.HostedClient(self.santiago)
         hostedClient.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628','2')
-        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1]}}, 
+        self.assertEqual({'client': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1], 
+                         santiago.Santiago.SERVICE_NAME+'-update-timestamp': None}}, 
                          hostedClient.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_hosted_client_delete_invalid_client_and_invalid_service(self):
@@ -911,8 +915,8 @@ class HostedService(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
@@ -970,8 +974,8 @@ class Consuming(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
@@ -1009,14 +1013,15 @@ class ConsumedHost(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
     def test_santiago_consumed_host_get(self):
         consumedHost = santiago.ConsumedHost(self.santiago)
-        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: {'locations': [1], 'update': None}}}, 
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1], 
+                         santiago.Santiago.SERVICE_NAME+'-update-timestamp': None}}, 
                          consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_consumed_host_get_with_invalid_host(self):
@@ -1027,13 +1032,15 @@ class ConsumedHost(SantiagoTest):
     def test_santiago_consumed_host_put(self):
         consumedHost = santiago.ConsumedHost(self.santiago)
         consumedHost.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',"2")
-        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2': {'locations': [], 'update': None}, santiago.Santiago.SERVICE_NAME: {'locations': [1], 'update': None}}}, 
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {'2': [], '2-update-timestamp': None, 
+                         santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None}}, 
                          consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_consumed_host_ensure_put_existing_service_does_not_overwrite_service(self):
         consumedHost = santiago.ConsumedHost(self.santiago)
         consumedHost.put('95801F1ABE01C28B05ADBE5FA7C860604DAE2628',santiago.Santiago.SERVICE_NAME)
-        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: {'locations': [1], 'update': None}}}, 
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628','services': {santiago.Santiago.SERVICE_NAME: [1], 
+                         santiago.Santiago.SERVICE_NAME+'-update-timestamp': None}}, 
                          consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_consumed_host_delete(self):
@@ -1045,7 +1052,8 @@ class ConsumedHost(SantiagoTest):
     def test_santiago_consumed_host_delete_invalid_service(self):
         consumedHost = santiago.ConsumedHost(self.santiago)
         consumedHost.delete('95801F1ABE01C28B05ADBE5FA7C860604DAE2628', '2')
-        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628', 'services': {santiago.Santiago.SERVICE_NAME: {'locations': [1], 'update': None}}}, 
+        self.assertEqual({'host': '95801F1ABE01C28B05ADBE5FA7C860604DAE2628', 'services': {santiago.Santiago.SERVICE_NAME: [1], 
+                         santiago.Santiago.SERVICE_NAME+'-update-timestamp': None}}, 
                          consumedHost.get('95801F1ABE01C28B05ADBE5FA7C860604DAE2628'))
 
     def test_santiago_consumed_host_delete_invalid_host_and_invalid_service(self):
@@ -1064,8 +1072,8 @@ class ConsumedService(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
-            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
-            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: {"update":None, "locations": [1]} }},
+            hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
+            consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
             gpg = self.gpg)
 
