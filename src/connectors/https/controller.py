@@ -77,7 +77,6 @@ def allow_requests(requests = None):
 
 cherrypy.tools.ip_filter = cherrypy.Tool('before_handler', allow_ips)
 cherrypy.tools.request_filter = cherrypy.Tool('before_handler', allow_requests)
-
 
 def start(*args, **kwargs):
     """Module-level start function, called after listener and sender started.
@@ -91,7 +90,6 @@ def stop(*args, **kwargs):
     """
     cherrypy.engine.stop()
     cherrypy.engine.exit()
-
 
 class HttpsListener(santiago.SantiagoListener):
     """The HTTPS interface FBuddy Listener."""

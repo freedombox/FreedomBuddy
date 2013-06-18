@@ -31,14 +31,14 @@ $(BUILD_DIR)/cert-depends: build
 	sudo apt-get install ssl-cert
 	touch $(BUILD_DIR)/cert-depends
 
-python-gnupg-0.3.3:
-	wget http://python-gnupg.googlecode.com/files/python-gnupg-0.3.3.tar.gz
-	tar -xzf python-gnupg-0.3.3.tar.gz
-	rm -f python-gnupg-0.3.3.tar.gz
+python-gnupg-0.3.4:
+	wget http://python-gnupg.googlecode.com/files/python-gnupg-0.3.4.tar.gz
+	tar -xzf python-gnupg-0.3.4.tar.gz
+	rm -f python-gnupg-0.3.4.tar.gz
 
-$(BUILD_DIR)/python-gnupg: build python-gnupg-0.3.3
+$(BUILD_DIR)/python-gnupg: build python-gnupg-0.3.4
 	rm -rf build/gnupg
-	mv python-gnupg-0.3.3 build/gnupg
+	mv python-gnupg-0.3.4 build/gnupg
 
 $(BUILD_DIR)/plinth: build
 	test -d $(BUILD_DIR)/plinth || git clone git://github.com/NickDaly/Plinth.git $(BUILD_DIR)/plinth
@@ -49,7 +49,7 @@ $(SCRIPTS_DIR)/tinc_rollout: build
 	cd $(SCRIPTS_DIR)/tinc_rollout; git pull
 
 predepend:
-	sudo sh -c "apt-get install python-routes python-socksipy python-cheetah python-openssl python-bjsonrpc python-cherrypy3 python-dateutil python-httplib2 python-gnupg"
+	sudo sh -c "apt-get install python-routes python-socksipy python-cheetah python-openssl python-bjsonrpc python-cherrypy3 python-dateutil python-httplib2"
 	touch predepend
 
 $(CFG_PRODUCTION):

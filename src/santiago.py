@@ -140,7 +140,8 @@ class Santiago(object):
         self.listeners = self.create_connectors(listeners, "Listener")
         self.senders = self.create_connectors(senders, "Sender")
         self.monitors = self.create_connectors(monitors, "Monitor")
-
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
         self.shelf = shelve.open(save_dir.rstrip(os.sep) + os.sep +
                                  str(self.my_key_id) + ".dat")
         self.hosting = hosting if hosting else self.load_data("hosting")

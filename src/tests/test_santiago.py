@@ -40,7 +40,8 @@ class SantiagoSetupTests(SantiagoTest):
     """Does Santiago get created correctly?"""
     """hosting=None, consuming=None, 
                  my_key_id=0, reply_service=None,
-                 save_dir=".", save_services=True,
+                 save_dir="src/tests/data/SantiagoSetupTests", 
+                 save_services=True,
                  gpg=None, force_sender=None, *args, **kwargs"""
     def test_create_santiago_with_https_listener(self):
         """Ensure listeners are set from variable in Santiago creator"""
@@ -82,7 +83,8 @@ class IncomingRequest(SantiagoTest):
 
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
-                                          gpg = self.gpg)
+                                          gpg = self.gpg,
+                                          save_dir='src/tests/data/IncomingRequest')
 
         self.valid_request_version = self.santiago.SUPPORTED_REQUEST_VERSION
         self.valid_reply_versions = self.santiago.SUPPORTED_REPLY_VERSIONS
@@ -243,7 +245,8 @@ class UnpackRequest(SantiagoTest):
 
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
-                                          gpg = self.gpg)
+                                          gpg = self.gpg,
+                                          save_dir='src/tests/data/UnpackRequest')
         self.valid_request_version = self.santiago.SUPPORTED_REQUEST_VERSION
         self.valid_reply_versions = self.santiago.SUPPORTED_REPLY_VERSIONS
 
@@ -413,7 +416,8 @@ class HandleRequest(SantiagoTest):
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
-	    gpg = self.gpg)
+            gpg = self.gpg,
+            save_dir='src/tests/data/HandleRequest')
 
         self.santiago.requested = False
         self.santiago.outgoing_request = (lambda *args, **kwargs:
@@ -507,7 +511,8 @@ class HostingAndConsuming(SantiagoTest):
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
-	    gpg = self.gpg)
+            gpg = self.gpg,
+            save_dir='src/tests/data/HostingAndConsuming')
 
 
 
@@ -561,6 +566,15 @@ class HostingAndConsuming(SantiagoTest):
         """Nothing returned when client not served."""
         self.assertEqual([], self.santiago.get_served_clients("test"))
 
+    def test_get_serving_hosts_correctly(self):
+        """Return hosting services from host when there are services set"""
+        self.assertEqual([self.keyid], self.santiago.get_serving_hosts(santiago.Santiago.SERVICE_NAME))
+
+    def test_get_serving_hosts_with_incorrect_service(self):
+        """Nothing returned when host not hosting service for me."""
+        self.assertEqual([], self.santiago.get_serving_hosts("test"))
+
+
 
 class OutgoingRequest(SantiagoTest):
     """Are outgoing requests properly formed?
@@ -592,7 +606,8 @@ class OutgoingRequest(SantiagoTest):
             my_key_id = self.keyid,
             consuming = { self.keyid: { santiago.Santiago.SERVICE_NAME: 
                                         ( "https://1", )}},
-	    gpg = self.gpg)
+            gpg = self.gpg,
+            save_dir='src/tests/data/OutgoingRequest')
 
         self.valid_request_version = self.santiago.SUPPORTED_REQUEST_VERSION
         self.valid_reply_versions = self.santiago.SUPPORTED_REPLY_VERSIONS
@@ -663,7 +678,8 @@ class CreateHosting(SantiagoTest):
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
-                                          gpg = self.gpg)
+                                          gpg = self.gpg,
+                                          save_dir='src/tests/data/CreateHosting')
 
         self.client = 1
         self.service = 2
@@ -699,7 +715,8 @@ class CreateConsuming(SantiagoTest):
         self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
-        self.santiago = santiago.Santiago(my_key_id = self.keyid, gpg=self.gpg)
+        self.santiago = santiago.Santiago(my_key_id = self.keyid, gpg=self.gpg,
+                                          save_dir='src/tests/data/CreateConsuming')
 
         self.host = 1
         self.service = 2
@@ -761,12 +778,12 @@ class ArgumentTests(SantiagoTest):
         consuming = { keyid: { service: [url], service+'-update-timestamp': None } }
 
         freedombuddy = santiago.Santiago(hosting=hosting, consuming=consuming,
-                                         save_dir='src/tests/data/test_gpg_home',
+                                         save_dir='src/tests/data/ArgumentTests',
                                          my_key_id=keyid, gpg=gpg_to_use)
 
         self.cycle(freedombuddy)
         freedombuddy1 = santiago.Santiago(my_key_id=keyid, gpg=gpg_to_use,
-                                          save_dir='src/tests/data/test_gpg_home')
+                                          save_dir='src/tests/data/ArgumentTests')
 
         self.assertIn(service, freedombuddy1.hosting[keyid])
         self.assertIn(service, freedombuddy1.consuming[keyid])
@@ -820,7 +837,8 @@ class Hosting(SantiagoTest):
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
-            gpg = self.gpg)
+            gpg = self.gpg,
+            save_dir='src/tests/data/Hosting')
 
     def test_santiago_hosting_get(self):
         hosting = santiago.Hosting(self.santiago)
@@ -859,7 +877,8 @@ class HostedClient(SantiagoTest):
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
-            gpg = self.gpg)
+            gpg = self.gpg,
+            save_dir='src/tests/data/HostedClient')
 
     def test_santiago_hosted_client_get(self):
         hostedClient = santiago.HostedClient(self.santiago)
@@ -918,7 +937,8 @@ class HostedService(SantiagoTest):
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
-            gpg = self.gpg)
+            gpg = self.gpg,
+            save_dir='src/tests/data/HostedService')
 
     def test_santiago_hosted_service_get(self):
         hostedService = santiago.HostedService(self.santiago)
@@ -977,7 +997,8 @@ class Consuming(SantiagoTest):
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
-            gpg = self.gpg)
+            gpg = self.gpg,
+            save_dir='src/tests/data/Consuming')
 
     def test_santiago_consuming_get(self):
         consuming = santiago.Consuming(self.santiago)
@@ -1016,7 +1037,8 @@ class ConsumedHost(SantiagoTest):
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
-            gpg = self.gpg)
+            gpg = self.gpg,
+            save_dir='src/tests/data/ConsumedHost')
 
     def test_santiago_consumed_host_get(self):
         consumedHost = santiago.ConsumedHost(self.santiago)
@@ -1075,7 +1097,8 @@ class ConsumedService(SantiagoTest):
             hosting = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             consuming = {self.keyid: {santiago.Santiago.SERVICE_NAME: [1], santiago.Santiago.SERVICE_NAME+'-update-timestamp': None }},
             my_key_id = self.keyid,
-            gpg = self.gpg)
+            gpg = self.gpg,
+            save_dir='src/tests/data/ConsumedService')
 
     def test_santiago_consumed_service_get(self):
         consumedService = santiago.ConsumedService(self.santiago)
