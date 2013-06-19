@@ -367,17 +367,18 @@ class Santiago(object):
 
         Check that hosting client/consuming host exists before trying to add service.
         Check that hosting/consuming service exists before trying to add location.
-
+        Don't allow services that end with -update-timestamp to be edited
         """
-        self.create_service(list_type, client, service)
-        list_to_use = self.get_consuming_or_hosting_list(list_type)
-        if list_to_use != None:
-            if utilities.isTimestampValid(list_to_use[client][str(service)+'-update-timestamp'],update):
-                list_to_use[client][service] = list()
-                list_to_use[client][str(service)+'-update-timestamp'] = update
-                for location in locations:
-                    if location not in list_to_use[client][service]:
-                        list_to_use[client][service].append(location)
+        if (not isinstance(service, basestring)) or (not service.endswith('-update-timestamp')):
+            self.create_service(list_type, client, service)
+            list_to_use = self.get_consuming_or_hosting_list(list_type)
+            if list_to_use != None:
+                if utilities.isTimestampValid(list_to_use[client][str(service)+'-update-timestamp'],update):
+                    list_to_use[client][service] = list()
+                    list_to_use[client][str(service)+'-update-timestamp'] = update
+                    for location in locations:
+                        if location not in list_to_use[client][service]:
+                          list_to_use[client][service].append(location)
 
     def replace_consuming_location(self, host, locations):
         """Replace existing consuming locations with the new ones."""

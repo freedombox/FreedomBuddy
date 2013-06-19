@@ -45,32 +45,35 @@ class SantiagoSetupTests(SantiagoTest):
                  gpg=None, force_sender=None, *args, **kwargs"""
     def test_create_santiago_with_https_listener(self):
         """Ensure listeners are set from variable in Santiago creator"""
-        self.santiago = santiago.Santiago(listeners={ "https": { "socket_port": 80 } })
+        self.santiago = santiago.Santiago(listeners={ "https": { "socket_port": 80 } },
+                                          save_dir="src/tests/data/SantiagoSetupTests")
         self.assertIsInstance(self.santiago.listeners["https"],httpscontroller.HttpsListener)
 
     def test_create_santiago_with_listeners_not_set(self):
         """Ensure listeners are set if variable in Santiago creator is None"""
-        self.santiago = santiago.Santiago()
+        self.santiago = santiago.Santiago(save_dir="src/tests/data/SantiagoSetupTests")
         self.assertEqual(None, self.santiago.listeners)
 
     def test_create_santiago_with_https_sender(self):
         """Ensure listeners are set from variable in Santiago creator"""
-        self.santiago = santiago.Santiago(senders={ "https": { "proxy_host": 80 } })
+        self.santiago = santiago.Santiago(senders={ "https": { "proxy_host": 80 } },
+                                          save_dir="src/tests/data/SantiagoSetupTests")
         self.assertIsInstance(self.santiago.senders["https"],httpscontroller.HttpsSender)
 
     def test_create_santiago_with_senders_not_set(self):
         """Ensure listeners are set if variable in Santiago creator is None"""
-        self.santiago = santiago.Santiago()
+        self.santiago = santiago.Santiago(save_dir="src/tests/data/SantiagoSetupTests")
         self.assertEqual(None, self.santiago.senders)
 
     def test_create_santiago_with_https_monitor(self):
         """Ensure listeners are set from variable in Santiago creator"""
-        self.santiago = santiago.Santiago(monitors={ "https": { "socket_port": 80 } })
+        self.santiago = santiago.Santiago(monitors={ "https": { "socket_port": 80 } },
+                                          save_dir="src/tests/data/SantiagoSetupTests")
         self.assertIsInstance(self.santiago.monitors["https"],httpscontroller.HttpsMonitor)
 
     def test_create_santiago_with_monitors_not_set(self):
         """Ensure listeners are set if variable in Santiago creator is None"""
-        self.santiago = santiago.Santiago()
+        self.santiago = santiago.Santiago(save_dir="src/tests/data/SantiagoSetupTests")
         self.assertEqual(None, self.santiago.monitors)
 
 class IncomingRequest(SantiagoTest):
@@ -88,13 +91,14 @@ class IncomingRequest(SantiagoTest):
 
         self.valid_request_version = self.santiago.SUPPORTED_REQUEST_VERSION
         self.valid_reply_versions = self.santiago.SUPPORTED_REPLY_VERSIONS
+        self.original_update_time = str(datetime.utcnow())
 
         self.request = { "host": self.keyid, "client": self.keyid,
                          "service": santiago.Santiago.SERVICE_NAME, 
                          "reply_to": None, "locations": [1],
                          "request_version": self.valid_request_version, 
                          "reply_versions": self.valid_reply_versions,
-                         "update": str(datetime.utcnow())}
+                         "update": self.original_update_time}
 
     def wrap_message(self, message):
         """The standard wrapping method for these tests."""
@@ -183,6 +187,27 @@ class IncomingRequest(SantiagoTest):
         self.assertEqual(None, self.santiago.incoming_request([original_request]))
         self.assertEqual(date_to_use, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME+'-update-timestamp'])
         self.assertEqual([2], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME])
+
+    def test_update_timestamp_not_directly_updatable(self):
+        """Ensure that an attacker is unable to change the service timestamp by updating the named service"""
+        self.assertEqual({}, self.santiago.consuming)
+        self.request = self.wrap_message(self.request)
+        self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME)
+        #Sent t+0 - Server submits service, message is logged.
+        self.assertEqual(None, self.santiago.incoming_request([self.request]))
+        self.assertEqual([1], self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME])
+        self.assertEqual(self.original_update_time, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME+'-update-timestamp'])
+        date_to_use = str(datetime.utcnow())
+        self.request = self.wrap_message({ "host": self.keyid, "client": self.keyid,
+                         "service": santiago.Santiago.SERVICE_NAME+'-update-timestamp', 
+                         "reply_to": None, "locations": [1],
+                         "request_version": self.valid_request_version, 
+                         "reply_versions": self.valid_reply_versions,
+                         "update": date_to_use})
+        self.santiago.requests[self.keyid].add(santiago.Santiago.SERVICE_NAME+'-update-timestamp')
+        self.assertEqual(None, self.santiago.incoming_request([self.request]))
+        self.assertEqual(self.original_update_time, self.santiago.consuming[self.keyid][santiago.Santiago.SERVICE_NAME+'-update-timestamp'])
+
 
 
 class UnpackRequest(SantiagoTest):
@@ -818,7 +843,8 @@ class ArgumentTests(SantiagoTest):
         freedombuddy = santiago.Santiago(hosting=hosting, consuming=consuming,
                                          save_services=False, my_key_id=keyid, 
                                          gpg=gpg_to_use)
-        freedombuddy1 = santiago.Santiago(my_key_id=keyid, gpg=gpg_to_use)
+        freedombuddy1 = santiago.Santiago(my_key_id=keyid, gpg=gpg_to_use,
+                                          save_dir='src/tests/data/ArgumentTests')
 
         self.cycle(freedombuddy)
         self.cycle(freedombuddy1)
