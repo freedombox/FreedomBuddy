@@ -77,6 +77,8 @@ def allow_requests(requests = None):
 
 cherrypy.tools.ip_filter = cherrypy.Tool('before_handler', allow_ips)
 cherrypy.tools.request_filter = cherrypy.Tool('before_handler', allow_requests)
+#cherrypy.config.update({'log.access_file': 'access.log',
+#                        'log.error_file': 'error.log'})
 
 def start(*args, **kwargs):
     """Module-level start function, called after listener and sender started.
@@ -277,7 +279,7 @@ class MonitorUtilities(object):
             raise cherrypy.HTTPError(500, "No values.")
         # return page content only if no errors.
         return [str(Template(
-                    file="/".join((self.relative_path, encoding,
+                    file="/".join(("src",self.relative_path, encoding,
                                    os.environ["LANG"].split("_")[0],
                                    template)),
                     searchList=my_search_list))]

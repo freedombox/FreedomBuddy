@@ -41,7 +41,7 @@ if __name__ == "__main__":
     listeners, senders, monitors = utilities.configure_connectors(protocols, connectors)
 
     # services to host and consume
-    url = "https://localhost:8080"
+    url = utilities.safe_load(config_file, "general", "url")
 
     # configure system
     # TODO Set this automatically when no relevant data/(keyid).dat file exists.

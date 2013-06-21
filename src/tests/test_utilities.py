@@ -95,6 +95,20 @@ class MultiSign(unittest.TestCase):
     def test_incorrect_gpg_key_raises_error(self):
         self.assertRaises(GPGKeyNotSpecifiedError, utilities.multi_sign, message="Test Message", gpg=self.gpg, keyid=None)
 
+class ConfigureConnectors(unittest.TestCase):
+    """Helper function retrieve create connectors with specified values"""
+
+    def setUp(self):
+        self.config = "src/tests/data/test_gpg.cfg"
+
+    def test_load_from_config(self):
+        config_file = utilities.load_config(self.config)
+        (mykey, protocols, connectors, force_sender) = utilities.get_config_values(config_file)
+        listeners, senders, monitors = utilities.configure_connectors(protocols, connectors)
+        self.assertEqual('8888', listeners['https']['socket_port'])
+        self.assertEqual('data/freedombuddy.crt', listeners['https']['ssl_certificate'])
+        self.assertEqual('data/freedombuddy.crt', listeners['https']['ssl_private_key'])
+
 class EnsureUpdateTimestampIsValid(unittest.TestCase):
     """Helper function to confirm whether update timestamp is valid."""
 
