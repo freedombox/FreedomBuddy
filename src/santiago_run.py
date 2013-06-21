@@ -22,7 +22,7 @@ import src.santiago as santiago
 
 if __name__ == "__main__":
 
-    (options, args) = parse_args(sys.argv)
+    (options, args) = utilities.parse_args(sys.argv)
 
     if options.trace:
         import pdb; pdb.set_trace()
@@ -34,7 +34,8 @@ if __name__ == "__main__":
         logging.getLogger("cherrypy.error").setLevel(logging.DEBUG)
 
     # load configuration settings
-    (mykey, protocols, connectors, force_sender) = utilities.load_config(options)
+    config_file = utilities.load_config(options.config)
+    (mykey, protocols, connectors, force_sender) = utilities.get_config_values(config_file)
 
     # create listeners and senders
     listeners, senders, monitors = utilities.configure_connectors(protocols, connectors)
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     santiago.debug_log("Santiago!")
     freedombuddy = santiago.Santiago(listeners, senders, hosting, consuming,
                                      my_key_id=mykey, monitors=monitors,
-                                     save_dir="../data",
+                                     save_dir="data",
                                      force_sender=force_sender)
 
     # run
