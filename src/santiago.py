@@ -327,6 +327,15 @@ class Santiago(object):
 
         return self.my_key_id == server
 
+    @classmethod
+    def update_time(service):
+        """Return the update time key for the service.
+
+        This pseudo-service name represents when the service was last updated.
+
+        """
+        return str(service) + "-update-timestamp"
+
     def create_hosting_client(self, client):
         """Create a hosting client if one doesn't currently exist."""
 
@@ -399,8 +408,8 @@ class Santiago(object):
 
         if service in self.hosting[client]:
             del self.hosting[client][service]
-        if str(service) + '-update-timestamp' in self.hosting[client]:
-            del self.hosting[client][str(service) + '-update-timestamp']
+        if Santiago.update_time(service) in self.hosting[client]:
+            del self.hosting[client][Santiago.update_time(service)]
 
     def remove_hosting_location(self, list_type, client, service, location):
         """Delete location from client's service."""
@@ -423,8 +432,8 @@ class Santiago(object):
 
         if service in self.consuming[host]:
             del self.consuming[host][service]
-        if str(service) + '-update-timestamp' in self.consuming[host]:
-            del self.consuming[host][str(service) + '-update-timestamp']
+        if Santiago.update_time(service) in self.consuming[host]:
+            del self.consuming[host][Santiago.update_time(service)]
 
     def remove_consuming_location(self, list_type, host, service, location):
         """Delete location from host's service."""
