@@ -572,7 +572,7 @@ class Santiago(object):
                   "reply_versions": list(Santiago.SUPPORTED_REPLY_VERSIONS)}),
             host, sign=self.my_key_id)
 
-    def incoming_request(self, request_list):
+    def incoming_request(self, requests):
         """Provide a service to a client.
 
         This tag doesn't do any real processing, it just catches and hides
@@ -591,10 +591,10 @@ class Santiago(object):
 
         """
         # no matter what happens, the sender will never hear about it.
-        if(isinstance(request_list, str)):
-            request_list = [request_list]
+        if(not isinstance(requests, list)):
+            requests = [requests]
         try:
-            for request in request_list:
+            for request in requests:
                 debug_log("request: {0}".format(str(request)))
 
                 unpacked = self.unpack_request(request)
@@ -715,8 +715,9 @@ class Santiago(object):
             self.proxy(to_, host, client, service, reply_to)
         else:
             if reply_to:
-                self.replace_consuming_location(client, reply_to)
-
+                self.replace_consuming_location(client,
+                                                self.reply_service,
+                                                reply_to)
             self.outgoing_request(
                 self.my_key_id, client, self.my_key_id, client,
                 service, self.hosting[client][service],
@@ -920,7 +921,7 @@ class HostedService(SantiagoMonitor):
     def put(self, client, service, location, update, *args, **kwargs):
         super(HostedService, self).put(client, service, location, update,
                                        *args, **kwargs)
-        if(isinstance(location, str)):
+        if(not isinstance(location, list)):
             location = [location]
         self.santiago.create_hosting_location(client, service, location, update)
 
@@ -956,13 +957,13 @@ class ConsumedHost(SantiagoMonitor):
         super(ConsumedHost, self).get(host, *args, **kwargs)
 
         return {
-            "services": self.santiago.get_services("Consuming", host),
+            "services": self.santiago.get_consuming_services(host),
             "host": host }
 
     def put(self, host, service, *args, **kwargs):
         super(ConsumedHost, self).put(host, service, *args, **kwargs)
 
-        self.santiago.create_consuming_host(host, service)
+        self.santiago.create_consuming_service(host, service)
 
     def delete(self, host, service, *args, **kwargs):
         super(ConsumedHost, self).delete(host, service, *args, **kwargs)
@@ -983,7 +984,7 @@ class ConsumedService(SantiagoMonitor):
     def put(self, host, service, location, update, *args, **kwargs):
         super(ConsumedService, self).put(host, service, location, update,
                                          *args, **kwargs)
-        if(isinstance(location, str)):
+        if(not isinstance(location, list)):
             location = [location]
         self.santiago.create_consuming_location(host, service, location, update)
 
