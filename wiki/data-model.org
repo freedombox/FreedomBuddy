@@ -13,47 +13,136 @@ rather unfair to do so.
 
 Currently, there are two versions of the data model, each of which has two use
 cases: a outgoing, from client to server, and an incoming, from server to
-client.
+client.  The incoming and outgoing use cases are equivalent unless otherwise
+noted.
 
 * Data Model Version 1
 
-** Data Points
+  This protocol version should no longer be used: FreedomBuddy uses this data in
+  a way that is susceptible to replay attacks by adversaries.
 
-*** Outgoing
+** Version 1 Data Points
 
-*** Incoming
+   - host :: The host's PGP key ID, a string.
+   - client :: The client's PGP key ID, a string.
+   - service :: The service's name, a string.
+   - locations :: Null (~""~) or an array of locations, each a string.  In an
+                  outgoing (initial) request, this parameter is blank.  In an
+                  incoming reply message, this parameter contains the locations
+                  of the specified services.
+   - reply_to :: An array of Santiago locations to reply to.
+   - request_version :: The version of the request (in this case, 1).
+   - reply_versions :: Request versions supported by this server.
 
-** Format
+** Version 1 Format
 
-** Wrapping Process
+   A JSON object (dictionary, hash-table) of values which are variously null,
+   strings, and arrays of strings.
+
+** Version 1 Wrapping Process
+
+   The JSON object is stringified and then PGP encrypted to the client's PGP
+   key.  Newlines and other special characters are escaped per the transport
+   protocol's requirements.
+
+   Messages can be multiply-wrapped to allow onion routing/blind proxying (where
+   each client can read the message's next hop, but nothing beyond that), though
+   this feature is not currently implemented.
 
 * Data Model Version 2
 
-** Data Points
+  Due to a foolish oversight, a second version of the protocol was required that
+  is no longer susceptible to replay attacks.  With this version of the data
+  model, FreedomBuddy has enough information to overcome these attacks: it
+  ignores updates that are not newer than the most recently received message or
+  are from the future.
 
-*** Outgoing
+** Version 2 Data Points
 
-*** Incoming
+   Same as [[*Version%201%20Data%20Points][version 1]], except for the addition of this parameter:
 
-** Format
+   - update :: The time the request was sent.
 
-** Wrapping Process
+** Version 2 Format
 
-* Compatibility Matrices
+   Same as [[*Version%201%20Format][version 1]].
 
-These tables record the effective compatibility of clients and servers between
-protocol versions.  Somewhat surprisingly, compatibility is not symmetric
-between servers and clients.  This is primarily because the outgoing message has
-fewer constraints than the incomning message.
+** Version 2 Wrapping Process
 
-The above may be incorrect.  On further reflection, I think these requirements
-are symmetric, thus it's doubtful that version 1 and 2 servers and clients will
-be able to round-trip a message.  If the requirements aren't symmetric, how does
-a server handle out-of-order client requests?
+   Same as [[*Version%201%20Wrapping%20Process][version 1]].
 
-** Outgoing: Client to Server
+* Data Model Version 3
 
-** Incoming: Server to Client
+  This version of the data model is still in the early planning stages but is
+  designed to move away from the PGP-only cryptography system.  Using X509
+  certificates or OTR has been a longstanding request that I haven't really
+  understood how to deal with for a while, now.  I believe we could also
+  properly fit message proxying between cilents into the mix (though that can be
+  pushed back to version 4 if necessary, as it'd be a backwards compatible
+  change).
+
+  There are two basic options for concurrently supporting any number of
+  encryption standards:
+
+  - (throw CPU efficiency out the window and) attempt to decrypt messages with
+    every possible key known between two parties.  Use heuristics to narrow down
+    the number of keys needed for the decryption process.  For example, a
+    PGP-encrypted message contains a different header than an OTR-encrypted
+    message.  However, if we know all the keys between two parties, we could
+    even remove the headers all together for added security-similar obfuscation
+    (non-cryptographic asshattery).
+
+  - (leak key information and) sign the encrypted payload and the plain-text
+    key's ID with the same encrypting key.  That will name the key as part of
+    the message:
+
+    #+begin_src text
+      ----- BEGIN PGP SIGNED MESSAGE -----
+      PGP Key ID: 00000001
+      ----- BEGIN PGP ENCRYPTED MESSAGE -----
+      1A7ECAB5A123BADCAB5
+      ----- END PGP ENCRYPTED MESSAGE -----
+      ----- END PGP SIGNED MESSAGE -----
+    #+end_src
+
+    Additional information could be embedded in the signed, unencrypted, header
+    to support message proxying and other features.
+
+  Both methods imply that we're being much more careful about the initial set up
+  than we needed to be in previous versions of the data model.  We're exchanging
+  data over a much larger key set now, so the initial exchange either has to be
+  signed in plain text, encrypted to a predetermined key, or we just try all
+  available keys for the fun of it.
+
+  This also implies lots of changes to the local data model, in that each user
+  has a local ID separate from their key IDs, or that all their other key IDs
+  map to PGP key IDs.
+
+  Identity, as a concept, is difficult...
+
+** Version 3 Data Points
+
+   Same as [[*Version%202%20Data%20Points][version 2]], except for...
+
+** Version 3 Format
+
+   Same as [[*Version%201%20Format][version 1]], except for...
+
+** Version 3 Wrapping Process
+
+   Same as [[*Version%201%20Wrapping%20Process][version 1]], except for...
+
+* Compatibility Between Message Versions
+
+  Protocol versions are generally compatible when they change for non-security
+  related reasons.  However, if the reiability or correct operation of the
+  protocol are at stake, then the relevant protocol versions are incompatible.
+
+  - [[*Data%20Model%20Version%201][Version 1]] :: Version 1 servers and clients can communicate between one
+                 another.  This version is not compatible with other versions.
+
+  - [[*Data%20Model%20Version%202][Version 2]] :: Version 2 servers and clients can communicate between one
+                 another.  This version is not compatible with version 1.
 
 * Metadata
   :PROPERTIES:
