@@ -63,9 +63,13 @@ class Santiago(object):
 
     The client and server are unified.
 
+    See `data model`_ for details on the REQUEST_VERSION and REPLY_VERSIONS.
+
+    .. _data model: ../wiki/data-model.html
+
     """
-    SUPPORTED_REQUEST_VERSION = 1
-    SUPPORTED_REPLY_VERSIONS = [1]
+    REQUEST_VERSION = 2
+    SUPPORTED_REPLY_VERSIONS = [REQUEST_VERSION]
     # all keys must be present in the message.
     ALL_KEYS = set(("host", "client", "service", "locations", "reply_to",
                     "request_version", "reply_versions", "update"))
@@ -245,7 +249,7 @@ class Santiago(object):
             getattr(connector, state)()
 
         for connector in self.connectors:
-            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], 
+            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)],
 			state)(santiago=self)
 
         debug_log("Santiago: {0}".format(state))
@@ -336,6 +340,92 @@ class Santiago(object):
         """
         return str(service) + "-update-timestamp"
 
+    def valid_hosting_update(self, client, service, update):
+        """Is the client's update time valid?
+
+        A valid update time has two critieria:
+
+        - It is newer than previous update times.
+        - It is not from the future.
+
+        See Santiago.valid_update_time for more detail.
+
+        """
+        return self.valid_update_time(True, client, service, update)
+
+    def valid_consuming_update(self, host, service, update):
+        """Is the host's update time valid?
+
+        A valid update time has two critieria:
+
+        - It is newer than previous update times.
+        - It is not from the future.
+
+        See Santiago.valid_update_time for more detail.
+
+        """
+        return self.valid_update_time(False, host, service, update)
+
+    def valid_update_time(self, hosting, peer, service, update):
+        """Is the peer's update time valid?
+
+        A valid update time has two critieria:
+
+        - It is newer than previous update times.
+        - It is not from the future.
+
+        The following snippets exercise these behaviors:
+
+        >>> import time
+        >>> hosting = True, peer = 0, service = 0, update = time.time()
+        >>> set_hosting_time = lambda x: self.hosting[peer][Santiago.update_time(service)] = x
+        >>> set_consuming_time = lambda x: self.consuming[peer][Santiago.update_time(service)] = x
+
+        - Newer update times succeed::
+
+        >>> set_hosting_time(1)
+        >>> self.valid_update_time(hosting, peer, service, update)
+        True
+
+        - Older update times fail::
+
+        >>> set_consuming_time(update - 1)
+        >>> self.valid_update_time(!hosting, peer, service, update)
+        False
+
+        - Future update times fail::
+
+        >>> set_hosting_time(update - 1)
+        >>> self.valid_update_time(hosting, peer, service, time.time() + 1)
+        False
+
+        The update time must be a valid Python time (of the sort produced by
+        time.time()).
+
+        pre::
+
+            update == float(update) # update can be a float.
+
+        """
+        # not protected, as this must fail hard: no recovery makes sense.
+        peer_list = getattr(self, { True: "hosting",
+                                    False: "consuming", }[hosting])
+
+        try:
+            previous_update = peer_list[peer][Santiago.update_time(service)]
+        except KeyError:
+             # this is a new host or service
+            prevous_update = 0
+
+        valid = (update <= time.time() and update > previous_update)
+
+        if not valid:
+            debug.log("%s.%s: invalid update time: %s vs %s (now is %s)".format(
+                    host, service, update, prev_time, time.time()))
+
+        return valid
+
+
     def create_hosting_client(self, client):
         """Create a hosting client if one doesn't currently exist."""
 
@@ -372,7 +462,7 @@ class Santiago(object):
         if host not in self.consuming:
             self.consuming[host] = dict()
 
-    def create_consuming_service(self, host, service):
+    def create_consuming_service(self, host, service, update):
         """Create a consuming service if one doesn't currently exist.
 
         Check that consuming host exists before trying to add service.
@@ -380,21 +470,31 @@ class Santiago(object):
         """
         self.create_consuming_host(host)
 
+        if not valid_consuming_update(host, service, update):
+            return False
+
         if service not in self.consuming[host]:
             self.consuming[host][service] = list()
 
-    def create_consuming_location(self, host, service, locations):
+        self.consuming[host][Santiago.update_time(service)] = update
+
+        return True
+
+    def create_consuming_location(self, host, service, locations, update):
         """Create a consuming location if one doesn't currently exist.
 
         Check that consuming host exists before trying to add service.
         Check that consuming service exists before trying to add location.
 
         """
-        self.create_consuming_service(host, service)
+        if not self.create_consuming_service(host, service, update):
+            return False
 
         for location in locations:
             if location not in self.consuming[host][service]:
                 self.consuming[host][service].append(location)
+
+        return True
 
 
     def remove_hosting_client(self, client):
@@ -446,15 +546,32 @@ class Santiago(object):
             logging.exception(error)
 
 
-    def replace_consuming_location(self, host, service, locations):
-        """Replace existing consuming locations with the new ones."""
+    def replace_consuming_location(self, host, service, locations, update):
+        """Replace existing consuming locations with the new ones.
+
+        Only services whose timestamps are newer than the previous request are
+        processed.
+
+        pre::
+
+            update == float(update) # update is a float.
+
+        """
+        if not valid_consuming_update(host, service, update):
+            return
 
         try:
             del self.consuming[host][service]
         except:
             pass
 
-        self.create_consuming_location(host, service, locations)
+        try:
+             del self.consuming[host][Santiago.update_time(service)]
+        except:
+            pass
+
+
+        self.create_consuming_location(host, service, locations, update)
 
     def get_host_locations(self, client, service):
         """Return client hosting data.
@@ -522,7 +639,7 @@ class Santiago(object):
         except Exception:
             logging.exception("Couldn't handle %s.%s", host, service)
 
-    def outgoing_request(self, host, client,
+    def outgoing_request(self, from_, to, host, client,
                          service, locations="", reply_to=""):
         """Send a request to another Santiago service.
 
@@ -537,7 +654,7 @@ class Santiago(object):
         client connector.
 
         """
-        self.requests[host].add(service)
+        self.enqueue_request(host, service)
 
         request = self.pack_request(host, client, service, locations, reply_to)
 
@@ -563,13 +680,16 @@ class Santiago(object):
         :reply_to: a ``list`` of places the *client* should send future requests
             to.
 
+        :update: The time the request was sent.
+
         """
         return self.gpg.encrypt(json.dumps(
                 { "host": host, "client": client,
                   "service": service, "locations": list(locations or ""),
                   "reply_to": list(reply_to),
-                  "request_version": Santiago.SUPPORTED_REQUEST_VERSION,
-                  "reply_versions": list(Santiago.SUPPORTED_REPLY_VERSIONS)}),
+                  "request_version": Santiago.REQUEST_VERSION,
+                  "reply_versions": list(Santiago.SUPPORTED_REPLY_VERSIONS),
+                  "update": time.time(),}),
             host, sign=self.my_key_id)
 
     def incoming_request(self, requests):
@@ -584,16 +704,18 @@ class Santiago(object):
         - The round-trip time for that response.
         - Whether the server is up or down.
 
-        Worst case scenario, a client causes the Python interpreter to
-        segfault and the Santiago process comes down, while the system
-        is set up to reject connections by default.  Then, the
-        attacker knows that the last request brought down a system.
+        Worst case scenario, a client causes the Python interpreter to segfault
+        and the Santiago process comes down, while the system is set up to
+        reject connections by default.  Then, the attacker knows that the last
+        request brought down this system.
 
         """
+        # all the logic of this function is inside a try block so that
         # no matter what happens, the sender will never hear about it.
-        if(not isinstance(requests, list)):
-            requests = [requests]
         try:
+            if(not isinstance(requests, list)):
+                requests = [requests]
+
             for request in requests:
                 debug_log("request: {0}".format(str(request)))
 
@@ -674,7 +796,7 @@ class Santiago(object):
         if not (set(Santiago.SUPPORTED_REPLY_VERSIONS) &
                 set(request_body["reply_versions"])):
             return
-        if not (set([Santiago.SUPPORTED_REQUEST_VERSION]) &
+        if not (set([Santiago.REQUEST_VERSION]) &
               set([request_body["request_version"]])):
             return
 
@@ -685,7 +807,8 @@ class Santiago(object):
         return request_body
 
     def handle_request(self, from_, to_, host, client,
-                       service, reply_to, request_version, reply_versions, update):
+                       service, reply_to,
+                       request_version, reply_versions, update):
         """Actually do the request processing.
 
         - Verify we're willing to host for both the client and proxy.  If we
@@ -710,14 +833,14 @@ class Santiago(object):
             debug_log("no host for {0} in {1}".format(client, self.hosting))
             return
 
-        # if we don't proxy, learn new reply locations and send the request.
+        # if we don't proxy, learn new reply locations and send the reply.
         if not self.i_am(host):
-            self.proxy(to_, host, client, service, reply_to)
+            self.proxy([to_, host, client, service, reply_to, update])
         else:
             if reply_to:
                 self.replace_consuming_location(client,
                                                 self.reply_service,
-                                                reply_to)
+                                                reply_to, update)
             self.outgoing_request(
                 self.my_key_id, client, self.my_key_id, client,
                 service, self.hosting[client][service],
@@ -730,8 +853,9 @@ class Santiago(object):
         original host as well as me.
 
         """
-        pass
-#FIXME:Need to create tests for this
+        raise RuntimeError("Proxying is not implemented.")
+
+    # FIXME: Need to create tests for this
     def handle_reply(self, from_, to_, host, client,
                      service, locations, reply_to,
                      request_version, reply_versions, update):
@@ -743,8 +867,6 @@ class Santiago(object):
 
         """
         debug_log("local {0}".format(str(locals())))
-        #Ensure update timestamp is a string value
-        update = str(update)
 
         # give up if we won't consume the service from the proxy or the client.
         try:
@@ -765,18 +887,39 @@ class Santiago(object):
             self.proxy()
             return
 
+        # if we have reply locations, update those locations.
         if reply_to:
-            self.replace_consuming_location(host, self.reply_service, reply_to)
-        self.create_consuming_location(host, service, locations, update)
+            self.replace_consuming_location(host, self.reply_service, reply_to,
+                                            update)
+
+        # if we successfully handled the request, dequeue it.
+        if self.create_consuming_location(host, service, locations, update):
+            self.dequeue_request(host, service)
+            debug_log("Success!")
+        else:
+            debug_log("Failure!")
+
+        debug_log("consuming {0}".format(self.consuming))
+        debug_log("requests {0}".format(self.requests))
+
+
+    def enqueue_request(host, service):
+        """Add a request to the outstanding request queue."""
+
+        if host not in self.requests:
+            self.requests[host] = list()
+
+        self.requests[host].add(service)
+
+    def dequeue_request(host, service):
+        """Remove a request from the outstanding request queue."""
 
         self.requests[host].remove(service)
-        # clean buffers
+
+        # clean buffers as a privacy protection.
         if not self.requests[host]:
             del self.requests[host]
 
-        debug_log("Success!")
-        debug_log("consuming {0}".format(self.consuming))
-        debug_log("requests {0}".format(self.requests))
 
 class SantiagoConnector(object):
     """Generic Santiago connector superclass.
