@@ -30,9 +30,10 @@ noted.
                   outgoing (initial) request, this parameter is blank.  In an
                   incoming reply message, this parameter contains the locations
                   of the specified services.
-   - reply_to :: An array of Santiago locations to reply to.
+   - reply_to :: An array of Santiago locations to reply to, each strings.
    - request_version :: The version of the request (in this case, 1).
-   - reply_versions :: Request versions supported by this server.
+   - reply_versions :: Request versions supported by this server, an array of
+                       integers.
 
 ** Version 1 Format
 
@@ -61,7 +62,11 @@ noted.
 
    Same as [[*Version%201%20Data%20Points][version 1]], except for the addition of this parameter:
 
-   - update :: The time the request was sent.
+   - update :: The time the request was sent, a Python Float (which should be
+               expressable as a JSON Number, within an acceptable tolerance).
+
+   Entertainingly, version 2 can be converted to version 1 by moving the
+   "update" parameter from the list of required to optional parameters.
 
 ** Version 2 Format
 
