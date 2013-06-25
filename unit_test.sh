@@ -11,3 +11,4 @@ python src/tests/test_santiago_listener.py
 python src/tests/test_gnupg.py
 python src/connectors/https/test_controller.py
 python src/tests/test_utilities.py
+python src/tests/test_santiago_run.py

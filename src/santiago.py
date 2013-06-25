@@ -433,7 +433,7 @@ class Santiago(object):
         if client not in self.hosting:
             self.hosting[client] = dict()
 
-    def create_hosting_service(self, client, service):
+    def create_hosting_service(self, client, service, update):
         """Create a hosting service if one doesn't currently exist.
 
         Check that hosting client exists before trying to add service.
@@ -441,21 +441,37 @@ class Santiago(object):
         """
         self.create_hosting_client(client)
 
+        if not self.valid_hosting_update(client, service, update):
+            return False
+
         if service not in self.hosting[client]:
             self.hosting[client][service] = list()
 
-    def create_hosting_location(self, client, service, locations):
+        self.hosting[client][Santiago.update_time(service)] = update
+
+        return True
+
+
+        if service not in self.hosting[client]:
+            self.hosting[client][service] = list()
+        if str(service)+'-update-timestamp' not in list_to_use[client]:
+                list_to_use[client][str(service)+'-update-timestamp'] = None
+
+    def create_hosting_location(self, client, service, locations, update):
         """Create a hosting service if one doesn't currently exist.
 
         Check that hosting client exists before trying to add service.
         Check that hosting service exists before trying to add location.
 
         """
-        self.create_hosting_service(client, service)
+        if not self.create_hosting_service(client, service, update):
+            return False
 
         for location in locations:
             if location not in self.hosting[client][service]:
                 self.hosting[client][service].append(location)
+
+        return True
 
     def create_consuming_host(self, host):
         """Create a consuming host if one doesn't currently exist."""
@@ -488,9 +504,12 @@ class Santiago(object):
         Check that consuming service exists before trying to add location.
 
         """
+        if (isinstance(service, basestring)) and (service.endswith('-update-timestamp')):
+            return False
+        
         if not self.create_consuming_service(host, service, update):
             return False
-
+        self.consuming[host][service] = list()
         for location in locations:
             if location not in self.consuming[host][service]:
                 self.consuming[host][service].append(location)
@@ -588,8 +607,7 @@ class Santiago(object):
                 return self.hosting[client][service]
             except KeyError as e:
                 logging.exception(e)
-
-        if client:
+        elif client:
             try:
                 return self.hosting[client]
             except KeyError as e:
@@ -618,8 +636,7 @@ class Santiago(object):
                 return self.consuming[host][service]
             except KeyError as e:
                 logging.exception(e)
-
-        if host:
+        elif host:
             try:
                 return self.consuming[host]
             except KeyError as e:
@@ -1059,10 +1076,10 @@ class HostedClient(SantiagoMonitor):
         return { "client": client,
                  "services": self.santiago.get_host_services(client) }
 
-    def put(self, client, service, *args, **kwargs):
-        super(HostedClient, self).put(client, service, *args, **kwargs)
+    def put(self, client, service, update, *args, **kwargs):
+        super(HostedClient, self).put(client, service, update, *args, **kwargs)
 
-        self.santiago.create_hosting_service(client, service)
+        self.santiago.create_hosting_service(client, service, update)
 
 
     def delete(self, client, service, *args, **kwargs):
@@ -1081,12 +1098,12 @@ class HostedService(SantiagoMonitor):
             "client": client,
             "locations": self.santiago.get_host_locations(client, service)}
 
-    def put(self, client, service, location, *args, **kwargs):
+    def put(self, client, service, location, update, *args, **kwargs):
         super(HostedService, self).put(client, service, location,
                                        *args, **kwargs)
         if(not isinstance(location, list)):
             location = [location]
-        self.santiago.create_hosting_location(client, service, location)
+        self.santiago.create_hosting_location(client, service, location, update)
 
     # Have to remove instead of delete for locations as ``service`` is a list
     def delete(self, client, service, location, *args, **kwargs):
@@ -1123,10 +1140,10 @@ class ConsumedHost(SantiagoMonitor):
             "services": self.santiago.get_client_services(host),
             "host": host }
 
-    def put(self, host, service, *args, **kwargs):
-        super(ConsumedHost, self).put(host, service, *args, **kwargs)
+    def put(self, host, service, update, *args, **kwargs):
+        super(ConsumedHost, self).put(host, service, update, *args, **kwargs)
 
-        self.santiago.create_consuming_service(host, service)
+        self.santiago.create_consuming_service(host, service, update)
 
     def delete(self, host, service, *args, **kwargs):
         super(ConsumedHost, self).delete(host, service, *args, **kwargs)

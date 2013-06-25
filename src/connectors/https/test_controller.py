@@ -98,7 +98,7 @@ class Stopper(MonitorTest):
         """Stop must send the "--stop" command to the cli client."""
 
         try:
-            self.controller.POST()
+            self.controller.post()
         except cherrypy.HTTPRedirect:
             pass
 
@@ -107,7 +107,7 @@ class Stopper(MonitorTest):
     def test_stop_redirects(self):
         """Stop redirects to ``/freedombuddy`` after POSTing."""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST()
+            self.controller.post()
         self.assertEqual(['http://127.0.0.1:0/freedombuddy'], 
                          context.exception[0])
 
@@ -179,20 +179,20 @@ class Hosting(MonitorTest):
     def test_get(self):
         """Test to ensure calling Get is 
            handled correctly by adding List action to command"""
-        self.controller.GET()
+        self.controller.get()
         self.assertInCommand(("--action list", "--hosting"))
 
     def test_post_blank(self):
         """Test to ensure calling Post with no default values is handled 
            correctly by returning None"""
-        self.assertEqual(None, self.controller.POST())
+        self.assertEqual(None, self.controller.post())
 
     def test_post_put_set(self):
         """Test to ensure calling Post with put set and delete not set is 
            handled correctly by adding Add action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(put="a")
+            self.controller.post(put="a")
         self.assertEqual(['http://127.0.0.1:8080/hosting'], 
                          context.exception[0])
         self.assertInCommand(("--action add", "--hosting", "--key a"))
@@ -202,7 +202,7 @@ class Hosting(MonitorTest):
            handled correctly by adding Remove action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(delete="a")
+            self.controller.post(delete="a")
         self.assertEqual(['http://127.0.0.1:8080/hosting'], 
                          context.exception[0])
 
@@ -212,18 +212,18 @@ class Hosting(MonitorTest):
         """Test to ensure calling Post with put set and delete set causes 
            an Exception to be raised"""
         self.assertRaises(HTTPSConnectorInvalidCombinationError, 
-                          self.controller.POST, put="a", delete="a")
+                          self.controller.post, put="a", delete="a")
 
     def test_put(self):
         """Test to ensure calling Put with put set is 
            handled correctly by adding Add action to command"""
-        self.controller.PUT("a")
+        self.controller.put("a")
         self.assertInCommand(("--action add", "--hosting", "--key a"))
 
     def test_delete(self):
         """Test to ensure calling Delete with delete set is 
            handled correctly by adding Remove action to command"""
-        self.controller.DELETE("a")
+        self.controller.delete("a")
         self.assertInCommand(("--action remove", "--hosting", "--key a"))
 
 class HostedClient(MonitorTest):
@@ -237,20 +237,20 @@ class HostedClient(MonitorTest):
     def test_get(self):
         """Test to ensure calling Get is 
            handled correctly by adding List action to command"""
-        self.controller.GET("a")
+        self.controller.get("a")
         self.assertInCommand(("--action list", "--hosting", "--key a"))
 
     def test_post_blank(self):
         """Test to ensure calling Post with no default values is handled 
            correctly by returning None"""
-        self.assertEqual(None, self.controller.POST(client="a"))
+        self.assertEqual(None, self.controller.post(client="a"))
 
     def test_post_put_set(self):
         """Test to ensure calling Post with put set and delete not set is 
            handled correctly by adding Add action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(client="a", put="b")
+            self.controller.post(client="a", put="b")
         self.assertEqual(['http://127.0.0.1:8080/hosting/a'], 
                          context.exception[0])
 
@@ -262,7 +262,7 @@ class HostedClient(MonitorTest):
            handled correctly by adding Remove action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(client="a", delete="b")
+            self.controller.post(client="a", delete="b")
         self.assertEqual(['http://127.0.0.1:8080/hosting/a'], 
                          context.exception[0])
 
@@ -273,20 +273,20 @@ class HostedClient(MonitorTest):
         """Test to ensure calling Post with put set and delete set causes 
            an Exception to be raised"""
         self.assertRaises(HTTPSConnectorInvalidCombinationError, 
-                          self.controller.POST, client="a", put="a", 
+                          self.controller.post, client="a", put="a", 
                           delete="a")
 
     def test_put(self):
         """Test to ensure calling Put with put set is 
            handled correctly by adding Add action to command"""
-        self.controller.PUT("a", "b")
+        self.controller.put("a", "b")
         self.assertInCommand(
             ("--action add", "--hosting", "--key a", "--service b"))
 
     def test_delete(self):
         """Test to ensure calling Delete with delete set is 
            handled correctly by adding Remove action to command"""
-        self.controller.DELETE("a", "b")
+        self.controller.delete("a", "b")
         self.assertInCommand(
             ("--action remove", "--hosting", "--key a", "--service b"))
 
@@ -301,21 +301,21 @@ class HostedService(MonitorTest):
     def test_get(self):
         """Test to ensure calling Get is 
            handled correctly by adding List action to command"""
-        self.controller.GET("a", "b")
+        self.controller.get("a", "b")
         self.assertInCommand(
             ("--action list", "--hosting", "--key a", "--service b"))
 
     def test_post_blank(self):
         """Test to ensure calling Post with no default values is handled 
            correctly by returning None"""
-        self.assertEqual(None, self.controller.POST(client="a", service="b"))
+        self.assertEqual(None, self.controller.post(client="a", service="b"))
 
     def test_post_put_set(self):
         """Test to ensure calling Post with put set and delete not set is 
            handled correctly by adding Add action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(client="a", service="b", put="c")
+            self.controller.post(client="a", service="b", put="c")
         self.assertEqual(['http://127.0.0.1:8080/hosting/a/b/'], 
                          context.exception[0])
 
@@ -327,7 +327,7 @@ class HostedService(MonitorTest):
            handled correctly by adding Remove action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(client="a", service="b", delete="c")
+            self.controller.post(client="a", service="b", delete="c")
         self.assertEqual(['http://127.0.0.1:8080/hosting/a/b/'], 
                          context.exception[0])
 
@@ -338,13 +338,13 @@ class HostedService(MonitorTest):
         """Test to ensure calling Post with put set and delete set causes 
            an Exception to be raised"""
         self.assertRaises(HTTPSConnectorInvalidCombinationError, 
-                          self.controller.POST, client="a", service="a", 
+                          self.controller.post, client="a", service="a", 
                           put="a", delete="a")
 
     def test_put(self):
         """Test to ensure calling Put with put set is 
            handled correctly by adding Add action to command"""
-        self.controller.PUT("a", "b", "c")
+        self.controller.put("a", "b", "c")
         self.assertInCommand(
             ("--action add", "--hosting", "--key a", "--service b",
              "--location c"))
@@ -352,7 +352,7 @@ class HostedService(MonitorTest):
     def test_delete(self):
         """Test to ensure calling Delete with delete set is 
            handled correctly by adding Remove action to command"""
-        self.controller.DELETE("a", "b", "c")
+        self.controller.delete("a", "b", "c")
         self.assertInCommand(
             ("--action remove", "--hosting", "--key a", "--service b",
              "--location c"))
@@ -368,20 +368,20 @@ class Consuming(MonitorTest):
     def test_get(self):
         """Test to ensure calling Get is 
            handled correctly by adding List action to command"""
-        self.controller.GET()
+        self.controller.get()
         self.assertInCommand(("--action list", "--consuming"))
 
     def test_post_blank(self):
         """Test to ensure calling Post with no default values is handled 
            correctly by returning None"""
-        self.assertEqual(None, self.controller.POST())
+        self.assertEqual(None, self.controller.post())
 
     def test_post_put_set(self):        
         """Test to ensure calling Post with put set and delete not set is 
            handled correctly by adding Add action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(put="a")
+            self.controller.post(put="a")
         self.assertEqual(['http://127.0.0.1:8080/consuming'], 
                          context.exception[0])
         self.assertInCommand(("--action add", "--consuming", "--key a"))
@@ -391,7 +391,7 @@ class Consuming(MonitorTest):
            handled correctly by adding Remove action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(delete="a")
+            self.controller.post(delete="a")
         self.assertEqual(['http://127.0.0.1:8080/consuming'], 
                          context.exception[0])
 
@@ -401,18 +401,18 @@ class Consuming(MonitorTest):
         """Test to ensure calling Post with put set and delete set causes 
            an Exception to be raised"""
         self.assertRaises(HTTPSConnectorInvalidCombinationError, 
-                          self.controller.POST, put="a", delete="a")
+                          self.controller.post, put="a", delete="a")
 
     def test_put(self):
         """Test to ensure calling Put with put set is 
            handled correctly by adding Add action to command"""
-        self.controller.PUT("a")
+        self.controller.put("a")
         self.assertInCommand(("--action add", "--consuming", "--key a"))
 
     def test_delete(self):
         """Test to ensure calling Delete with delete set is 
            handled correctly by adding Remove action to command"""
-        self.controller.DELETE("a")
+        self.controller.delete("a")
         self.assertInCommand(("--action remove", "--consuming", "--key a"))
 
 class ConsumedHost(MonitorTest):
@@ -426,20 +426,20 @@ class ConsumedHost(MonitorTest):
     def test_get(self):
         """Test to ensure calling Get is 
            handled correctly by adding List action to command"""
-        self.controller.GET("a")
+        self.controller.get("a")
         self.assertInCommand(("--action list", "--consuming", "--key a"))
 
     def test_post_blank(self):
         """Test to ensure calling Post with no default values is handled 
            correctly by returning None"""
-        self.assertEqual(None, self.controller.POST(host="a"))
+        self.assertEqual(None, self.controller.post(host="a"))
 
     def test_post_put_set(self):
         """Test to ensure calling Post with put set and delete not set is 
            handled correctly by adding Add action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(host="a", put="b")
+            self.controller.post(host="a", put="b")
         self.assertEqual(['http://127.0.0.1:8080/consuming/a'], 
                          context.exception[0])
 
@@ -451,7 +451,7 @@ class ConsumedHost(MonitorTest):
            handled correctly by adding Remove action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(host="a", delete="b")
+            self.controller.post(host="a", delete="b")
         self.assertEqual(['http://127.0.0.1:8080/consuming/a'], 
                          context.exception[0])
 
@@ -462,19 +462,19 @@ class ConsumedHost(MonitorTest):
         """Test to ensure calling Post with put set and delete set causes 
            an Exception to be raised"""
         self.assertRaises(HTTPSConnectorInvalidCombinationError, 
-                          self.controller.POST, host="a", put="a", delete="a")
+                          self.controller.post, host="a", put="a", delete="a")
 
     def test_put(self):
         """Test to ensure calling Put with put set is 
            handled correctly by adding Add action to command"""
-        self.controller.PUT("a", "b")
+        self.controller.put("a", "b")
         self.assertInCommand(
             ("--action add", "--consuming", "--key a", "--service b"))
 
     def test_delete(self):        
         """Test to ensure calling Delete with delete set is 
            handled correctly by adding Remove action to command"""
-        self.controller.DELETE("a", "b")
+        self.controller.delete("a", "b")
         self.assertInCommand(
             ("--action remove", "--consuming", "--key a", "--service b"))
 
@@ -489,21 +489,21 @@ class ConsumedService(MonitorTest):
     def test_get(self):
         """Test to ensure calling Get is 
            handled correctly by adding List action to command"""
-        self.controller.GET("a", "b")
+        self.controller.get("a", "b")
         self.assertInCommand(
             ("--action list", "--consuming", "--key a", "--service b"))
 
     def test_post_blank(self):
         """Test to ensure calling Post with no default values is handled 
            correctly by returning None"""
-        self.assertEqual(None, self.controller.POST(host="a", service="b"))
+        self.assertEqual(None, self.controller.post(host="a", service="b"))
 
     def test_post_put_set(self):
         """Test to ensure calling Post with put set and delete not set is 
            handled correctly by adding Add action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(host="a", service="b", put="c")
+            self.controller.post(host="a", service="b", put="c")
         self.assertEqual(['http://127.0.0.1:8080/consuming/a/b/'], 
                          context.exception[0])
 
@@ -515,7 +515,7 @@ class ConsumedService(MonitorTest):
            handled correctly by adding Remove action to command
            and user is redirected to correct URL"""
         with self.assertRaises(cherrypy.HTTPRedirect) as context:
-            self.controller.POST(host="a", service="b", delete="c")
+            self.controller.post(host="a", service="b", delete="c")
         self.assertEqual(['http://127.0.0.1:8080/consuming/a/b/'], 
                          context.exception[0])
 
@@ -526,13 +526,13 @@ class ConsumedService(MonitorTest):
         """Test to ensure calling Post with put set and delete set causes 
            an Exception to be raised"""
         self.assertRaises(HTTPSConnectorInvalidCombinationError, 
-                          self.controller.POST, host="a", service="a", 
+                          self.controller.post, host="a", service="a", 
                           put="a", delete="a")
 
     def test_put(self):
         """Test to ensure calling Put with put set is 
            handled correctly by adding Add action to command"""
-        self.controller.PUT("a", "b", "c")
+        self.controller.put("a", "b", "c")
         self.assertInCommand(
             ("--action add", "--consuming", "--key a", "--service b",
              "--location c"))
@@ -540,7 +540,7 @@ class ConsumedService(MonitorTest):
     def test_delete(self):
         """Test to ensure calling Delete with delete set is 
            handled correctly by adding Remove action to command"""
-        self.controller.DELETE("a", "b", "c")
+        self.controller.delete("a", "b", "c")
         self.assertInCommand(
             ("--action remove", "--consuming", "--key a", "--service b",
              "--location c"))
@@ -556,7 +556,7 @@ class Query(MonitorTest):
         """Do requests hook into the CLI client?"""
 
         try:
-            self.controller.POST("a", "b")
+            self.controller.post("a", "b")
         except cherrypy.HTTPRedirect:
             pass
         self.assertInCommand(
@@ -566,7 +566,7 @@ class Query(MonitorTest):
         """Are requests redirected appropriately?"""
 
         self.assertRaises(cherrypy.HTTPRedirect,
-                          self.controller.POST, *("a", "b"))
+                          self.controller.post, *("a", "b"))
 
 if __name__ == "__main__":
     unittest.main()
