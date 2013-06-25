@@ -84,7 +84,7 @@ from optparse import OptionParser
 import pipes
 import sys
 
-import santiago
+import src.santiago as santiago
 import subprocess
 
 SANTIAGO_INSTANCE = BJSONRPC_SERVER = None
@@ -228,9 +228,9 @@ class CliSender(santiago.SantiagoSender):
         """
         protocol = destination.split(":")[0]
 
-        code = self.senders[protocol]
-        code = code.replace("$DESTINATION", pipes.quote(str(destination)))
-        code = code.replace("$REQUEST", pipes.quote(str(request)))
+        code = self.senders[protocol].split()
+        code[code.index("$DESTINATION")] = pipes.quote(str(destination))
+        code[code.index("$REQUEST")] = pipes.quote(str(request)).strip("'")
 
         subprocess.call(code)
 
@@ -256,13 +256,13 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
         return self.sender.outgoing_request(*args, **kwargs)
 
     def query(self, *args, **kwargs):
-        return self.querier.POST(*args, **kwargs)
+        return self.querier.post(*args, **kwargs)
 
     def stop(self):
         """Quit the server and stop Santiago."""
 
         BJSONRPC_SERVER.stop()
-        santiago.Stop(SANTIAGO_INSTANCE).POST()
+        santiago.Stop(SANTIAGO_INSTANCE).post()
 
     def consuming(self, operation, host, service=None, location=None):
         """Update a service I consume from other hosts."""
@@ -278,16 +278,16 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
         """Change Santiago's known clients, servers, services, and locations."""
 
         if operation == "add":
-            action = "PUT"
+            action = "put"
         elif operation == "remove":
-            action = "DELETE"
+            action = "delete"
         elif operation == "list":
-            action = "GET"
+            action = "get"
         else:
-            action = "GET"
+            action = "get"
 
         # if we're modifying data
-        if action != "GET":
+        if action != "get":
             if location != None:
                 actor = santiago.HostedService if i_host else santiago.ConsumedService
             elif service != None:
@@ -297,7 +297,7 @@ class BjsonRpcHost(bjsonrpc.handlers.BaseHandler):
             else:
                 actor = None
         # just listing data, don't need to handle listing indvidiual locations.
-        elif action == "GET":
+        elif action == "get":
             if service != None:
                 actor = santiago.HostedService if i_host else santiago.ConsumedService
             elif key != None:

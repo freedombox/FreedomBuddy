@@ -31,7 +31,7 @@ then
     # do EVERYTHING in multiple terminals.
 
     # start fbuddy + cli client
-    lxterm -e "python src/santiago_run.py" &
+    lxterm -e "python src/santiago_run.py -vv" &
 
     # start https client
     lxterm -e "python src/connectors/https/controller.py --listen" &
