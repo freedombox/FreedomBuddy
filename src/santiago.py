@@ -177,7 +177,7 @@ class Santiago(object):
                 #         santiago=self, **settings["https"])
                 connectors[protocol] = getattr(
                     module, protocol_connector)(
-                        santiago = self, **settings[protocol])
+                        santiago_to_use = self, **settings[protocol])
 
             # log a type error, assume all others are fatal.
             except TypeError:
@@ -249,8 +249,10 @@ class Santiago(object):
             getattr(connector, state)()
 
         for connector in self.connectors:
+            print getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], 
+			state)
             getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], 
-			state)(santiago=self)
+			state)(santiago_to_use=self)
 
         debug_log("Santiago: {0}".format(state))
 
@@ -469,8 +471,7 @@ class Santiago(object):
         """
         try:
             self.outgoing_request(
-                host, self.my_key_id, host, self.my_key_id,
-                service, None, self.consuming[host][self.reply_service])
+                host, self.my_key_id, service, None, self.consuming[host][self.reply_service])
         except Exception:
             logging.exception("Couldn't handle %s.%s", host, service)
 
@@ -737,9 +738,9 @@ class SantiagoConnector(object):
     "controllers" in the MVC paradigm.
 
     """
-    def __init__(self, santiago = None, *args, **kwargs):
+    def __init__(self, santiago_to_use = None, *args, **kwargs):
         super(SantiagoConnector, self).__init__()
-        self.santiago = santiago
+        self.santiago = santiago_to_use
 
     def start(self, *args, **kwargs):
         """Starts the connector, called when initialization is complete.
@@ -818,7 +819,7 @@ class Query(SantiagoMonitor):
 
     """
     def post(self, host, service, *args, **kwargs):
-        super(Query, self).POST(host, service, *args, **kwargs)
+        super(Query, self).post(host, service, *args, **kwargs)
 
         self.santiago.query(host, service)
 

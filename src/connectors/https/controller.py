@@ -26,7 +26,7 @@ import src.santiago as santiago
 from src.utilities import HTTPSConnectorInvalidCombinationError
 
 
-COMMAND_LINE = "python connectors/cli/controller.py"
+COMMAND_LINE = "python src/connectors/cli/controller.py"
 def command(a_command):
     """Pass the request to the command line client and unwrap the reply."""
 
@@ -244,7 +244,7 @@ class MonitorUtilities(object):
 
     def __init__(self, *args, **kwargs):
         super(MonitorUtilities, self).__init__(*args, **kwargs)
-        self.relative_path = "connectors/https/templates"
+        self.relative_path = "src/connectors/https/templates"
 
     def _parse_query(self, query_input):
         """Split a URL into its query string.
@@ -279,7 +279,7 @@ class MonitorUtilities(object):
             raise cherrypy.HTTPError(500, "No values.")
         # return page content only if no errors.
         return [str(Template(
-                    file="/".join(("src",self.relative_path, encoding,
+                    file="/".join((self.relative_path, encoding,
                                    os.environ["LANG"].split("_")[0],
                                    template)),
                     searchList=my_search_list))]
@@ -583,7 +583,7 @@ if __name__ == "__main__":
         santiago = lambda: None
         santiago.locale = "en"
         santiago.debug_log = lambda *args, **kwargs: None
-        HttpsMonitor(santiago=santiago, socket_port=port,
+        HttpsMonitor(santiago_to_use=santiago, socket_port=port,
                      ssl_certificate=cert, ssl_private_key=key)
         cherrypy.engine.start()
     else:
