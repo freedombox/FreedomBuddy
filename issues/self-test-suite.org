@@ -34,6 +34,14 @@
 
 ** TODO Repeated connection attempts over time and at different times of day.
 
+** New Functionality Testing [0/3]
+
+   Verify these behaviors.
+
+*** TODO Give up if the request is too old.
+*** TODO Give up if the request is too new.
+*** TODO Remember the service update times.
+
 * Discussion
 * Metadata
   :PROPERTIES:

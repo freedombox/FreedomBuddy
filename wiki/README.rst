@@ -7,12 +7,15 @@ Person-Focused Networking
 The FreedomBuddy System
 -----------------------
 
-:Author: Nick Daly, 2012
-:License: This file is distributed under a Creative Commons
-    Attribution-ShareAlike 3.0 Unported, Version 3 license.  This CC-By-SA
-    license is available in both full_ and summarized_ versions from Creative
-    Commons.  This file is also distributed under the `GNU Free Documentation
-    License`_, version 1.3 or later.
+:Author:
+    Nick Daly, 2012
+
+:License:
+    This file is distributed under a Creative Commons Attribution-ShareAlike 3.0
+    Unported, Version 3 license.  This CC-By-SA license is available in both
+    full_ and summarized_ versions from Creative Commons.  This file is also
+    distributed under the `GNU Free Documentation License`_, version 1.3 or
+    later.
 
     FreedomBuddy itself is distributed under the terms of the GNU Affero General
     Public License as published by the Free Software Foundation, either version
@@ -22,9 +25,10 @@ The FreedomBuddy System
 .. _summarized: http://creativecommons.org/licenses/by-sa/3.0/
 .. _GNU Free Documentation License: http://www.gnu.org/licenses/fdl.html
 
-:The State of Things: FreedomBuddy is **not** ready for public, in the field,
-    deployment.  It won't fully protect your privacy, there're still a number of
-    flaws that need to be fixed first.  Run ``grep -r FIXME *`` for details.
+:The State of Things:
+    FreedomBuddy is **not** ready for public, in the field, deployment.  It
+    won't fully protect your privacy, there're still a number of flaws that need
+    to be fixed first.  Run ``grep -r FIXME *`` for details.
 
 .. contents::
 
@@ -142,8 +146,9 @@ controlled by that service provider very quickly and easily.
 Data Use
 --------
 
-:TODO: Revise to reduce communication to logical minimum number of connections,
-       exchanges, and communications.
+TODO
+    Revise to reduce communication to logical minimum number of connections,
+    exchanges, and communications.
 
 When *A* is connecting to *B*'s service, it will attempt to connect to that
 service, which B will validate before permitting the connection.  If the service
@@ -154,7 +159,8 @@ non-responsive, *A* will move on to *C*.  *A* will ask *C* for the service.  If
 affirmatively to *A* with the service's location.
 
 :A -> B: (Connecting to Service!)
-:B: (Validating Service and rejecting for some reason, e.x., A hasn't been
+:B: 
+    (Validating Service and rejecting for some reason, e.x., A hasn't been
     reauthorized for this service recently enough, and because it's Wednesday.)
 :B -> A: (No response)
 :A -> B: Will you serve X?
@@ -326,8 +332,9 @@ services.  If A relies primarily on C's services, A isn't very boned at all.
 Methods
 -------
 
-:TODO: I'll need to think about all these a lot more.  I'm really far from
-       exhaustive logical proof at this point.
+:TODO:
+    I'll need to think about all these a lot more.  I'm really far from
+    exhaustive logical proof at this point.
 
 Out of Order
 ~~~~~~~~~~~~
@@ -391,31 +398,35 @@ Sure, there's been a lot of work so far, but there's a lot more to do.
 Design Questions
 ----------------
 
-:Really weird proxies: Email, Twitter, bit.ly, paste buckets, etc.
-    This implies listener polling.
+:Really weird proxies:
+    Email, Twitter, bit.ly, paste buckets, etc.  This implies listener polling.
 
 :Add Expiry: Add both service and proxy (search) hop expiry.
 
-:Moar Unit Testing!: Add real Unit Testing.  Spec out the system through test
-    harnesses.  If the tests can run the system, it's complete.
+:Moar Unit Testing!:
+    Add real Unit Testing.  Spec out the system through test harnesses.  If the
+    tests can run the system, it's complete.
 
-:Clarify Actions: Actions probably aren't necessary with hop expiry, since each
-    Santiago sender sends two messages: "Will X serve Y for Z? Please respond at
-    W.", and "X will (not) serve Y for Z at U."
+:Clarify Actions:
+    Actions probably aren't necessary with hop expiry, since each Santiago
+    sender sends two messages: "Will X serve Y for Z? Please respond at W.", and
+    "X will (not) serve Y for Z at U."
 
-:Fucking-with-you Replies: An urban legend: During World War II, the RAF
-    confused the German air force by alternating the altitudes of their fighters
-    and bombers (doing it wrong, flying the fighters *beneath* the bombers).
-    Apparently the Germans were most confused when the RAF did it wrong once
-    every seven flights.  Whether or not it's true, it implies a lesson:
+:Fucking-with-you Replies:
+    An urban legend: During World War II, the RAF confused the German air force
+    by alternating the altitudes of their fighters and bombers (doing it wrong,
+    flying the fighters *beneath* the bombers).  Apparently the Germans were
+    most confused when the RAF did it wrong once every seven flights.  Whether
+    or not it's true, it implies a lesson:
 
     Confuse adversaries by intentionally doing it wrong, sometimes.  We could
     answer a bum Santiago request with garbage, irrelevant HTTP codes, or
     silence.
 
-:Onion Routing: What can we learn from Tor itself?  Maybe not a lot.  Maybe a
-    bit.  That we don't allow untrusted connections is an incredible limitation
-    on the routing system.
+:Onion Routing:
+    What can we learn from Tor itself?  Maybe not a lot.  Maybe a bit.  That we
+    don't allow untrusted connections is an incredible limitation on the routing
+    system.
 
     However, we can reinterpret the onion concept, by permitting the signed and
     encrypted parts of messages to conflict.  A's signed message is to B, but
@@ -435,28 +446,31 @@ Design Questions
     I'm still not sure whether the benefits outweigh the costs, but that's still
     an interesting question.
 
-:Reverse DNS: Should we check with the original requester before replying?  What
-    if we can't reach that requester outside of the reply-to address they sent?
+:Reverse DNS:
+    Should we check with the original requester before replying?  What if we
+    can't reach that requester outside of the reply-to address they sent?
     Verifying the requester's identity by their self-reported address seems to
     add little confidence to the requester's identity.
 
 Functional Questions
 --------------------
 
-:Queuing Messages: Queue actions, dispatching X MB over Y requests per friend
-    per unit time, unless the request is preempted by another reply.
+:Queuing Messages:
+    Queue actions, dispatching X MB over Y requests per friend per unit time,
+    unless the request is preempted by another reply.
 
-:Process Separation: Santiagi should be separated at the process/message-handler
-    level, so that trouble in one Santiago doesn't tear down the rest (makes
-    queuing harder with multiple listeners).  Services should be recorded and
-    messages should be queued at a file-level so that each process who needs
-    access can have it.
+:Process Separation:
+    Santiagi should be separated at the process/message-handler level, so that
+    trouble in one Santiago doesn't tear down the rest (makes queuing harder
+    with multiple listeners).  Services should be recorded and messages should
+    be queued at a file-level so that each process who needs access can have it.
 
-:Santiago Updates: Updates are tricky things.  They're when we're most
-    vulnerable.  The question becomes: since both boxes need to know where they
-    are to communicate successfully, but at least one box may have changed its
-    location (even its Santiago), how do we handle those updates, while reducing
-    the vulnerability as much as possible?  Let's assume that A (the requester)
+:Santiago Updates:
+    Updates are tricky things.  They're when we're most vulnerable.  The
+    question becomes: since both boxes need to know where they are to
+    communicate successfully, but at least one box may have changed its location
+    (even its Santiago), how do we handle those updates, while reducing the
+    vulnerability as much as possible?  Let's assume that A (the requester)
     changes its locations frequently, while B (the server) does not.  A requests
     a service from B and B then needs to reply.  How does B know where to reply?
     It has a few old Santiago ports left over in the database.  A might also
@@ -498,11 +512,12 @@ Functional Questions
     trust the second of three kids, then why am I trusting the key?  Trust is an
     annoyingly deep subject, and one of the few good uses of the word "faith."
 
-:Encryption Keys: So, being able to sign and encrypt messages is necessary
-    functional requirement.  However, that implies that the Santiago process
-    always has access to the public key's secret key.  That's right, it's an
-    always-on web service that has access to a secret key, in Python.  That's
-    bad, Python makes it (slightly) worse.
+:Encryption Keys:
+    So, being able to sign and encrypt messages is necessary functional
+    requirement.  However, that implies that the Santiago process always has
+    access to the public key's secret key.  That's right, it's an always-on web
+    service that has access to a secret key, in Python.  That's bad, Python
+    makes it (slightly) worse.
 
     So, how do we make the system less vulnerable?  The first step is to avoid
     storing the secret key (or the key's password) in memory whenever possible.
@@ -526,10 +541,11 @@ Functional Questions
     no hard-coded passwords or gpg-agents are required.  Then, it's just
     plug-and-play.  That might be an acceptable option in some circumstances.
 
-:Location Revocation: Key revocation is easy.  However, we don't really have a
-    solution for location revocation.  This means an adversary who controls an
-    old location can hear the broadcasts.  However, an adversary without a key
-    can't really use those broadcasts.
+:Location Revocation:
+    Key revocation is easy.  However, we don't really have a solution for
+    location revocation.  This means an adversary who controls an old location
+    can hear the broadcasts.  However, an adversary without a key can't really
+    use those broadcasts.
 
     If we allowed key revocation, than any adversary without the key couldn't do
     much either.

@@ -7,7 +7,6 @@ Currently contains a bunch of errors and config-file shortcuts.
 import ConfigParser as configparser
 from optparse import OptionParser
 from datetime import datetime
-from dateutil import parser
 
 def load_config(configfile):
     """Returns data from the named config file."""
@@ -46,7 +45,7 @@ def get_config_values(config):
     return mykey, protocols, connectors, force_sender
 
 def configure_connectors(protocols, connectors):
-    """Create listeners/senders/monitors from procotols & connectors"""
+
     listeners, senders, monitors = {}, {}, {}
 
     for protocol in protocols:
@@ -85,59 +84,6 @@ def safe_load(config, section, key=None, default=None):
             return config.items(section)
     except (configparser.NoSectionError, configparser.NoOptionError):
         return default
-
-def isTimestampValid(date, compare_date):
-    """Confirms whether compare_date is valid when compared to date.
-    compare_date must be greater than date but not in the (utc) future.
-    """
-    if(isinstance(date, str)):
-        date = parser.parse(date)
-    if(isinstance(compare_date, str)):
-        compare_date = parser.parse(compare_date)
-    if date is None and compare_date is None:
-        return False
-    elif date is None:
-        return True
-    elif compare_date is None:
-        return False
-    if compare_date < date:
-        return False
-    elif compare_date == date:
-        return False
-    elif compare_date > datetime.utcnow():
-        return False
-    return True
-
-def parse_args(args):
-    """Interpret args passed in on the command line."""
-
-    parser = OptionParser()
-
-    parser.add_option("-v", "--verbose", dest="verbose", action="count",
-                      help="""\
-Can be given multiple times to increase logging level.  Once means show
-FreedomBuddy logging messages.  Twice means show connector logging messages as
-well.""")
-
-    parser.add_option("-c", "--config", dest="config",
-                      default="data/production.cfg",
-                      help="""The configuration file to use.""")
-
-    parser.add_option("-d", "--default-services", dest="default_services",
-                      action="store_true", help="""\
-Whether to reset the list of hosted and consumed services to the default.""")
-
-    parser.add_option("-f", "--forget", dest="forget_services",
-                      action="store_true", help="""\
-If set, don't store service data when exiting.
-
-Useful if you want to test or experiment with new service configurations,
-without overwriting your existing data.""")
-
-    parser.add_option("-t", "--trace", dest="trace", action="store_true",
-                      help="Drop into the debugger when starting FreedomBuddy.")
-
-    return parser.parse_args(args)
 
 class SignatureError(Exception):
     """Base class for signature-related errors."""
