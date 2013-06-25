@@ -416,7 +416,7 @@ class Santiago(object):
         except KeyError:
              # this is a new host or service
             previous_update = 0
-
+        update = float(update)
         valid = (update <= time.time()) and (update > previous_update)
 
         if not valid:
