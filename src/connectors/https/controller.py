@@ -26,7 +26,7 @@ import src.santiago as santiago
 from src.utilities import HTTPSConnectorInvalidCombinationError
 
 
-COMMAND_LINE = "python connectors/cli/controller.py"
+COMMAND_LINE = "python src/connectors/cli/controller.py"
 def command(a_command):
     """Pass the request to the command line client and unwrap the reply."""
 
@@ -226,7 +226,7 @@ class HttpsMonitor(santiago.SantiagoMonitor):
             for a_method in ("PUT", "GET", "POST", "DELETE"):
                 dispatcher.connect(controller.__class__.__name__ + a_method,
                                    place, controller=controller, 
-                                   action=a_method,
+                                   action=a_method.lower(),
                                    conditions={ "method": [a_method] })
 
         return dispatcher
@@ -244,7 +244,7 @@ class MonitorUtilities(object):
 
     def __init__(self, *args, **kwargs):
         super(MonitorUtilities, self).__init__(*args, **kwargs)
-        self.relative_path = "connectors/https/templates"
+        self.relative_path = "src/connectors/https/templates"
 
     def _parse_query(self, query_input):
         """Split a URL into its query string.
@@ -293,7 +293,7 @@ class HttpRoot(santiago.SantiagoMonitor, MonitorUtilities):
 
     """
     @cherrypy.tools.ip_filter()
-    def GET(self, **kwargs):
+    def get(self, **kwargs):
         """Return root template"""
         return self.respond("root.tmpl", {})
 
@@ -301,7 +301,7 @@ class HttpStop(santiago.Stop, MonitorUtilities):
     """Stop the service."""
 
     @cherrypy.tools.ip_filter()
-    def POST(self, **kwargs):
+    def post(self, **kwargs):
         """Stop the service."""
         command("--stop")
         raise cherrypy.HTTPRedirect("/freedombuddy")
@@ -313,7 +313,7 @@ class HttpQuery(santiago.Query, MonitorUtilities):
 
     """
     @cherrypy.tools.ip_filter()
-    def POST(self, host, service):
+    def post(self, host, service):
         """Query the FBuddy"""
         command("--query --key {0} --service {1}".format(host, service))
         raise cherrypy.HTTPRedirect("/consuming/%s/%s" % (host, service))
@@ -322,7 +322,7 @@ class HttpHosting(santiago.Hosting, MonitorUtilities):
     """List clients I'm hosting services for."""
 
     @cherrypy.tools.ip_filter()
-    def GET(self, **kwargs):
+    def get(self, **kwargs):
         """Return hosting template"""
         return self.respond(
             "hosting.tmpl",
@@ -330,28 +330,28 @@ class HttpHosting(santiago.Hosting, MonitorUtilities):
             **kwargs)
 
     @cherrypy.tools.ip_filter()
-    def POST(self, put="", delete="", **kwargs):
+    def post(self, put="", delete="", **kwargs):
         """Add/Delete a hosting client.
-           Don't allow a POST request to PUT & DELETE at the same time.
+           Don't allow a post request to put & delete at the same time.
         """
         if put and delete:
             raise HTTPSConnectorInvalidCombinationError()
         elif put:
-            self.PUT(put)
+            self.put(put)
         elif delete:
-            self.DELETE(delete)
+            self.delete(delete)
         else:
             return None
 
         raise cherrypy.HTTPRedirect("/hosting")
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, client, **kwargs):
+    def put(self, client, **kwargs):
         """Add a hosting client"""
         command("--action add --hosting --key {0}".format(client))
 
     @cherrypy.tools.ip_filter()
-    def DELETE(self, client):
+    def delete(self, client):
         """Delete a hosting client"""
         command("--action remove --hosting --key {0}".format(client))
 
@@ -359,7 +359,7 @@ class HttpHostedClient(santiago.HostedClient, MonitorUtilities):
     """List the services I'm hosting for the client."""
 
     @cherrypy.tools.ip_filter()
-    def GET(self, client, **kwargs):
+    def get(self, client, **kwargs):
         """Return hosted client template"""
         return self.respond(
             "hostedClient.tmpl",
@@ -367,29 +367,29 @@ class HttpHostedClient(santiago.HostedClient, MonitorUtilities):
             **kwargs)
 
     @cherrypy.tools.ip_filter()
-    def POST(self, client, put="", delete="", **kwargs):
+    def post(self, client, put="", delete="", **kwargs):
         """Add/Delete a hosted client service
-           Don't allow a POST request to PUT & DELETE at the same time.
+           Don't allow a post request to put & delete at the same time.
         """
         if put and delete:
             raise HTTPSConnectorInvalidCombinationError()
         elif put:
-            self.PUT(client, put)
+            self.put(client, put)
         elif delete:
-            self.DELETE(client, delete)
+            self.delete(client, delete)
         else:
             return None
 
         raise cherrypy.HTTPRedirect("/hosting/" + client)
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, client, service):
+    def put(self, client, service):
         """Add a hosted client service"""
         command("--action add --hosting --key {0} --service {1}".format(
                 client, service))
 
     @cherrypy.tools.ip_filter()
-    def DELETE(self, client, service):
+    def delete(self, client, service):
         """Delete a hosted client service"""
         command("--action remove --hosting --key {0} --service {1}".format(
                 client, service))
@@ -398,7 +398,7 @@ class HttpHostedService(santiago.HostedService, MonitorUtilities):
     """List locations I'm hosting the service for the client."""
 
     @cherrypy.tools.ip_filter()
-    def GET(self, client, service, **kwargs):
+    def get(self, client, service, **kwargs):
         """Return hosted client locations template"""
         return self.respond(
             "hostedService.tmpl",
@@ -407,29 +407,29 @@ class HttpHostedService(santiago.HostedService, MonitorUtilities):
             **kwargs)
 
     @cherrypy.tools.ip_filter()
-    def POST(self, client, service, put="", delete="", **kwargs):
+    def post(self, client, service, put="", delete="", **kwargs):
         """Add/Delete a hosted client location
-           Don't allow a POST request to PUT & DELETE at the same time.
+           Don't allow a post request to put & delete at the same time.
         """
         if put and delete:
             raise HTTPSConnectorInvalidCombinationError()
         elif put:
-            self.PUT(client, service, put)
+            self.put(client, service, put)
         elif delete:
-            self.DELETE(client, service, delete)
+            self.delete(client, service, delete)
         else:
             return None
 
         raise cherrypy.HTTPRedirect("/hosting/{0}/{1}/".format(client, service))
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, client, service, location, **kwargs):
+    def put(self, client, service, location, **kwargs):
         """Add a hosted client service"""
         command(("--action add --hosting --key {0} --service {1}" +
                  " --location {2}").format(client, service, location)),
 
     @cherrypy.tools.ip_filter()
-    def DELETE(self, client, service, location, **kwargs):
+    def delete(self, client, service, location, **kwargs):
         """Delete a hosted client service"""
         command(("--action remove --hosting --key {0} --service {1}" +
                  " --location {2}").format(client, service, location)),
@@ -438,7 +438,7 @@ class HttpConsuming(santiago.Consuming, MonitorUtilities):
     """Get the hosts I'm consuming services from."""
 
     @cherrypy.tools.ip_filter()
-    def GET(self, **kwargs):
+    def get(self, **kwargs):
         """Return consuming template"""
         return self.respond(
             "consuming.tmpl",
@@ -446,28 +446,28 @@ class HttpConsuming(santiago.Consuming, MonitorUtilities):
             **kwargs)
 
     @cherrypy.tools.ip_filter()
-    def POST(self, put="", delete="", **kwargs):
+    def post(self, put="", delete="", **kwargs):
         """Add/Delete a consuming client
-           Don't allow a POST request to PUT & DELETE at the same time.
+           Don't allow a post request to put & delete at the same time.
         """
         if put and delete:
             raise HTTPSConnectorInvalidCombinationError()
         elif put:
-            self.PUT(put)
+            self.put(put)
         elif delete:
-            self.DELETE(delete)
+            self.delete(delete)
         else:
             return None
 
         raise cherrypy.HTTPRedirect("/consuming")
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, host, **kwargs):
+    def put(self, host, **kwargs):
         """Add a consuming client"""
         command("--action add --consuming --key {0}".format(host))
 
     @cherrypy.tools.ip_filter()
-    def DELETE(self, host, **kwargs):
+    def delete(self, host, **kwargs):
         """Delete a consuming client"""
         command("--action remove --consuming --key {0}".format(host))
 
@@ -475,7 +475,7 @@ class HttpConsumedHost(santiago.ConsumedHost, MonitorUtilities):
     """Get the services I'm consuming from the host."""
 
     @cherrypy.tools.ip_filter()
-    def GET(self, host, **kwargs):
+    def get(self, host, **kwargs):
         """Return Consumed host template"""
         return self.respond(
             "consumedHost.tmpl",
@@ -483,29 +483,29 @@ class HttpConsumedHost(santiago.ConsumedHost, MonitorUtilities):
             **kwargs)
 
     @cherrypy.tools.ip_filter()
-    def POST(self, host, put="", delete="", **kwargs):
+    def post(self, host, put="", delete="", **kwargs):
         """Add/Delete a consuming host
-           Don't allow a POST request to PUT & DELETE at the same time.
+           Don't allow a post request to put & delete at the same time.
         """
         if put and delete:
             raise HTTPSConnectorInvalidCombinationError()
         elif put:
-            self.PUT(host, put)
+            self.put(host, put)
         elif delete:
-            self.DELETE(host, delete)
+            self.delete(host, delete)
         else:
             return None
 
         raise cherrypy.HTTPRedirect("/consuming/" + host)
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, host, service, **kwargs):
+    def put(self, host, service, **kwargs):
         """Add a consuming host"""
         command("--action add --consuming --key {0} --service {1}".format(
                 host, service))
 
     @cherrypy.tools.ip_filter()
-    def DELETE(self, host, service, **kwargs):
+    def delete(self, host, service, **kwargs):
         """Delete a consuming host"""
         command("--action remove --consuming --key {0} --service {1}".format(
                 host, service))
@@ -514,7 +514,7 @@ class HttpConsumedService(santiago.ConsumedService, MonitorUtilities):
     """Get the locations of the service I'm consuming from the host."""
 
     @cherrypy.tools.ip_filter()
-    def GET(self, host, service, **kwargs):
+    def get(self, host, service, **kwargs):
         """Return consumed host locations template"""
         return self.respond(
             "consumedService.tmpl",
@@ -523,29 +523,29 @@ class HttpConsumedService(santiago.ConsumedService, MonitorUtilities):
             **kwargs)
 
     @cherrypy.tools.ip_filter()
-    def POST(self, host, service, put="", delete="", **kwargs):
+    def post(self, host, service, put="", delete="", **kwargs):
         """Add/Delete a location for a consuming host service
-           Don't allow a POST request to PUT & DELETE at the same time.
+           Don't allow a post request to put & delete at the same time.
         """
         if put and delete:
             raise HTTPSConnectorInvalidCombinationError()
         elif put:
-            self.PUT(host, service, put)
+            self.put(host, service, put)
         elif delete:
-            self.DELETE(host, service, delete)
+            self.delete(host, service, delete)
         else:
             return None
 
         raise cherrypy.HTTPRedirect("/consuming/{0}/{1}/".format(host, service))
 
     @cherrypy.tools.ip_filter()
-    def PUT(self, host, service, location, **kwargs):
+    def put(self, host, service, location, **kwargs):
         """Add a location for a consuming host service"""
         command(("--action add --consuming --key {0} --service {1}" +
                  " --location {2}").format(host, service, location))
 
     @cherrypy.tools.ip_filter()
-    def DELETE(self, host, service, location, **kwargs):
+    def delete(self, host, service, location, **kwargs):
         """Delete a location for a consuming host service"""
         command(("--action remove --consuming --key {0} --service {1}" +
                  " --location {2}").format(host, service, location))
@@ -569,8 +569,8 @@ if __name__ == "__main__":
     parser = OptionParser()
     (options, args_local) = interpret_args(sys.argv[1:], parser)
     port = 8080
-    cert = "../data/freedombuddy.crt"
-    key = "../data/freedombuddy.crt"
+    cert = "data/freedombuddy.crt"
+    key = "data/freedombuddy.crt"
 
     if options.outgoing and options.destination:
         HttpsSender().outgoing_request(options.outgoing, options.destination)

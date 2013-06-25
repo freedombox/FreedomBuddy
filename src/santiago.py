@@ -250,7 +250,7 @@ class Santiago(object):
 
         for connector in self.connectors:
             getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)],
-			state)(santiago=self)
+                    state)(santiago_to_use=self)
 
         debug_log("Santiago: {0}".format(state))
 
@@ -332,7 +332,7 @@ class Santiago(object):
         return self.my_key_id == server
 
     @classmethod
-    def update_time(service):
+    def update_time(cls, service):
         """Return the update time key for the service.
 
         This pseudo-service name represents when the service was last updated.
@@ -415,13 +415,14 @@ class Santiago(object):
             previous_update = peer_list[peer][Santiago.update_time(service)]
         except KeyError:
              # this is a new host or service
-            prevous_update = 0
+            previous_update = 0
 
-        valid = (update <= time.time() and update > previous_update)
+        valid = (update <= time.time()) and (update > previous_update)
 
         if not valid:
-            debug.log("%s.%s: invalid update time: %s vs %s (now is %s)".format(
-                    host, service, update, prev_time, time.time()))
+            debug_log(
+                "{0}.{1}: invalid update time: {2} vs {3} (now is {4})".format(
+                    peer, service, update, previous_update, time.time()))
 
         return valid
 
@@ -470,7 +471,7 @@ class Santiago(object):
         """
         self.create_consuming_host(host)
 
-        if not valid_consuming_update(host, service, update):
+        if not self.valid_consuming_update(host, service, update):
             return False
 
         if service not in self.consuming[host]:
@@ -511,7 +512,7 @@ class Santiago(object):
         if Santiago.update_time(service) in self.hosting[client]:
             del self.hosting[client][Santiago.update_time(service)]
 
-    def remove_hosting_location(self, list_type, client, service, location):
+    def remove_hosting_location(self, client, service, location):
         """Delete location from client's service."""
 
         try:
@@ -527,7 +528,7 @@ class Santiago(object):
         if host in self.consuming:
             del self.consuming[host]
 
-    def remove_consuming_service(self, list_type, host, service):
+    def remove_consuming_service(self, host, service):
         """Delete service from host."""
 
         if service in self.consuming[host]:
@@ -535,7 +536,7 @@ class Santiago(object):
         if Santiago.update_time(service) in self.consuming[host]:
             del self.consuming[host][Santiago.update_time(service)]
 
-    def remove_consuming_location(self, list_type, host, service, location):
+    def remove_consuming_location(self, host, service, location):
         """Delete location from host's service."""
 
         try:
@@ -557,7 +558,7 @@ class Santiago(object):
             update == float(update) # update is a float.
 
         """
-        if not valid_consuming_update(host, service, update):
+        if not self.valid_consuming_update(host, service, update):
             return
 
         try:
@@ -594,6 +595,17 @@ class Santiago(object):
             except KeyError as e:
                 logging.exception(e)
 
+    def get_host_services(self, client):
+        """Return what I'm hosting for the client.
+
+        Return nothing if the client or service are unrecognized.
+
+        """
+        try:
+            return self.hosting[client]
+        except KeyError as error:
+            logging.exception(error)
+
     def get_client_locations(self, host, service):
         """Return hosting data for me, the client.
 
@@ -612,6 +624,14 @@ class Santiago(object):
                 return self.consuming[host]
             except KeyError as e:
                 logging.exception(e)
+
+    def get_client_services(self, host):
+        """Return what services the host serves for me, the client."""
+
+        try:
+            return self.consuming[host]
+        except KeyError as error:
+            logging.exception(error)
 
     def get_served_clients(self, service):
         """Return what clients I'm hosting the service for."""
@@ -903,15 +923,15 @@ class Santiago(object):
         debug_log("requests {0}".format(self.requests))
 
 
-    def enqueue_request(host, service):
+    def enqueue_request(self, host, service):
         """Add a request to the outstanding request queue."""
 
         if host not in self.requests:
-            self.requests[host] = list()
+            self.requests[host] = set()
 
         self.requests[host].add(service)
 
-    def dequeue_request(host, service):
+    def dequeue_request(self, host, service):
         """Remove a request from the outstanding request queue."""
 
         self.requests[host].remove(service)
@@ -1009,7 +1029,7 @@ class Query(SantiagoMonitor):
 
     """
     def post(self, host, service, *args, **kwargs):
-        super(Query, self).POST(host, service, *args, **kwargs)
+        super(Query, self).post(host, service, *args, **kwargs)
 
         self.santiago.query(host, service)
 
@@ -1037,7 +1057,7 @@ class HostedClient(SantiagoMonitor):
         super(HostedClient, self).get(*args, **kwargs)
 
         return { "client": client,
-                 "services": self.santiago.get_hosting_services(client) }
+                 "services": self.santiago.get_host_services(client) }
 
     def put(self, client, service, *args, **kwargs):
         super(HostedClient, self).put(client, service, *args, **kwargs)
@@ -1059,14 +1079,14 @@ class HostedService(SantiagoMonitor):
         return {
             "service": service,
             "client": client,
-            "locations": self.santiago.get_hosting_locations(client, service)}
+            "locations": self.santiago.get_host_locations(client, service)}
 
-    def put(self, client, service, location, update, *args, **kwargs):
-        super(HostedService, self).put(client, service, location, update,
+    def put(self, client, service, location, *args, **kwargs):
+        super(HostedService, self).put(client, service, location,
                                        *args, **kwargs)
         if(not isinstance(location, list)):
             location = [location]
-        self.santiago.create_hosting_location(client, service, location, update)
+        self.santiago.create_hosting_location(client, service, location)
 
     # Have to remove instead of delete for locations as ``service`` is a list
     def delete(self, client, service, location, *args, **kwargs):
@@ -1100,7 +1120,7 @@ class ConsumedHost(SantiagoMonitor):
         super(ConsumedHost, self).get(host, *args, **kwargs)
 
         return {
-            "services": self.santiago.get_consuming_services(host),
+            "services": self.santiago.get_client_services(host),
             "host": host }
 
     def put(self, host, service, *args, **kwargs):
@@ -1122,7 +1142,7 @@ class ConsumedService(SantiagoMonitor):
         return { "service": service,
                  "host": host,
                  "locations":
-                     self.santiago.get_consuming_locations(host, service) }
+                     self.santiago.get_client_locations(host, service) }
 
     def put(self, host, service, location, update, *args, **kwargs):
         super(ConsumedService, self).put(host, service, location, update,
