@@ -8,7 +8,9 @@ The FreedomBuddy System
 -----------------------
 
 :Author:
-    Nick Daly, 2012
+    This Document: Nick Daly, 2012
+
+    The Source Code: See the repository's commit history.
 
 :License:
     This file is distributed under a Creative Commons Attribution-ShareAlike 3.0
@@ -30,7 +32,16 @@ The FreedomBuddy System
     won't fully protect your privacy, there're still a number of flaws that need
     to be fixed first.  Run ``grep -r FIXME *`` for details.
 
+    However, if you'd like to test and try to break the system, now is a fine
+    time.
+
 .. contents::
+
+Getting Started
+===============
+
+Run ``make``.  Then, run ``./start.sh 5``.  Your web-browser will open to the
+service, with the default locations configured.
 
 Santiago's Map
 ==============
