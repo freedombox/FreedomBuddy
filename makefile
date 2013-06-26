@@ -10,6 +10,15 @@ CFG_TEST = $(DATA_DIR)/test.cfg
 TEST_CRYPT_FILE = test_crypt_file
 
 freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(SCRIPTS_DIR)/tinc_rollout $(BUILD_DIR)/python-gnupg $(CFG_PRODUCTION) $(CFG_TEST) predepend 
+	@echo "Configuring FreedomBuddy for first run."
+	./start.sh 0
+	sleep 10
+	PYTHONPATH=.:$PYTHONPATH python src/connectors/cli/controller.py --stop
+	@echo ""
+	@echo "Configuration complete."
+	@echo "You can now start FreedomBuddy by running:"
+	@echo "    bash start.sh 5"
+# TODO should this run publish at some point?
 
 build:
 	mkdir -p build
@@ -64,4 +73,3 @@ clean:
 	rm -rf $(KEYS_TEST)
 	rm -f $(TEST_CRYPT_FILE)*
 	rm -f predepend
-
