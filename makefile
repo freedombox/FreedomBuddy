@@ -9,7 +9,7 @@ CFG_PRODUCTION = $(DATA_DIR)/production.cfg
 CFG_TEST = $(DATA_DIR)/test.cfg
 TEST_CRYPT_FILE = test_crypt_file
 
-freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(SCRIPTS_DIR)/tinc_rollout $(BUILD_DIR)/python-gnupg $(CFG_PRODUCTION) $(CFG_TEST) predepend 
+freedombuddy: build ssl-certificate $(BUILD_DIR)/plinth $(SCRIPTS_DIR)/tinc_rollout $(CFG_PRODUCTION) $(CFG_TEST) predepend 
 	@echo "Configuring FreedomBuddy for first run."
 	./start.sh 0
 	sleep 10
@@ -39,15 +39,6 @@ endif
 $(BUILD_DIR)/cert-depends: build
 	sudo apt-get install ssl-cert
 	touch $(BUILD_DIR)/cert-depends
-
-python-gnupg-0.3.3:
-	wget http://python-gnupg.googlecode.com/files/python-gnupg-0.3.3.tar.gz
-	tar -xzf python-gnupg-0.3.3.tar.gz
-	rm -f python-gnupg-0.3.3.tar.gz
-
-$(BUILD_DIR)/python-gnupg: build python-gnupg-0.3.3
-	rm -rf build/gnupg
-	mv python-gnupg-0.3.3 build/gnupg
 
 $(BUILD_DIR)/plinth: build
 	test -d $(BUILD_DIR)/plinth || git clone git://github.com/NickDaly/Plinth.git $(BUILD_DIR)/plinth

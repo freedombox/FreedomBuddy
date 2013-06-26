@@ -2,7 +2,6 @@
 # -*- mode: sh; mode: auto-fill; fill-column: 80 -*-
 
 PYTHONPATH=$PYTHONPATH:../..
-PYTHONPATH=$PYTHONPATH:build/gnupg
 PYTHONPATH=$PYTHONPATH:build/plinth
 PYTHONPATH=$PYTHONPATH:build/bjsonrpc
 export PYTHONPATH
