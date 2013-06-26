@@ -40,8 +40,20 @@ The FreedomBuddy System
 Getting Started
 ===============
 
-Run ``make``.  Then, run ``./start.sh 5``.  Your web-browser will open to the
-service, with the default locations configured.
+#. Make sure you can run commands as "sudo".  If not, you probably need to add
+   yourself to the sudo group, then log out, and then log back in::
+
+    # usermod -a -G sudo (username)
+
+#. Run ``make``
+
+#. Edit ``src/production.cfg`` and replace "0" with full 64-character
+   fingerprint of your actual PGP key ID.  No spaces!
+
+#. Run ``./start.sh 5``
+
+#. Your web-browser will open to the service, with the default locations
+   configured.
 
 Santiago's Map
 ==============
