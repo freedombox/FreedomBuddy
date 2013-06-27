@@ -1,9 +1,10 @@
 #! /bin/sh
 # -*- mode: sh; mode: auto-fill; fill-column: 80 -*-
 
-PYTHONPATH=$PYTHONPATH:../..
-PYTHONPATH=$PYTHONPATH:build/plinth
-PYTHONPATH=$PYTHONPATH:build/bjsonrpc
+PYTHONPATH=../..:$PYTHONPATH
+PYTHONPATH=build/gnupg:$PYTHONPATH
+PYTHONPATH=build/plinth:$PYTHONPATH
+PYTHONPATH=build/bjsonrpc:$PYTHONPATH
 export PYTHONPATH
 
 
