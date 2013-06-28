@@ -40,14 +40,9 @@ $(BUILD_DIR)/cert-depends: build
 	sudo apt-get install ssl-cert
 	touch $(BUILD_DIR)/cert-depends
 
-python-gnupg-0.3.3:
-	wget http://python-gnupg.googlecode.com/files/python-gnupg-0.3.3.tar.gz
-	tar -xzf python-gnupg-0.3.3.tar.gz
-	rm -f python-gnupg-0.3.3.tar.gz
-
-$(BUILD_DIR)/python-gnupg: build python-gnupg-0.3.3
-	rm -rf build/gnupg
-	mv python-gnupg-0.3.3 build/gnupg
+$(BUILD_DIR)/python-gnupg: build
+	test -d $(BUILD_DIR)/python-gnupg || git clone git://github.com/isislovecruft/python-gnupg.git $(BUILD_DIR)/python-gnupg
+	cd $(BUILD_DIR)/python-gnupg; git pull
 
 $(BUILD_DIR)/plinth: build
 	test -d $(BUILD_DIR)/plinth || git clone git://github.com/NickDaly/Plinth.git $(BUILD_DIR)/plinth
