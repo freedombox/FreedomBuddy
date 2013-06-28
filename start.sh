@@ -1,12 +1,19 @@
 #! /bin/sh
 # -*- mode: sh; mode: auto-fill; fill-column: 80 -*-
 
-PYTHONPATH=$PYTHONPATH:build/gnupg
-PYTHONPATH=$PYTHONPATH:build/plinth
-PYTHONPATH=$PYTHONPATH:build/bjsonrpc
+
+PYTHONPATH=build/gnupg:$PYTHONPATH
+PYTHONPATH=build/plinth:$PYTHONPATH
+PYTHONPATH=build/bjsonrpc:$PYTHONPATH
 export PYTHONPATH
 
-if [ "$1" -eq "1" ]
+
+if [ "$1" -eq "0" ]
+then
+    # initial run
+    python src/santiago_run.py -d &
+
+elif [ "$1" -eq "1" ]
 then
     # start santiago
     python src/santiago_run.py "$@"
@@ -31,7 +38,7 @@ then
     # do EVERYTHING in multiple terminals.
 
     # start fbuddy + cli client
-    lxterm -e "python src/santiago_run.py -vv" &
+    lxterm -e "python src/santiago_run.py" &
 
     # start https client
     lxterm -e "python src/connectors/https/controller.py --listen" &
