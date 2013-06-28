@@ -568,11 +568,14 @@ def interpret_args(args, parser):
 if __name__ == "__main__":
     parser = OptionParser()
     (options, args_local) = interpret_args(sys.argv[1:], parser)
+    # FIXME this should be read from the config file.
     port = 8080
     cert = "data/freedombuddy.crt"
     key = "data/freedombuddy.crt"
 
     if options.outgoing and options.destination:
+        # assume this came from the cli-connector, remove ' from pipes.quote
+        options.outgoing = options.outgoing.strip("'")
         HttpsSender().outgoing_request(options.outgoing, options.destination)
     elif options.listen:
         HttpsListener(socket_port=port,

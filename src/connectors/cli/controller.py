@@ -230,7 +230,7 @@ class CliSender(santiago.SantiagoSender):
 
         code = self.senders[protocol].split()
         code[code.index("$DESTINATION")] = pipes.quote(str(destination))
-        code[code.index("$REQUEST")] = pipes.quote(str(request)).strip("'")
+        code[code.index("$REQUEST")] = pipes.quote(str(request))
 
         subprocess.call(code)
 
