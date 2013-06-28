@@ -25,11 +25,14 @@ noted.
 
    - host :: The host's PGP key ID, a string.
    - client :: The client's PGP key ID, a string.
-   - service :: The service's name, a string.
+   - service :: The service's name, a string.  For usability and simplicity, the
+                default UI assumes that each service is only a single line of
+                text, but this is not enforced in the code.
    - locations :: Null (~""~) or an array of locations, each a string.  In an
                   outgoing (initial) request, this parameter is blank.  In an
                   incoming reply message, this parameter contains the locations
-                  of the specified services.
+                  of the specified services.  Each location can be any number of
+                  lines.
    - reply_to :: An array of Santiago locations to reply to, each strings.
    - request_version :: The version of the request (in this case, 1).
    - reply_versions :: Request versions supported by this server, an array of
