@@ -32,8 +32,8 @@ class RevokedKey(unittest.TestCase):
         revoked = 'src/tests/data/test_revoked_keys/test_still_revoked_keys/'
         revoked_config = 'src/tests/data/test_revoked_keys/test_revoked_then_valid.cfg'
         self.iterations = 3
-        self.gpg_expired_then_valid = gnupg.GPG(gnupghome=valid)
-        self.gpg_expired = gnupg.GPG(gnupghome=revoked)
+        self.gpg_expired_then_valid = gnupg.GPG(homedir=valid)
+        self.gpg_expired = gnupg.GPG(homedir=revoked)
         self.config = utilities.load_config(revoked_config)
 
 class RevokedKeyTest(RevokedKey):
@@ -96,8 +96,8 @@ class ExpiredKey(unittest.TestCase):
         expired = 'src/tests/data/test_expired_keys/test_still_expired_keys/'
         expired_config = 'src/tests/data/test_expired_keys/test_expired_then_valid.cfg'
         self.iterations = 3
-        self.gpg_expired_then_valid = gnupg.GPG(gnupghome=valid)
-        self.gpg_expired = gnupg.GPG(gnupghome=expired)
+        self.gpg_expired_then_valid = gnupg.GPG(homedir=valid)
+        self.gpg_expired = gnupg.GPG(homedir=expired)
         self.config = utilities.load_config(expired_config)
 
 class ValidSubKeyButExpiredSuperKeyTest(ExpiredKey):
@@ -166,7 +166,7 @@ class MessageWrapper(unittest.TestCase):
     def setUp(self):
 
         self.iterations = 3
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         config = utilities.load_config("src/tests/data/test_gpg.cfg")
         self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
         self.messages = utilities.multi_sign(

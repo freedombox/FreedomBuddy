@@ -84,7 +84,7 @@ class UpdateTime(SantiagoTest):
     def setUp(self):
         """Create a request."""
 
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
 
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
@@ -109,8 +109,8 @@ class UpdateTime(SantiagoTest):
         """The standard wrapping method for these tests."""
 	
         return str(self.gpg.encrypt(json.dumps(message),
-                                    recipients=[self.keyid],
-                                    sign=self.keyid))
+                                    (str(self.keyid)),
+                                    default_key=self.keyid))
 
     def test_identical_times_fail(self):
         self.request = self.wrap_message({ "host": self.keyid, "client": self.keyid,
@@ -178,7 +178,7 @@ class IncomingRequest(SantiagoTest):
     def setUp(self):
         """Create a request."""
 
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
 
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
@@ -200,8 +200,8 @@ class IncomingRequest(SantiagoTest):
         """The standard wrapping method for these tests."""
 	
         return str(self.gpg.encrypt(json.dumps(message),
-                                    recipients=[self.keyid],
-                                    sign=self.keyid))
+                                    (str(self.keyid)),
+                                    default_key=self.keyid))
 
     def test_ensure_string_handled(self):
         """If a string is passed to incoming_request, convert it to a single value in a list."""
@@ -362,7 +362,7 @@ class UnpackRequest(SantiagoTest):
     def setUp(self):
         """Create a request."""
 
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
 
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
@@ -397,8 +397,8 @@ class UnpackRequest(SantiagoTest):
         """The standard wrapping method for these tests."""
 	
         return str(self.gpg.encrypt(json.dumps(message),
-                                    recipients=[self.keyid],
-                                    sign=self.keyid))
+                                    (str(self.keyid)),
+                                    default_key=self.keyid))
 
     def test_valid_message(self):
         """A message that should pass does pass normally."""
@@ -530,7 +530,7 @@ class HandleRequest(SantiagoTest):
         overridden to record that the method is called.
 
         """
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
@@ -625,7 +625,7 @@ class HostingAndConsuming(SantiagoTest):
     def setUp(self):
         """Do a good bit of setup to make this a nicer test-class.
         """
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
@@ -709,7 +709,7 @@ class OutgoingRequest(SantiagoTest):
 
         def __init__(self):
             self.destination = self.crypt = self.request = None
-            self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+            self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
 
         def outgoing_request(self, request, destination):
             """Decrypt and record the pertinent details about the request."""
@@ -720,7 +720,7 @@ class OutgoingRequest(SantiagoTest):
 
     def setUp(self):
         """Create an encryptable request."""
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
@@ -797,7 +797,7 @@ class CreateHosting(SantiagoTest):
 
     """
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(my_key_id = self.keyid, 
@@ -835,7 +835,7 @@ class CreateConsuming(SantiagoTest):
 
     """
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(my_key_id = self.keyid, gpg=self.gpg,
@@ -885,7 +885,7 @@ class ArgumentTests(SantiagoTest):
 
         url = "sharky_with_angry_hats"
         service = "omg its a fake service name, haha."
-        gpg_to_use = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        gpg_to_use = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
 
         configfile = "src/tests/data/test_gpg.cfg"
 
@@ -923,7 +923,7 @@ class ArgumentTests(SantiagoTest):
         """
         url = "sharky_with_angry_hats"
         service = "omg its a fake service name, haha."
-        gpg_to_use = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        gpg_to_use = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
 
         configfile = "src/tests/data/test_gpg.cfg"
 
@@ -954,7 +954,7 @@ class Hosting(SantiagoTest):
     """Tests Hosting Rest interface."""
 
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
@@ -994,7 +994,7 @@ class HostedClient(SantiagoTest):
     """Tests HostedClient Rest interface."""
 
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.date_to_use = time.time()
 
@@ -1055,7 +1055,7 @@ class HostedService(SantiagoTest):
     """Tests HostedClient Rest interface."""
 
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.initial_update = time.time()
         self.test_update = time.time()
@@ -1117,7 +1117,7 @@ class Consuming(SantiagoTest):
     """Tests Consuming Rest interface."""
 
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
 
         self.santiago = santiago.Santiago(
@@ -1157,7 +1157,7 @@ class ConsumedHost(SantiagoTest):
     """Tests ConsumedHost Rest interface."""
 
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.initial_update = time.time()
         self.test_update = time.time()
@@ -1219,7 +1219,7 @@ class ConsumedService(SantiagoTest):
     """Tests consumedService Rest interface."""
 
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.initial_update = time.time()
         self.test_update = time.time()

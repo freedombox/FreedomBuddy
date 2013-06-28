@@ -319,8 +319,8 @@ class Santiago(object):
 
         data = getattr(self, key)
 
-        data = str(self.gpg.encrypt(str(data), recipients=[self.my_key_id],
-                                    sign=self.my_key_id))
+        data = str(self.gpg.encrypt(str(data), (str(self.my_key_id)),
+                                    default_key=self.my_key_id))
 
         self.shelf[key] = data
 
@@ -726,7 +726,7 @@ class Santiago(object):
                   "request_version": Santiago.REQUEST_VERSION,
                   "reply_versions": list(Santiago.SUPPORTED_REPLY_VERSIONS),
                   "update": time.time(),}),
-            host, sign=self.my_key_id)
+            (str(host)), default_key=self.my_key_id)
 
     def incoming_request(self, requests):
         """Provide a service to a client.

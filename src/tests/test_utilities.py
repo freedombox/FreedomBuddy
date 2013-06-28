@@ -67,7 +67,7 @@ class MultiSign(unittest.TestCase):
     """Helper function to sign a message a number of times with a certain key"""
 
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
 
     def test_incorrect_gpg_raises_error(self):
         self.assertRaises(GPGNotSpecifiedError, utilities.multi_sign, message="Test Message", gpg=None, keyid="1")

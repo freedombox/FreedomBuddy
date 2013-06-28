@@ -13,7 +13,7 @@ from time import sleep
 class CliListener(unittest.TestCase):
     """Test main code call."""
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.test_keyid = "1111111111111111111111111111111111111111"
         self.original_update_time = time.time()
@@ -124,7 +124,7 @@ class CliListener(unittest.TestCase):
 class CliSender(unittest.TestCase):
     """Test main code call."""
     def setUp(self):
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         self.keyid = utilities.load_config("src/tests/data/test_gpg.cfg").get("pgpprocessor", "keyid")
         self.test_keyid = "1111111111111111111111111111111111111111"
         self.santiago = santiago.Santiago(
