@@ -46,9 +46,10 @@
 
   However, I can't tell whether that's necessary or appropriate.
 
-* Fixes [0/4]
+* Fixes [3/4]
 
-** TODO Track response time
+** DONE Track response time
+   CLOSED: [2013-07-20 Sat 17:06]
 
    - Responses to later requests supercede any responses to previous requests.
 
@@ -71,7 +72,8 @@
      highly correlated between clients) are more damaging to the server than
      "last message" times.
 
-** TODO Data Structure Changes
+** DONE Data Structure Changes
+   CLOSED: [2013-07-20 Sat 17:07]
 
    Each communication (request and response or just response?) needs to include
    its creation/sent time.
@@ -95,7 +97,8 @@
    If this attack fails (service is at state t+1, and is not at state t+0), we
    know the service is implemented correctly.
 
-** TODO Increment protocol version.
+** DONE Increment protocol version.
+   CLOSED: [2013-07-20 Sat 17:07]
 
    I'll need to bump the protocol version to version 2.  Version 2 is not
    backwards compatible [fn:1].
@@ -273,7 +276,6 @@
   :Priority: 0
   :Owner:    Nick Daly
   :Description: Add Response-Time to Replies
-  :Tags:
   :END:
 
 
