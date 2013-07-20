@@ -97,9 +97,9 @@ class Santiago(object):
 
             { "http": { "port": 80 } }
 
-        hosting and consuming are service dictionaries, one being an inversion
-        of the other.  hosting contains services you host, while consuming lists
-        services you use, as a client.
+        *hosting* and *consuming* are service dictionaries.  *hosting* contains
+        services you host, while *consuming* lists services you use, as a
+        client.
 
             hosting: { "someKey": { "someService": ( "http://a.list",
                                                      "http://of.locations" )}}
