@@ -77,7 +77,8 @@ def allow_requests(requests = None):
 
 cherrypy.tools.ip_filter = cherrypy.Tool('before_handler', allow_ips)
 cherrypy.tools.request_filter = cherrypy.Tool('before_handler', allow_requests)
-
+#cherrypy.config.update({'log.access_file': 'access.log',
+#                        'log.error_file': 'error.log'})
 
 def start(*args, **kwargs):
     """Module-level start function, called after listener and sender started.
@@ -91,7 +92,6 @@ def stop(*args, **kwargs):
     """
     cherrypy.engine.stop()
     cherrypy.engine.exit()
-
 
 class HttpsListener(santiago.SantiagoListener):
     """The HTTPS interface FBuddy Listener."""
@@ -586,7 +586,7 @@ if __name__ == "__main__":
         santiago = lambda: None
         santiago.locale = "en"
         santiago.debug_log = lambda *args, **kwargs: None
-        HttpsMonitor(santiago=santiago, socket_port=port,
+        HttpsMonitor(santiago_to_use=santiago, socket_port=port,
                      ssl_certificate=cert, ssl_private_key=key)
         cherrypy.engine.start()
     else:

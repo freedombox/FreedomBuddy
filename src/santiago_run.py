@@ -99,7 +99,7 @@ def configure_connectors(protocols, connectors):
 
 if __name__ == "__main__":
 
-    (options, args) = parse_args(sys.argv)
+    (options, args) = utilities.parse_args(sys.argv)
 
     if options.trace:
         import pdb; pdb.set_trace()
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     listeners, senders, monitors = configure_connectors(protocols, connectors)
 
     # services to host and consume
-    url = "https://localhost:8080"
+    url = utilities.safe_load(config_file, "general", "url")
 
     # configure system
     # TODO Set this automatically when no relevant data/(keyid).dat file exists.

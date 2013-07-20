@@ -41,7 +41,7 @@ $(BUILD_DIR)/cert-depends: build
 	touch $(BUILD_DIR)/cert-depends
 
 $(BUILD_DIR)/python-gnupg: build
-	test -d $(BUILD_DIR)/python-gnupg || git clone git://github.com/isislovecruft/python-gnupg.git $(BUILD_DIR)/python-gnupg
+	test -d $(BUILD_DIR)/python-gnupg || git clone git://github.com/tomgalloway/python-gnupg.git $(BUILD_DIR)/python-gnupg
 	cd $(BUILD_DIR)/python-gnupg; git pull
 
 $(BUILD_DIR)/plinth: build
@@ -53,7 +53,7 @@ $(SCRIPTS_DIR)/tinc_rollout: build
 	cd $(SCRIPTS_DIR)/tinc_rollout; git pull
 
 predepend:
-	sudo sh -c "apt-get install python-routes python-socksipy python-cheetah python-openssl python-bjsonrpc python-cherrypy3 python-contract python-dateutil python-httplib2 python-gnupg"
+	sudo sh -c "apt-get install python-bjsonrpc python-cheetah python-cherrypy3 python-contract python-dateutil python-httplib2 python-openssl python-routes python-socksipy"
 	touch predepend
 
 $(CFG_PRODUCTION):

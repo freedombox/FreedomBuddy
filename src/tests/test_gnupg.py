@@ -15,7 +15,7 @@ class GnuPGWrapper(unittest.TestCase):
     """
     def setUp(self):
 
-        self.gpg = gnupg.GPG(gnupghome='src/tests/data/test_gpg_home')
+        self.gpg = gnupg.GPG(homedir='src/tests/data/test_gpg_home')
         config = utilities.load_config("src/tests/data/test_gpg.cfg")
         self.key_id = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
         self.recipient = "joe@foo.bar"
@@ -38,7 +38,7 @@ class CryptionTest(GnuPGWrapper):
 
     def test_sign_then_verify(self):
         """Confirm data is signed & verified correctly"""
-        signed = self.gpg.sign(str(self.message), keyid=self.key_id)
+        signed = self.gpg.sign(str(self.message), default_key=self.key_id)
         verified = self.gpg.verify(str(signed.data))
         self.assertEqual(verified.fingerprint, self.key_id)
         self.assertEqual(True, verified.valid)

@@ -141,7 +141,8 @@ class Santiago(object):
         self.listeners = self.create_connectors(listeners, "Listener")
         self.senders = self.create_connectors(senders, "Sender")
         self.monitors = self.create_connectors(monitors, "Monitor")
-
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
         self.shelf = shelve.open(save_dir.rstrip(os.sep) + os.sep +
                                  str(self.my_key_id) + ".dat")
         self.hosting = hosting if hosting else self.load_data("hosting")
@@ -177,7 +178,7 @@ class Santiago(object):
                 #         santiago=self, **settings["https"])
                 connectors[protocol] = getattr(
                     module, protocol_connector)(
-                        santiago = self, **settings[protocol])
+                        santiago_to_use = self, **settings[protocol])
 
             # log a type error, assume all others are fatal.
             except TypeError:
@@ -249,8 +250,8 @@ class Santiago(object):
             getattr(connector, state)()
 
         for connector in self.connectors:
-            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)],
-                    state)(santiago_to_use=self)
+            getattr(sys.modules[Santiago.CONTROLLER_MODULE.format(connector)], 
+			state)(santiago_to_use=self)
 
         debug_log("Santiago: {0}".format(state))
 
@@ -318,8 +319,8 @@ class Santiago(object):
 
         data = getattr(self, key)
 
-        data = str(self.gpg.encrypt(str(data), recipients=[self.my_key_id],
-                                    sign=self.my_key_id))
+        data = str(self.gpg.encrypt(str(data), (str(self.my_key_id)),
+                                    default_key=self.my_key_id))
 
         self.shelf[key] = data
 
@@ -355,7 +356,6 @@ class Santiago(object):
 
     def valid_consuming_update(self, host, service, update):
         """Is the host's update time valid?
-
         A valid update time has two critieria:
 
         - It is newer than previous update times.
@@ -416,7 +416,7 @@ class Santiago(object):
         except KeyError:
              # this is a new host or service
             previous_update = 0
-
+        update = float(update)
         valid = (update <= time.time()) and (update > previous_update)
 
         if not valid:
@@ -433,7 +433,7 @@ class Santiago(object):
         if client not in self.hosting:
             self.hosting[client] = dict()
 
-    def create_hosting_service(self, client, service):
+    def create_hosting_service(self, client, service, update):
         """Create a hosting service if one doesn't currently exist.
 
         Check that hosting client exists before trying to add service.
@@ -441,21 +441,37 @@ class Santiago(object):
         """
         self.create_hosting_client(client)
 
+        if not self.valid_hosting_update(client, service, update):
+            return False
+
         if service not in self.hosting[client]:
             self.hosting[client][service] = list()
 
-    def create_hosting_location(self, client, service, locations):
+        self.hosting[client][Santiago.update_time(service)] = update
+
+        return True
+
+
+        if service not in self.hosting[client]:
+            self.hosting[client][service] = list()
+        if str(service)+'-update-timestamp' not in list_to_use[client]:
+                list_to_use[client][str(service)+'-update-timestamp'] = None
+
+    def create_hosting_location(self, client, service, locations, update):
         """Create a hosting service if one doesn't currently exist.
 
         Check that hosting client exists before trying to add service.
         Check that hosting service exists before trying to add location.
 
         """
-        self.create_hosting_service(client, service)
+        if not self.create_hosting_service(client, service, update):
+            return False
 
         for location in locations:
             if location not in self.hosting[client][service]:
                 self.hosting[client][service].append(location)
+
+        return True
 
     def create_consuming_host(self, host):
         """Create a consuming host if one doesn't currently exist."""
@@ -488,9 +504,12 @@ class Santiago(object):
         Check that consuming service exists before trying to add location.
 
         """
+        if (isinstance(service, basestring)) and (service.endswith('-update-timestamp')):
+            return False
+        
         if not self.create_consuming_service(host, service, update):
             return False
-
+        self.consuming[host][service] = list()
         for location in locations:
             if location not in self.consuming[host][service]:
                 self.consuming[host][service].append(location)
@@ -588,8 +607,7 @@ class Santiago(object):
                 return self.hosting[client][service]
             except KeyError as e:
                 logging.exception(e)
-
-        if client:
+        elif client:
             try:
                 return self.hosting[client]
             except KeyError as e:
@@ -618,8 +636,7 @@ class Santiago(object):
                 return self.consuming[host][service]
             except KeyError as e:
                 logging.exception(e)
-
-        if host:
+        elif host:
             try:
                 return self.consuming[host]
             except KeyError as e:
@@ -654,8 +671,7 @@ class Santiago(object):
         """
         try:
             self.outgoing_request(
-                host, self.my_key_id, host, self.my_key_id,
-                service, None, self.consuming[host][self.reply_service])
+                host, self.my_key_id, service, None, self.consuming[host][self.reply_service])
         except Exception:
             logging.exception("Couldn't handle %s.%s", host, service)
 
@@ -710,7 +726,7 @@ class Santiago(object):
                   "request_version": Santiago.REQUEST_VERSION,
                   "reply_versions": list(Santiago.SUPPORTED_REPLY_VERSIONS),
                   "update": time.time(),}),
-            host, sign=self.my_key_id)
+            (str(host)), default_key=self.my_key_id)
 
     def incoming_request(self, requests):
         """Provide a service to a client.
@@ -948,9 +964,9 @@ class SantiagoConnector(object):
     "controllers" in the MVC paradigm.
 
     """
-    def __init__(self, santiago = None, *args, **kwargs):
-        super(SantiagoConnector, self).__init__(*args, **kwargs)
-        self.santiago = santiago
+    def __init__(self, santiago_to_use = None, *args, **kwargs):
+        super(SantiagoConnector, self).__init__()
+        self.santiago = santiago_to_use
 
     def start(self, *args, **kwargs):
         """Starts the connector, called when initialization is complete.
@@ -1059,10 +1075,10 @@ class HostedClient(SantiagoMonitor):
         return { "client": client,
                  "services": self.santiago.get_host_services(client) }
 
-    def put(self, client, service, *args, **kwargs):
-        super(HostedClient, self).put(client, service, *args, **kwargs)
+    def put(self, client, service, update, *args, **kwargs):
+        super(HostedClient, self).put(client, service, update, *args, **kwargs)
 
-        self.santiago.create_hosting_service(client, service)
+        self.santiago.create_hosting_service(client, service, update)
 
 
     def delete(self, client, service, *args, **kwargs):
@@ -1081,12 +1097,12 @@ class HostedService(SantiagoMonitor):
             "client": client,
             "locations": self.santiago.get_host_locations(client, service)}
 
-    def put(self, client, service, location, *args, **kwargs):
+    def put(self, client, service, location, update, *args, **kwargs):
         super(HostedService, self).put(client, service, location,
                                        *args, **kwargs)
         if(not isinstance(location, list)):
             location = [location]
-        self.santiago.create_hosting_location(client, service, location)
+        self.santiago.create_hosting_location(client, service, location, update)
 
     # Have to remove instead of delete for locations as ``service`` is a list
     def delete(self, client, service, location, *args, **kwargs):
@@ -1123,10 +1139,10 @@ class ConsumedHost(SantiagoMonitor):
             "services": self.santiago.get_client_services(host),
             "host": host }
 
-    def put(self, host, service, *args, **kwargs):
-        super(ConsumedHost, self).put(host, service, *args, **kwargs)
+    def put(self, host, service, update, *args, **kwargs):
+        super(ConsumedHost, self).put(host, service, update, *args, **kwargs)
 
-        self.santiago.create_consuming_service(host, service)
+        self.santiago.create_consuming_service(host, service, update)
 
     def delete(self, host, service, *args, **kwargs):
         super(ConsumedHost, self).delete(host, service, *args, **kwargs)

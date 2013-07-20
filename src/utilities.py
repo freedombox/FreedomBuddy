@@ -44,6 +44,21 @@ def get_config_values(config):
 
     return mykey, protocols, connectors, force_sender
 
+def configure_connectors(protocols, connectors):
+
+    listeners, senders, monitors = {}, {}, {}
+
+    for protocol in protocols:
+        for connector in connectors:
+            if connector == protocol + "-listener":
+                listeners[protocol] = dict(connectors[protocol + "-listener"])
+            elif connector == protocol + "-sender":
+                senders[protocol] = dict(connectors[protocol + "-sender"])
+            elif connector == protocol + "-monitor":
+                monitors[protocol] = dict(connectors[protocol + "-monitor"])
+
+    return listeners, senders, monitors
+
 def multi_sign(message, gpg, keyid, iterations=3):
     """Sign a message several times with a specified key."""
 
@@ -55,7 +70,7 @@ def multi_sign(message, gpg, keyid, iterations=3):
         raise GPGKeyNotSpecifiedError
 
     for i in range(iterations):
-        messages.append(str(gpg.sign(messages[i], keyid=keyid)))
+        messages.append(str(gpg.sign(messages[i], default_key=keyid)))
 
     return messages
 
