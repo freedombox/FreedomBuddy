@@ -1,5 +1,7 @@
 # -*- mode: org; fill-column: 80 -*-
 
+#+TODO: TODO(t) WAIT(w@/!) | DONE(d!) CANCELED(c@)
+
 * TODO reorganize and consolidate this todo file.                      :meta:
 * TODO figure out what other request types FBuddies should request   :design:
    from one another.
@@ -12,7 +14,10 @@
 
 - Replies include "this service expires on".
 
-* TODO clean up [[file:../src/santiago.py::if%20not%20self.requests%5Bhost%5D:][requests]] after 5 minutes                             :expiry:
+* CANCELED clean up [[file:../src/santiago.py::if%20not%20self.requests%5Bhost%5D:][requests]] after 5 minutes                         :expiry:
+  CLOSED: [2013-07-20 Sat 16:58]
+  - State "CANCELED"   from "TODO"       [2013-07-20 Sat 16:58] \\
+    Killing this idea.  /We don't know how long replies will take./
 
   If they don't reply in that time, it times out and should be cleaned up.
 
@@ -31,7 +36,7 @@
 
    - allow some services to be hidden?
 
-* TODO Message Queuing                                             :requests:
+* TODO Message Queuing and Rate Limiting                           :requests:
 
 - Process a maximum of X MB over Y requests per unit time Z per
    friend.
@@ -45,4 +50,44 @@
 
    The cert-file might not exist.
 
+   The service config file doesn't exist (or is empty).
+
 * TODO Update documentation.                                        :cleanup:
+* TODO Version the database.                                         :design:
+* TODO Split out database code.                                      :design:
+  :PROPERTIES:
+  :ID:       cdf4f528-dde9-4981-8a64-729e8efef1a3
+  :END:
+* TODO Split out message parsing code.                               :design:
+* TODO Incorporate SSH/OpenVPN into FBuddy                         :services:
+* TODO Put together some documentation for FBuddy                   :cleanup:
+* TODO [#A] Debian Package FreedomBuddy                              :design:
+  SCHEDULED: <2013-04-20 Sat>
+
+  See [[file:~/my/creations/source/freedombox/freedombox/freedombox-privoxy/Makefile::deb:%20debian][file:../freedombox/freedombox-privoxy/Makefile::deb: debian]]:
+
+  #+begin_src sh
+    deb: debian
+    debian: privoxy/easyprivacy.action privoxy/https_everywhere.action privoxy/easylist.action changelog
+        ./make_deb.sh
+        cd `find Debian -maxdepth 1 -name "freedombox*" -type d`; debuild -us -uc #-kjames@jamesvasile.com
+    
+  #+end_src
+
+* DONE [#A] Add request timestamps to FBuddy                  :design:expiry:
+  CLOSED: [2013-07-20 Sat 16:56]
+
+  Each service needs to keep track of the most recent response from the server
+  to handle disordered server responses, in case of uneven lag times between
+  services.
+
+** DONE Post bug report on github
+   CLOSED: [2013-07-20 Sat 16:57] SCHEDULED: <2013-04-20 Sat>
+* TODO Write every change back to the datastore, use withsqlite      :design:
+
+** TODO Post bug report on github
+   SCHEDULED: <2013-04-20 Sat>
+
+* TODO FBuddy should pull location data from person's LDAP entry     :design:
+
+  Really, FBuddy should also [[id:cdf4f528-dde9-4981-8a64-729e8efef1a3][support the LDAP backend]] for use in a FBX.
