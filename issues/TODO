@@ -14,13 +14,6 @@
 
 - Replies include "this service expires on".
 
-* CANCELED clean up [[file:../src/santiago.py::if%20not%20self.requests%5Bhost%5D:][requests]] after 5 minutes                         :expiry:
-  CLOSED: [2013-07-20 Sat 16:58]
-  - State "CANCELED"   from "TODO"       [2013-07-20 Sat 16:58] \\
-    Killing this idea.  /We don't know how long replies will take./
-
-  If they don't reply in that time, it times out and should be cleaned up.
-
 * TODO support editing-in-place well for HTML frontend             :requests:
 
    I really should.  Remove + Add isn't acceptable in complex
@@ -73,16 +66,6 @@
         cd `find Debian -maxdepth 1 -name "freedombox*" -type d`; debuild -us -uc #-kjames@jamesvasile.com
     
   #+end_src
-
-* DONE [#A] Add request timestamps to FBuddy                  :design:expiry:
-  CLOSED: [2013-07-20 Sat 16:56]
-
-  Each service needs to keep track of the most recent response from the server
-  to handle disordered server responses, in case of uneven lag times between
-  services.
-
-** DONE Post bug report on github
-   CLOSED: [2013-07-20 Sat 16:57] SCHEDULED: <2013-04-20 Sat>
 * TODO Write every change back to the datastore, use withsqlite      :design:
 
 ** TODO Post bug report on github
