@@ -99,7 +99,7 @@ def configure_connectors(protocols, connectors):
 
 if __name__ == "__main__":
 
-    (options, args) = utilities.parse_args(sys.argv)
+    (options, args) = parse_args(sys.argv)
 
     if options.trace:
         import pdb; pdb.set_trace()
