@@ -51,18 +51,21 @@ without overwriting your existing data.""")
 
     return parser.parse_args(args)
 
-def load_config(options):
+def load_config(config):
     """Load data from the specified configuration file."""
 
     listify_string = lambda x: [item.strip() for item in x.split(",")]
 
-    config = utilities.load_config(options)
+    config = utilities.load_config(config)
 
     mykey = utilities.safe_load(config, "pgpprocessor", "keyid", 0)
     protocols = listify_string(
         utilities.safe_load(config, "connectors", "protocols"))
     connectors = {}
     force_sender = utilities.safe_load(config, "connectors", "force_sender")
+
+    # services to host and consume
+    url = utilities.safe_load(config, "general", "url")
 
     if protocols == ['']:
         raise RuntimeError("No protocols detected.  Have you run 'make'?")
@@ -80,7 +83,7 @@ def load_config(options):
             connectors[connector] = dict(
                 utilities.safe_load(config, connector, None, {}))
 
-    return mykey, protocols, connectors, force_sender
+    return mykey, protocols, connectors, force_sender, url
 
 def configure_connectors(protocols, connectors):
 
@@ -111,13 +114,11 @@ if __name__ == "__main__":
         logging.getLogger("cherrypy.error").setLevel(logging.DEBUG)
 
     # load configuration settings
-    (mykey, protocols, connectors, force_sender) = load_config(options.config)
+    mykey, protocols, connectors, force_sender, url = (
+        load_config(options.config))
 
     # create listeners and senders
     listeners, senders, monitors = configure_connectors(protocols, connectors)
-
-    # services to host and consume
-    url = utilities.safe_load(config_file, "general", "url")
 
     # configure system
     # TODO Set this automatically when no relevant data/(keyid).dat file exists.
